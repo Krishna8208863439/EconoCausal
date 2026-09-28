@@ -932,3 +932,19 @@ using SEED=42. Results will vary with different datasets, hyperparameters, and r
 | v0.8.0 | Oct 17, 2026 | UI: Discount Allocation fix, CSV downloads, and light-green theme applied |
 | v0.9.0 | Oct 18, 2026 | CSV file history, version snapshots, UI module cleanup and refactor |
 | v1.0.0-rc | Oct 21, 2026 | Final submission: complete codebase, patch scripts, all data files |
+
+---
+
+## 32. Project Motivation and Business Context
+
+Traditional machine learning systems used in marketing focus on predictive questions such as
+'Who is most likely to buy?'. However, this ignores the more important causal question:
+'Who will buy MORE because of a discount?' These are fundamentally different questions with
+very different business implications for discount budget allocation decisions.
+
+EconoCausal was motivated by the observation that discount budgets are routinely wasted on
+customers who would have purchased regardless of the offer (always-buyers) or on customers
+who will never purchase regardless of any incentive (never-buyers). The economically optimal
+strategy targets the persuadables -- customers whose purchase probability meaningfully increases
+because of the promotional offer. Double Machine Learning provides a statistically rigorous
+framework for estimating individual causal effects while properly controlling for confounders.
