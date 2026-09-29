@@ -948,3 +948,23 @@ who will never purchase regardless of any incentive (never-buyers). The economic
 strategy targets the persuadables -- customers whose purchase probability meaningfully increases
 because of the promotional offer. Double Machine Learning provides a statistically rigorous
 framework for estimating individual causal effects while properly controlling for confounders.
+
+---
+
+## 33. Technical Design Decisions and Rationale
+
+Several key architectural and methodological decisions were made during the development of EconoCausal:
+
+Why Double Machine Learning over standard uplift models?
+DML provides semi-parametric efficiency and valid confidence intervals for treatment effect estimates,
+which standard T-learner or S-learner uplift models do not guarantee. This is critical for settings
+where statistical validity of causal effect estimates matters for real business decisions.
+
+Why FastAPI for the backend API?
+FastAPI provides automatic OpenAPI documentation, async request handling, and Pydantic-based request
+validation, all critical for a production-quality ML inference API with minimal boilerplate overhead.
+
+Why React and Vite for the frontend dashboard?
+Vite provides near-instant hot module replacement during development and optimised production builds.
+React's component model fits the modular dashboard structure with separate pages for Overview, Causal
+Analysis, Budget Optimization, and Drift Monitoring sections of the analytics platform.
