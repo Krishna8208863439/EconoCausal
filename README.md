@@ -1007,3 +1007,24 @@ Before setting up EconoCausal, ensure your environment meets the following minim
 
 The project has been tested and verified on Windows 10/11, Ubuntu 20.04 LTS, and macOS 12 Monterey.
 Ensure that both Python and Node.js are added to your system PATH before running the setup commands.
+
+---
+
+## 36. Testing Infrastructure and Coverage
+
+EconoCausal uses a layered testing strategy to ensure reliability across all system components:
+
+| Layer | Tool | Scope |
+|-------|------|-------|
+| Unit tests (ML) | pytest | Model training, evaluation metrics, drift detection logic |
+| Unit tests (API) | pytest + httpx | All FastAPI endpoint contracts and response schemas |
+| Integration tests | pytest | End-to-end ML pipeline from raw data to final predictions |
+
+Running the test suite locally:
+
+    pytest tests/ -v                           (run all tests with verbose output)
+    pytest tests/ --cov=. --cov-report=html    (run with HTML coverage report)
+    pytest tests/test_drift_detector.py -v     (run a specific test module only)
+
+The full test suite contains 153 tests across 8 test modules covering all critical paths.
+All tests must pass before any Pull Request is accepted and merged into the main branch.
