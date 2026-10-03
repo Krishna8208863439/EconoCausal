@@ -1028,3 +1028,24 @@ Running the test suite locally:
 
 The full test suite contains 153 tests across 8 test modules covering all critical paths.
 All tests must pass before any Pull Request is accepted and merged into the main branch.
+
+---
+
+## 37. Security Considerations and Best Practices
+
+The following security practices are implemented and recommended for EconoCausal deployments:
+
+Environment variables: All API keys, database credentials, and configuration secrets are stored
+in .env files that are excluded from version control via .gitignore entries. Never commit secrets.
+
+Input validation: All FastAPI endpoints validate incoming request payloads using Pydantic schemas,
+rejecting malformed or out-of-range inputs before they reach the ML inference layer for processing.
+
+CORS policy: The backend API restricts cross-origin requests to the configured frontend origin
+in production. Update the CORS allowlist in backend/main.py for your specific deployment target.
+
+Dependency scanning: Regularly run pip audit (Python) and npm audit (Node.js) to identify and
+patch known security vulnerabilities in project dependencies prior to any production deployment.
+
+No PII storage: The system does not store, log, or persist any personally identifiable information.
+All customer data submitted to the API must be properly anonymised or synthetic before processing.
