@@ -1049,3 +1049,27 @@ patch known security vulnerabilities in project dependencies prior to any produc
 
 No PII storage: The system does not store, log, or persist any personally identifiable information.
 All customer data submitted to the API must be properly anonymised or synthetic before processing.
+
+---
+
+## 38. Project Roadmap and Planned Future Enhancements
+
+The following features and improvements are planned for upcoming versions of EconoCausal:
+
+Near-term roadmap (v1.1.0 target):
+- Multi-arm treatment support for three discount tiers: 0%, 10%, and 20% discount levels
+- Automated model retraining triggered automatically by confirmed data drift detection alerts
+- Dashboard export to PDF and PNG report formats for offline sharing and presentation use
+- JWT-based user authentication and role-based access control for the analytics dashboard
+
+Medium-term roadmap (v1.2.0 target):
+- Integration with real-world retail datasets such as Kaggle Instacart or UCI Online Retail
+- Confidence interval visualisation rendered directly on treatment effect charts in the UI
+- A/B test result import and side-by-side comparison against DML causal effect estimates
+- Docker Compose configuration for simplified one-command production environment deployment
+
+Long-term roadmap (v2.0.0 target):
+- Continuous treatment support with variable discount percentage as a continuous treatment variable
+- Bayesian causal inference module as a statistically richer alternative to standard DML estimators
+- Multi-period longitudinal uplift modelling for subscription churn and customer retention scenarios
+- Full REST API versioning with backwards-compatibility guarantees across all major version releases
