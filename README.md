@@ -787,3 +787,12 @@ list, and evaluation table to match the implementation as it evolves. Do
 not publish confidential internship material or private customer data.
 
 Infotact.
+
+---
+
+## 22. Acknowledgements
+
+This project was developed as part of the Infotact Solutions internship programme (Reference: ITS/DSML/1147).
+Special thanks to the EconML and CausalML open-source communities whose libraries and documentation made
+the causal inference components of this project possible. Additional thanks to the DoubleML team for their
+rigorous theoretical foundations and Python implementations of Double Machine Learning estimators.
