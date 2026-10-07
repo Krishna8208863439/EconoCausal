@@ -796,3 +796,18 @@ This project was developed as part of the Infotact Solutions internship programm
 Special thanks to the EconML and CausalML open-source communities whose libraries and documentation made
 the causal inference components of this project possible. Additional thanks to the DoubleML team for their
 rigorous theoretical foundations and Python implementations of Double Machine Learning estimators.
+
+---
+
+## 23. Frequently Asked Questions (FAQ)
+
+**Q: Does this project require a GPU to run?**
+A: No. All ML models run on CPU by default. GPU acceleration can optionally be enabled via
+CausalML's optional CUDA dependencies, but it is not required for standard evaluation workflows.
+
+**Q: What Python version is required?**
+A: Python 3.9 or higher is strongly recommended for full compatibility with EconML, CausalML, and FastAPI.
+Python 3.8 may work but is not actively tested or supported.
+
+**Q: Can I use my own dataset?**
+A: Yes. Replace the CSV files under data/ with your own data following the same column schema described in Section 9.
