@@ -811,3 +811,17 @@ Python 3.8 may work but is not actively tested or supported.
 
 **Q: Can I use my own dataset?**
 A: Yes. Replace the CSV files under data/ with your own data following the same column schema described in Section 9.
+
+---
+
+## 24. Glossary of Key Terms
+
+| Term | Full Form | Definition |
+|------|-----------|------------|
+| ITE | Individual Treatment Effect | The causal impact of a treatment on a single customer unit |
+| ATE | Average Treatment Effect | The mean causal impact of a treatment across the full population |
+| CATE | Conditional Average Treatment Effect | ATE conditioned on a specific set of observed covariates |
+| DML | Double Machine Learning | A two-stage ML method that removes confounding bias using nuisance models |
+| DAG | Directed Acyclic Graph | A graphical model encoding causal relationships between variables |
+| Uplift | - | The incremental gain in outcome probability caused by a treatment or promotional offer |
+| Confounder | - | A variable that causally affects both the treatment assignment and the observed outcome |
