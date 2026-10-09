@@ -68,6 +68,10 @@
 
 
 
+> **Benchmark Models:** Linear and logistic baseline models are included in `ml/benchmarks.py` to compare against DML uplift estimates. Evaluating against unregularized OLS and standard random forest baselines confirms causal advantage.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
