@@ -72,6 +72,10 @@
 
 
 
+> **Synthetic Data:** The synthetic data generator (`ml/data_generator.py`) simulates realistic e-commerce transactions with known ground-truth heterogeneous treatment effects to validate CATE recovery.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
