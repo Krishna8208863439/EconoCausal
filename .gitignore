@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Data — never commit private or customer data
+data/raw/*.csv
+data/raw/*.parquet
+data/processed/*.csv
+data/processed/*.parquet
+# Allow the sample synthetic file only
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports / generated artefacts — commit figures for documentation
+# (re-running eda.py or build_dag.py regenerates them from source)
+!reports/figures/*.png
+
+# Model artefacts
+*.pkl
+*.joblib
+*.h5

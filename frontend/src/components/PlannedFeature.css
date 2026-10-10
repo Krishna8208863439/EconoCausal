@@ -1,0 +1,31 @@
+.planned-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #FFFDE7;
+  border: 1px dashed #FDD835;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-top: 12px;
+}
+
+.planned-feature__icon { font-size: 1.4rem; flex-shrink: 0; }
+
+.planned-feature__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.planned-feature__name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.planned-feature__desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}

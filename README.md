@@ -471,61 +471,202 @@ results table only after running experiments.
 | Budget utilization | TBD | TBD | Report unused budget too |
 | Policy value / ROI | TBD | TBD | Define value and costs clearly |
 
-## 14. Running the Project
+## 14. Running the Project — Week 1 Setup
 
-The commands below are a **suggested starting setup**, not a guarantee
-that the current repository already contains these files. Update this
-section once the implementation and dependency versions are committed.
+> **Environment:** Python 3.14, Node.js 22, Windows PowerShell.  
+> All data is entirely synthetic — no real customer data is used.
 
 ### Prerequisites
 
-- Python 3.10 or a version supported by the selected library releases.
-- Node.js and npm for the React dashboard.
-- Git.
-- A suitable dataset, or the project's documented synthetic sample.
+| Tool | Minimum version | Notes |
+| :--- | :--- | :--- |
+| Python | 3.10+ | 3.14 confirmed working |
+| pip | any recent | bundled with Python |
+| Node.js | 18+ | 22 confirmed working |
+| npm | 9+ | bundled with Node.js |
+| Git | any | for cloning |
 
-### Backend setup (suggested)
+---
 
-```bash
+### Step 1 — Clone and enter the repository
+
+```powershell
 git clone https://github.com/Krishna8208863439/EconoCausal.git
 cd EconoCausal
+```
 
+---
+
+### Step 2 — Create and activate a Python virtual environment
+
+```powershell
 python -m venv .venv
-```
-
-Activate the environment:
-
-```bash
-# Windows PowerShell
 .venv\Scripts\Activate.ps1
-
-# macOS/Linux
-source .venv/bin/activate
 ```
 
-Install dependencies after creating and verifying `requirements.txt`:
+> If activation is blocked by execution policy, run once:
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 
-```bash
+---
+
+### Step 3 — Install Python dependencies
+
+```powershell
 pip install -r requirements.txt
 ```
 
-If the API entry point is implemented as `src/api/main.py` with a
-FastAPI app named `app`, start it with:
+Key packages installed: `numpy`, `pandas`, `scikit-learn`, `dowhy`,
+`matplotlib`, `seaborn`, `plotly`, `networkx`, `pytest`.
 
-```bash
-uvicorn src.api.main:app --reload
+---
+
+### Step 4 — Generate the synthetic dataset
+
+```powershell
+python src/data/generate_data.py
 ```
 
-### Frontend setup (suggested)
+Output: `data/raw/mock_retail_campaign.csv` (2 244 rows, seed = 42).
 
-```bash
+---
+
+### Step 5 — Run the preprocessing pipeline
+
+```powershell
+python src/data/preprocess.py
+```
+
+Output: `data/processed/cleaned_retail_campaign.csv` (2 200 rows, no missing values).
+
+---
+
+### Step 6 — Run EDA and generate figures
+
+```powershell
+python src/data/eda.py
+```
+
+Outputs: 8 PNG figures in `reports/figures/` and console statistics summary.
+
+---
+
+### Step 7 — Build the causal DAG
+
+```powershell
+python src/causal/build_dag.py
+```
+
+Outputs:
+- `reports/figures/causal_dag.png`
+- `reports/week1_causal_analysis.md`
+
+---
+
+### Step 8 — Run the test suite
+
+```powershell
+python -m pytest tests/ -v
+```
+
+Expected: **78 passed, 0 failed** in ~2 seconds.
+
+---
+
+### Step 9 — Start the React dashboard
+
+```powershell
 cd frontend
-npm install
+npm install        # first time only
 npm run dev
 ```
 
-The frontend command requires a `package.json` with a `dev` script. Use
-the actual entry point and scripts defined by the repository.
+Dashboard opens at **http://localhost:5173**.
+
+To display the pre-generated EDA figures and DAG in the dashboard:
+
+```powershell
+# Run from the project root (after activating the venv)
+New-Item -ItemType Directory -Force -Path frontend\public\eda_figures
+Copy-Item reports\figures\*.png frontend\public\eda_figures\
+Copy-Item reports\figures\causal_dag.png frontend\public\causal_dag.png
+```
+
+---
+
+### Step 10 — (Optional) Open the EDA notebook
+
+```powershell
+# From project root, with venv active:
+jupyter notebook notebooks/01_week1_eda.ipynb
+```
+
+---
+
+### One-command pipeline (all Python steps)
+
+```powershell
+python src/data/generate_data.py; `
+python src/data/preprocess.py; `
+python src/data/eda.py; `
+python src/causal/build_dag.py; `
+python -m pytest tests/ -v
+```
+
+---
+
+### Week 1 Acceptance Checklist
+
+| Criterion | Status |
+| :--- | :--- |
+| Synthetic dataset generated with one command | ✅ `python src/data/generate_data.py` |
+| Preprocessing pipeline runs successfully | ✅ `python src/data/preprocess.py` |
+| EDA report and 8 figures saved | ✅ `reports/figures/` + `reports/week1_eda_report.md` |
+| DoWhy causal DAG generated and PNG saved | ✅ `reports/figures/causal_dag.png` |
+| Causal assumptions documented | ✅ `reports/week1_causal_analysis.md` |
+| Dashboard starts locally and displays initial interface | ✅ `cd frontend && npm run dev` → http://localhost:5173 |
+| 78 unit tests pass with zero failures | ✅ `python -m pytest tests/ -v` |
+| All deliverables organised and reproducible | ✅ See repository structure below |
+| No unsupported claims about causal effects or ROI | ✅ All estimates clearly labelled as naïve/biased or planned |
+
+---
+
+### Current Repository Structure (Week 1)
+
+```text
+EconoCausal/
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── data/
+│   ├── raw/mock_retail_campaign.csv          ← 2 244 rows (generated)
+│   ├── processed/cleaned_retail_campaign.csv ← 2 200 rows (cleaned)
+│   └── README.md                             ← data dictionary
+├── notebooks/
+│   └── 01_week1_eda.ipynb
+├── src/
+│   ├── data/
+│   │   ├── generate_data.py
+│   │   ├── preprocess.py
+│   │   └── eda.py
+│   └── causal/
+│       └── build_dag.py
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── README.md
+│   └── src/
+│       ├── components/  (TopBar, Sidebar, StatCard, SectionCard,
+│       │                 PlannedFeature, CsvUploader)
+│       └── pages/       (Overview, Data, Causal, Budget, Uplift)
+├── reports/
+│   ├── figures/         ← 8 EDA PNGs + causal_dag.png
+│   ├── week1_eda_report.md
+│   ├── week1_causal_analysis.md
+│   └── week1_completion_report.md
+└── tests/
+    ├── test_data_generation.py   ← 34 tests
+    └── test_preprocessing.py     ← 44 tests
+```
 
 ### Configuration
 
