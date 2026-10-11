@@ -76,6 +76,10 @@
 
 
 
+> **Cross-Validation:** K-fold cross-fitting is used in the Double Machine Learning pipeline to prevent overfitting and eliminate regularization bias in causal effect estimates.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
