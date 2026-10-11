@@ -30,6 +30,9 @@ data/processed/*.parquet
 # Allow the sample synthetic file only
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/raw/mock_retail_campaign.csv
+!data/processed/cleaned_retail_campaign.csv
+!data/processed/ite_predictions.csv
 
 # Node / frontend
 frontend/node_modules/

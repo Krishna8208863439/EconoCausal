@@ -6,10 +6,10 @@ import './Page.css'
 const MILESTONES = [
   { week: 1, title: 'Causal Graphing & Dashboard Scaffold', done: true,
     items: ['Synthetic dataset (2 200 records)', 'Data preprocessing pipeline', 'EDA with 8 figures', 'DoWhy causal DAG', 'React dashboard scaffold'] },
-  { week: 2, title: 'Double Machine Learning (DML)', done: false,
-    items: ['EconML DML estimator', 'ATE & CATE estimation', 'Propensity overlap check', 'Refutation tests', 'Plotly uplift charts'] },
-  { week: 3, title: 'Budget Optimisation & API', done: false,
-    items: ['SciPy constrained optimisation', 'Allocation table & recommendations', 'FastAPI packaging', 'Dashboard polish'] },
+  { week: 2, title: 'Double Machine Learning (DML) & Uplift Evaluation', done: true,
+    items: ['EconML CausalForestDML trained', 'ATE (+19.5 pp) & CATE estimation', 'Propensity overlap (99.9% support)', 'Interactive Plotly Uplift & Qini curves', 'FastAPI backend integration'] },
+  { week: 3, title: 'Budget Optimisation & API Packaging', done: false,
+    items: ['SciPy constrained optimisation', 'Allocation table & recommendations', 'End-to-end API polish', 'Production deployment'] },
 ]
 
 export default function OverviewPage() {

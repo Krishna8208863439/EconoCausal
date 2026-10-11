@@ -1,0 +1,179 @@
+{
+  "dataset": {
+    "total_records": 2200,
+    "treated_records": 1293,
+    "control_records": 907,
+    "treated_rate": 0.5669,
+    "control_rate": 0.3583,
+    "naive_ate": 0.2086
+  },
+  "dml_estimates": {
+    "mean_ate": 0.1947,
+    "ci_lower_95": 0.0567,
+    "ci_upper_95": 0.3328,
+    "std_ite": 0.0436,
+    "min_ite": 0.0325,
+    "max_ite": 0.3528,
+    "positive_fraction": 1.0
+  },
+  "dgp_validation": {
+    "true_ate": 0.1202,
+    "naive_ate": 0.2086,
+    "dml_ate": 0.1947,
+    "naive_bias": 0.0884,
+    "dml_error": 0.0745,
+    "mae_vs_true_ite": 0.077,
+    "rank_correlation_spearman": -0.0836
+  },
+  "nuisance_diagnostics": {
+    "treatment_model": {
+      "model_type": "RandomForestClassifier",
+      "cv_folds": 5,
+      "roc_auc": 0.5359,
+      "brier_score": 0.2426,
+      "log_loss": 0.6785,
+      "accuracy": 0.5782,
+      "propensity_mean": 0.5884,
+      "propensity_std": 0.0633,
+      "propensity_treated_mean": 0.5915,
+      "propensity_control_mean": 0.5839,
+      "overlap_window": [
+        0.3995,
+        0.7658
+      ],
+      "common_support_fraction": 0.9991,
+      "overlap_passed": true
+    },
+    "outcome_model": {
+      "model_type": "RandomForestRegressor",
+      "cv_folds": 5,
+      "mse": 0.2517,
+      "rmse": 0.5017,
+      "mae": 0.4918,
+      "r2_score": -0.0085,
+      "brier_score": 0.2517,
+      "outcome_mean_actual": 0.4809,
+      "outcome_mean_pred": 0.477
+    }
+  },
+  "uplift_evaluation": {
+    "fractions": [
+      0.0,
+      0.1,
+      0.2,
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0
+    ],
+    "causal_gain": [
+      0.0,
+      125.57,
+      243.9,
+      336.48,
+      399.97,
+      467.87,
+      510.3,
+      536.76,
+      523.67,
+      513.54,
+      458.86
+    ],
+    "random_gain": [
+      0.0,
+      45.89,
+      91.77,
+      137.66,
+      183.55,
+      229.43,
+      275.32,
+      321.2,
+      367.09,
+      412.98,
+      458.86
+    ],
+    "qini_score": 0.6839,
+    "total_incremental_conversions": 458.86
+  },
+  "policy_comparison": {
+    "budget": 5000.0,
+    "cost_per_discount": 10.0,
+    "max_targetable_customers": 500,
+    "policies": [
+      {
+        "name": "Causal DML Targeting",
+        "targeted_customers": 500,
+        "spend": 5000.0,
+        "incremental_conversions": 125.2,
+        "incremental_revenue": 5009.02,
+        "roi_percent": 0.2,
+        "mean_ite": 0.2505
+      },
+      {
+        "name": "Random Targeting",
+        "targeted_customers": 500,
+        "spend": 5000.0,
+        "incremental_conversions": 97.4,
+        "incremental_revenue": 3894.69,
+        "roi_percent": -22.1,
+        "mean_ite": 0.1947
+      },
+      {
+        "name": "Blanket Discount (All)",
+        "targeted_customers": 2200,
+        "spend": 22000.0,
+        "incremental_conversions": 428.4,
+        "incremental_revenue": 17136.62,
+        "roi_percent": -22.1,
+        "mean_ite": 0.1947
+      },
+      {
+        "name": "No Discount (Baseline)",
+        "targeted_customers": 0,
+        "spend": 0.0,
+        "incremental_conversions": 0.0,
+        "incremental_revenue": 0.0,
+        "roi_percent": 0.0,
+        "mean_ite": 0.0
+      }
+    ]
+  },
+  "segment_breakdown": [
+    {
+      "customer_segment": "Lapsed",
+      "count": 350,
+      "mean": 0.1948,
+      "std": 0.0357,
+      "min": 0.0812,
+      "max": 0.2851
+    },
+    {
+      "customer_segment": "Occasional",
+      "count": 549,
+      "mean": 0.218,
+      "std": 0.0519,
+      "min": 0.0371,
+      "max": 0.3528
+    },
+    {
+      "customer_segment": "Premium",
+      "count": 431,
+      "mean": 0.1776,
+      "std": 0.0342,
+      "min": 0.0616,
+      "max": 0.2691
+    },
+    {
+      "customer_segment": "Regular",
+      "count": 870,
+      "mean": 0.1885,
+      "std": 0.0386,
+      "min": 0.0325,
+      "max": 0.2831
+    }
+  ]
+}

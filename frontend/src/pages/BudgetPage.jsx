@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SectionCard from '../components/SectionCard.jsx'
 import PlannedFeature from '../components/PlannedFeature.jsx'
+import { api } from '../services/api.js'
 import './Page.css'
 
 const TREATMENT_COLS = ['discount_offered']
@@ -8,11 +9,30 @@ const OUTCOME_COLS   = ['purchased', 'revenue']
 const CONFOUNDER_COLS = ['age_group','past_purchases','avg_order_value','website_visits','customer_segment']
 
 export default function BudgetPage() {
-  const [budget, setBudget]         = useState(5000)
+  const [budget, setBudget]         = useState(50000)
+  const [currency, setCurrency]     = useState('INR') // Default INR as requested
+  const [discountAmount, setDiscountAmount] = useState(100)
   const [treatment, setTreatment]   = useState('discount_offered')
   const [outcome, setOutcome]       = useState('purchased')
   const [confounders, setConfounders] = useState([...CONFOUNDER_COLS])
   const [saved, setSaved]           = useState(false)
+
+  const currencySymbol = currency === 'INR' ? '₹' : '£'
+
+  useEffect(() => {
+    async function loadConfig() {
+      const cfg = await api.getBudgetConfig()
+      if (cfg) {
+        if (cfg.budget) setBudget(cfg.budget)
+        if (cfg.currency) setCurrency(cfg.currency)
+        if (cfg.discount_amount) setDiscountAmount(cfg.discount_amount)
+        if (cfg.treatment_col) setTreatment(cfg.treatment_col)
+        if (cfg.outcome_col) setOutcome(cfg.outcome_col)
+        if (cfg.covariates) setConfounders(cfg.covariates)
+      }
+    }
+    loadConfig()
+  }, [])
 
   function handleConfoundToggle(col) {
     setConfounders(prev =>
@@ -21,8 +41,16 @@ export default function BudgetPage() {
     setSaved(false)
   }
 
-  function handleSave(e) {
+  async function handleSave(e) {
     e.preventDefault()
+    await api.saveBudgetConfig({
+      budget,
+      currency,
+      discount_amount: discountAmount,
+      treatment_col: treatment,
+      outcome_col: outcome,
+      covariates: confounders,
+    })
     setSaved(true)
   }
 
@@ -30,33 +58,51 @@ export default function BudgetPage() {
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Budget &amp; Configuration</h1>
-
       </div>
 
       <SectionCard title="Campaign Configuration">
         <form onSubmit={handleSave} className="config-form" aria-label="Campaign configuration form">
 
           <fieldset>
-            <legend>Budget</legend>
-            <label htmlFor="budget-input" className="form-label">
-              Total promotional budget (£)
-              <span className="form-hint">Maximum spend across all discount offers in this campaign.</span>
-            </label>
-            <div className="input-row">
-              <span className="input-prefix">£</span>
-              <input
-                id="budget-input"
-                type="number"
-                min={0}
-                step={100}
-                value={budget}
-                onChange={e => { setBudget(Number(e.target.value)); setSaved(false) }}
-                className="form-input"
-                aria-describedby="budget-hint"
-              />
+            <legend>Currency &amp; Spend Settings</legend>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '14px', marginBottom: '14px' }}>
+              <div>
+                <label htmlFor="currency-select" className="form-label">
+                  Currency
+                </label>
+                <select
+                  id="currency-select"
+                  value={currency}
+                  onChange={e => { setCurrency(e.target.value); setSaved(false) }}
+                  className="form-select"
+                >
+                  <option value="INR">₹ INR (Indian Rupee)</option>
+                  <option value="GBP">£ GBP (British Pound)</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="budget-input" className="form-label">
+                  Total promotional budget ({currencySymbol})
+                </label>
+                <div className="input-row">
+                  <span className="input-prefix">{currencySymbol}</span>
+                  <input
+                    id="budget-input"
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={budget}
+                    onChange={e => { setBudget(Number(e.target.value)); setSaved(false) }}
+                    className="form-input"
+                    aria-describedby="budget-hint"
+                  />
+                </div>
+              </div>
             </div>
+
             <div className="budget-display" id="budget-hint" aria-live="polite">
-              Budget: <strong>£{budget.toLocaleString()}</strong>
+              Active Budget: <strong>{currencySymbol}{budget.toLocaleString()}</strong> (Targeting capacity: ~{Math.floor(budget / (discountAmount || 1)).toLocaleString()} discounts at {currencySymbol}{discountAmount})
             </div>
           </fieldset>
 
@@ -139,7 +185,7 @@ export default function BudgetPage() {
       {saved && (
         <SectionCard title="Active Configuration">
           <dl className="config-summary">
-            <div><dt>Budget</dt><dd>£{budget.toLocaleString()}</dd></div>
+            <div><dt>Budget</dt><dd>{currencySymbol}{budget.toLocaleString()}</dd></div>
             <div><dt>Treatment</dt><dd><code>{treatment}</code></dd></div>
             <div><dt>Outcome</dt><dd><code>{outcome}</code></dd></div>
             <div><dt>Confounders ({confounders.length})</dt>

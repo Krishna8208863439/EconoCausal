@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react'
+import Papa from 'papaparse'
+import Plot from 'react-plotly.js'
 import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import CsvUploader from '../components/CsvUploader.jsx'
@@ -42,6 +44,7 @@ function computeSummary(data) {
 export default function DataPage({ uploadedData, onDataUploaded }) {
   const [fileName, setFileName] = useState(null)
   const [previewPage, setPreviewPage] = useState(0)
+  const [loadingDefault, setLoadingDefault] = useState(false)
   const PAGE_SIZE = 5
 
   const summary = useMemo(() => computeSummary(uploadedData), [uploadedData])
@@ -56,14 +59,55 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
     onDataUploaded(data)
   }
 
+  async function handleLoadDefault() {
+    setLoadingDefault(true)
+    try {
+      const res = await fetch('/cleaned_retail_campaign.csv')
+      const text = await res.text()
+      Papa.parse(text, {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          handleLoaded(results.data, 'cleaned_retail_campaign.csv (Default Synthetic)')
+          setLoadingDefault(false)
+        },
+      })
+    } catch (err) {
+      console.error('Failed to load default dataset:', err)
+      setLoadingDefault(false)
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-header">
-        <h1 className="page-title">Data &amp; EDA</h1>
-
+        <div>
+          <h1 className="page-title">Data &amp; EDA</h1>
+          <p className="page-subtitle" style={{ color: '#64748B', marginTop: '4px' }}>
+            Exploratory Data Analysis, Confounder Identification &amp; Selection Bias Diagnostics
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleLoadDefault}
+          disabled={loadingDefault}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: '#0F172A',
+            color: '#FFFFFF',
+            borderRadius: '6px',
+            border: 'none',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          {loadingDefault ? '⏳ Loading Dataset…' : '⚡ Load Default Dataset (2,200 rows)'}
+        </button>
       </div>
 
-      <SectionCard title="Upload Campaign Dataset">
+      <SectionCard title="Upload or Load Campaign Dataset">
         <CsvUploader onDataLoaded={handleLoaded} />
       </SectionCard>
 
@@ -96,6 +140,46 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
               regardless. The true causal ATE will be estimated using Double Machine Learning in Week 2.
             </span>
           </div>
+
+          <SectionCard title="Observed Purchase Rates: Treated vs Control by Segment">
+            <div style={{ width: '100%', height: '350px' }}>
+              <Plot
+                data={[
+                  {
+                    x: ['Premium', 'Regular', 'Occasional', 'Lapsed'],
+                    y: ['Premium', 'Regular', 'Occasional', 'Lapsed'].map(seg => {
+                      const rows = uploadedData.filter(r => r.customer_segment === seg && Number(r.discount_offered) === 1)
+                      return rows.length ? Number(((rows.filter(r => Number(r.purchased) === 1).length / rows.length) * 100).toFixed(1)) : 0
+                    }),
+                    name: 'Treated (Discount=1)',
+                    type: 'bar',
+                    marker: { color: '#2563EB' },
+                  },
+                  {
+                    x: ['Premium', 'Regular', 'Occasional', 'Lapsed'],
+                    y: ['Premium', 'Regular', 'Occasional', 'Lapsed'].map(seg => {
+                      const rows = uploadedData.filter(r => r.customer_segment === seg && Number(r.discount_offered) === 0)
+                      return rows.length ? Number(((rows.filter(r => Number(r.purchased) === 1).length / rows.length) * 100).toFixed(1)) : 0
+                    }),
+                    name: 'Control (Discount=0)',
+                    type: 'bar',
+                    marker: { color: '#F59E0B' },
+                  },
+                ]}
+                layout={{
+                  title: { text: '<b>Observed Purchase Rate by Segment & Treatment</b>', font: { size: 14 } },
+                  barmode: 'group',
+                  yaxis: { title: 'Purchase Rate (%)', ticksuffix: '%' },
+                  autosize: true,
+                  height: 330,
+                  margin: { l: 50, r: 20, t: 50, b: 40 },
+                  legend: { orientation: 'h', x: 0.1, y: 1.15 },
+                }}
+                config={{ responsive: true, displayModeBar: false }}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          </SectionCard>
         </>
       )}
 
