@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { id: 'data',     label: 'Data & EDA',         icon: '📊', week: 1 },
   { id: 'causal',   label: 'Causal Analysis',    icon: '🔗', week: 1 },
   { id: 'budget',   label: 'Budget Config',       icon: '💰', week: 1 },
-  { id: 'uplift',   label: 'Uplift Analysis',     icon: '📈', week: 2, planned: true },
+  { id: 'uplift',   label: 'Uplift Analysis',     icon: '📈', week: 2 },
 ]
 
 export default function Sidebar({ activePage, onNavigate, isOpen }) {
@@ -40,11 +40,7 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
       <div className="sidebar-footer">
         <div className="status-block">
           <span className="status-dot active" aria-hidden="true" />
-          <span>Complete</span>
-        </div>
-        <div className="status-block planned">
-          <span className="status-dot planned" aria-hidden="true" />
-          <span>Week 2–3 planned</span>
+          <span>Week 1 & 2 Live</span>
         </div>
       </div>
     </nav>

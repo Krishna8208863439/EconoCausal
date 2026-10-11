@@ -17,6 +17,12 @@
   flex: 1;
 }
 
+.page-subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
 /* ── Notice banners ─────────────────────────────────────────────────────── */
 
 .notice-banner {
@@ -219,6 +225,15 @@
   font-family: var(--font-mono);
 }
 .data-table tr:hover td { background: #F9FAFB; }
+.data-table tfoot td { font-family: var(--font-sans); font-weight: 700; color: #0F172A; }
+
+/* ── Loading box ────────────────────────────────────────────────────────── */
+.loading-box {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
 
 /* ── Pagination ─────────────────────────────────────────────────────────── */
 
