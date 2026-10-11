@@ -239,23 +239,27 @@ def print_summary(df: pd.DataFrame) -> None:
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
-def run_pipeline(raw_path: Path = RAW_PATH) -> pd.DataFrame:
+def run_pipeline(raw_path: Path | str | pd.DataFrame = RAW_PATH) -> pd.DataFrame:
     """
     Execute the full preprocessing pipeline.
 
     Parameters
     ----------
-    raw_path : Path
-        Path to the raw CSV file.
+    raw_path : Path | str | pd.DataFrame
+        Path to the raw CSV file or an existing DataFrame.
 
     Returns
     -------
     pd.DataFrame
         Cleaned dataset ready for EDA and causal modelling.
     """
-    log.info("Loading raw data from %s", raw_path)
-    df = pd.read_csv(raw_path)
-    log.info("Raw dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
+    if isinstance(raw_path, pd.DataFrame):
+        df = raw_path.copy()
+        log.info("Raw DataFrame provided directly: %d rows, %d columns.", len(df), df.shape[1])
+    else:
+        log.info("Loading raw data from %s", raw_path)
+        df = pd.read_csv(raw_path)
+        log.info("Raw dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
 
     # Validation
     validate_columns(df)
