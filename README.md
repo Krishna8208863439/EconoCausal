@@ -80,6 +80,10 @@
 
 
 
+> **Confidence Intervals:** Standard errors and 95% confidence intervals for CATE estimates are computed analytically using Neyman orthogonal scores for robust statistical inference.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
