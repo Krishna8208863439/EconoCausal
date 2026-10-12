@@ -2,11 +2,14 @@ import React from 'react'
 import './Sidebar.css'
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Overview',          icon: '🏠', week: 1 },
-  { id: 'data',     label: 'Data & EDA',         icon: '📊', week: 1 },
-  { id: 'causal',   label: 'Causal Analysis',    icon: '🔗', week: 1 },
-  { id: 'budget',   label: 'Budget Config',       icon: '💰', week: 1 },
-  { id: 'uplift',   label: 'Uplift Analysis',     icon: '📈', week: 2 },
+  { id: 'overview',     label: 'Overview',            icon: '🏠', week: 1 },
+  { id: 'data',         label: 'Data & EDA',           icon: '📊', week: 1 },
+  { id: 'causal',       label: 'Causal Analysis',      icon: '🔗', week: 1 },
+  { id: 'budget',       label: 'Budget Config',         icon: '💰', week: 1 },
+  { id: 'uplift',       label: 'Uplift Analysis',       icon: '📈', week: 2 },
+  { id: 'optimization', label: 'Discount Allocation',   icon: '🎯', week: 3 },
+  { id: 'drift',        label: 'Data Drift Monitor',    icon: '🛡️', week: 4 },
+  { id: 'report',       label: 'Final Delivery & Deck', icon: '📑', week: 4 },
 ]
 
 export default function Sidebar({ activePage, onNavigate, isOpen }) {
@@ -40,7 +43,7 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
       <div className="sidebar-footer">
         <div className="status-block">
           <span className="status-dot active" aria-hidden="true" />
-          <span>Week 1 & 2 Live</span>
+          <span>Week 1, 2, 3 & 4 Live</span>
         </div>
       </div>
     </nav>

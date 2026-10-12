@@ -6,14 +6,20 @@ import DataPage from './pages/DataPage.jsx'
 import CausalPage from './pages/CausalPage.jsx'
 import BudgetPage from './pages/BudgetPage.jsx'
 import UpliftPage from './pages/UpliftPage.jsx'
+import BudgetOptimization from './pages/BudgetOptimization.jsx'
+import DriftPage from './pages/DriftPage.jsx'
+import FinalReportPage from './pages/FinalReportPage.jsx'
 import './App.css'
 
 const PAGES = {
-  overview: OverviewPage,
-  data:     DataPage,
-  causal:   CausalPage,
-  budget:   BudgetPage,
-  uplift:   UpliftPage,
+  overview:     OverviewPage,
+  data:         DataPage,
+  causal:       CausalPage,
+  budget:       BudgetPage,
+  uplift:       UpliftPage,
+  optimization: BudgetOptimization,
+  drift:        DriftPage,
+  report:       FinalReportPage,
 }
 
 export default function App() {

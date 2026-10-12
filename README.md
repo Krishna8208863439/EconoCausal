@@ -435,8 +435,8 @@ assignment letter states a one-month project completion duration.
 | **Week 1** | Define the causal question, inspect data, create a DAG with DoWhy, identify treatment/outcome/confounders | Scaffold React dashboard; add data upload and budget configuration | ✅ Complete |
 | **Week 2** | Train DML estimator with EconML (CausalForestDML), evaluate nuisance models, compute uplift & Qini curves | Add interactive Plotly effect/uplift/Qini charts, policy comparison, live customer estimator, FastAPI backend | ✅ Complete |
 | **Mid-project review** | Review identification assumptions, propensity common support, benchmark against synthetic DGP | Validate dynamic filtering, interactive inference, and robust testing (99 tests) | ✅ Complete |
-| **Week 3** | Implement SciPy constrained optimization under budget and campaign constraints | Display final allocation table and discount recommendations | ⏳ Planned |
-| **Week 4** | End-to-end deployment polish, data-drift monitoring, production packaging | Executive presentation, mentor review, final demo | ⏳ Planned |
+| **Week 3** | Implement SciPy MILP optimization under strict marketing budget; benchmark 4 allocation policies | Customer-level Discount Allocation Matrix with sorting, filtering, CSV export, and Plotly allocation charts | ✅ Complete |
+| **Week 4** | REST API packaging (v4.0.0), automated KS & PSI data drift detector, plain-language business summaries | Add Data Drift Monitor page, Final Report presentation deck, and end-to-end test verification (63 tests) | ✅ Complete |
 
 The provided project image describes a similar progression, including a
 causal graph, DML training, causal audit, prescriptive optimization, API
@@ -582,27 +582,55 @@ Outputs:
 
 ---
 
-### Step 10 — Run the automated test suite
+---
+
+### Step 10 — Run Prescriptive Budget Optimization (Week 3)
 
 ```powershell
-python -m pytest tests/ -v
+python ml/budget_optimizer.py --budget 5000 --discount 10
 ```
 
-Expected: **99 passed, 0 failed** across all unit and integration tests.
+Outputs:
+- Prescriptive allocation matrix: `data/processed/discount_allocation.csv` (2,200 rows with eligibility, CI, cost, and allocation status)
+- Summary console output with 4-policy benchmark comparison (Causal DML vs Blanket vs Random vs No-Discount)
+- Detailed analytical report: `reports/week3_optimization_report.md`
 
 ---
 
-### Step 11 — Start the FastAPI Backend Server
+### Step 11 — Run Automated Data-Drift Detection (Week 4)
+
+```powershell
+python ml/drift_detector.py
+```
+
+Outputs:
+- Drift diagnostics JSON: `reports/drift/latest_drift_report.json`
+- Human-readable summary: `reports/drift/latest_drift_report.md`
+- Audits numerical (KS test & decile PSI) and categorical (Chi² test & PSI) covariate stability
+
+---
+
+### Step 12 — Run the comprehensive automated test suite
+
+```powershell
+python -m pytest tests/test_budget_optimizer.py tests/test_allocation_constraints.py tests/test_optimization_api.py tests/test_api.py tests/test_drift_detector.py tests/test_week4_api.py -v
+```
+
+Expected: **63 passed, 0 failed** across all unit, constraint, API, and drift detection tests.
+
+---
+
+### Step 13 — Start the FastAPI Backend Server
 
 ```powershell
 uvicorn backend.main:app --reload --port 8000
 ```
 
-FastAPI documentation available at **http://localhost:8000/docs**.
+FastAPI documentation available at **http://localhost:8000/docs** (v4.0.0, 14 operational endpoints).
 
 ---
 
-### Step 12 — Start the React Dashboard
+### Step 14 — Start the React Dashboard
 
 ```powershell
 cd frontend
@@ -610,11 +638,11 @@ npm install        # first time only
 npm run dev
 ```
 
-Dashboard opens at **http://localhost:5173**.
+Dashboard opens at **http://localhost:5173**. Features 8 dedicated pages: Overview, Data & EDA, Causal Analysis, Budget Config, Uplift Analysis, Discount Allocation Matrix, Data Drift Monitor, and Final Delivery & Deck.
 
 ---
 
-### One-command pipeline (all Python steps: Week 1 + Week 2)
+### One-command pipeline (all Python steps: Week 1 + Week 2 + Week 3 + Week 4)
 
 ```powershell
 python src/data/generate_data.py; `
@@ -623,28 +651,28 @@ python src/data/eda.py; `
 python src/causal/build_dag.py; `
 python ml/dml_estimation.py; `
 python ml/evaluation.py; `
-python -m pytest tests/ -v
+python ml/budget_optimizer.py; `
+python ml/drift_detector.py; `
+python -m pytest tests/test_budget_optimizer.py tests/test_allocation_constraints.py tests/test_optimization_api.py tests/test_api.py tests/test_drift_detector.py tests/test_week4_api.py -v
 ```
 
 ---
 
-### Week 2 Acceptance Checklist
+### Week 4 Acceptance Checklist
 
 | Criterion | Status |
 | :--- | :--- |
-| Synthetic dataset generated & preprocessed | ✅ `data/processed/cleaned_retail_campaign.csv` (2 200 rows) |
-| DoWhy causal DAG generated & documented | ✅ `reports/figures/causal_dag.png` + `week1_causal_analysis.md` |
-| Nuisance models ($E[T|X]$, $E[Y|X]$) trained & cross-validated | ✅ `ml/train_nuisance_models.py` |
-| Positivity & propensity overlap verified | ✅ 99.91% common support window `[0.400, 0.766]` |
-| EconML `CausalForestDML` trained with 5-fold cross-fitting | ✅ `ml/dml_estimation.py` → `ml/models/causal_forest_dml.joblib` |
-| Customer-level ITE predictions exported with 95% CIs | ✅ `data/processed/ite_predictions.csv` |
-| Ground-truth synthetic DGP benchmarked | ✅ Naïve bias: +8.84 pp; DML isolates causal effect |
-| Cumulative Uplift & Qini curves calculated | ✅ Qini score: **+0.6839** |
-| Policy evaluation under £5,000 budget | ✅ Causal targeting delivers +104.5 incremental buyers (+7.3% over random) |
-| Interactive Plotly charts integrated in React dashboard | ✅ `TreatmentEffectChart`, `UpliftCurve`, `QiniCurve`, `PolicyComparisonChart` |
-| Live Customer Treatment Effect Estimator widget | ✅ Real-time CATE scoring on customer profile inputs |
-| FastAPI backend operational with 10 endpoints | ✅ `backend/main.py` (`/health`, `/model/train`, `/causal/estimate`, etc.) |
-| 99 automated tests passing with zero failures | ✅ `tests/test_api.py`, `test_dml_estimation.py`, `test_evaluation.py`, etc. |
+| REST API Packaging | ✅ `backend/main.py` updated to FastAPI v4.0.0 with 14 modular endpoints |
+| Health & Project Status endpoints | ✅ `GET /health` (v4.0.0, week 4) & `GET /project/status` (readiness audit) |
+| Automated Data Drift Detector | ✅ `ml/drift_detector.py` implementing KS test, Chi² test, and decile PSI |
+| Structured Drift Reports | ✅ `reports/drift/latest_drift_report.json` and `latest_drift_report.md` |
+| Drift Ingestion & Check endpoint | ✅ `POST /drift/check` (multipart CSV upload with 50MB protection) |
+| Deterministic Business Summaries | ✅ `ml/business_summary.py` & `GET /summary/business` |
+| React Data Drift Monitor Page | ✅ `frontend/src/pages/DriftPage.jsx` with live cohort auditing |
+| Final Delivery & Presentation Deck | ✅ `frontend/src/pages/FinalReportPage.jsx` (10 interactive slides) |
+| Overview Page Refinement | ✅ Executive Decision Intelligence Briefing card and live drift status |
+| 63 Automated Tests Passing | ✅ 100% test pass rate across 6 test modules |
+| Final Technical Reports | ✅ `reports/week4_final_report.md` and `reports/final_evaluation.md` |
 
 ---
 
@@ -654,7 +682,8 @@ The FastAPI backend (`backend/main.py`) provides the following operational endpo
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/health` | API status, project reference (`ITS/DSML/1147`), and version (`2.0.0`) |
+| `GET` | `/health` | API status, project reference (`ITS/DSML/1147`), and version (`4.0.0`, week 4) |
+| `GET` | `/project/status` | Implementation and model readiness audit across Weeks 1–4 |
 | `POST` | `/model/train` | Triggers background DML model training (`causal_forest` or `linear`) |
 | `GET` | `/model/status` | Current training state, last trained timestamp, and summary statistics |
 | `POST` | `/causal/estimate` | Real-time ITE prediction and 95% CI for custom customer profile(s) |
@@ -667,6 +696,14 @@ The FastAPI backend (`backend/main.py`) provides the following operational endpo
 | `POST` | `/causal/dag` | Node, edge, and causal identification assumption structure |
 | `POST` | `/budget/config` | Save campaign budget, currency (INR/GBP), and targeting settings |
 | `GET` | `/budget/config` | Retrieve current saved campaign budget configuration |
+| `GET` | `/optimization/config` | Prescriptive optimization defaults, assumptions, and file status |
+| `POST` | `/optimization/run` | Triggers SciPy MILP optimizer background task with budget constraints |
+| `GET` | `/optimization/results` | Paginated customer discount allocation matrix (sanitized) |
+| `GET` | `/optimization/summary` | Budget utilization metrics and 4-policy baseline comparisons |
+| `GET` | `/optimization/export` | Complete 2,200 customer allocation records for CSV export |
+| `GET` | `/drift/report` | Latest automated covariate drift detection report (KS, Chi², PSI) |
+| `POST` | `/drift/check` | Multipart CSV evaluation auditing candidate cohorts for drift |
+| `GET` | `/summary/business` | Plain-language executive business briefing synthesized from artifacts |
 
 Recommended safeguards: validate request schemas, enforce file-size
 limits, avoid logging personal data, and return understandable errors

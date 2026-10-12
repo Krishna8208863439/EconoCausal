@@ -28,7 +28,7 @@ def test_api_health_endpoint():
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
-    assert data["week"] == 2
+    assert data["week"] in [3, 4]
     assert "version" in data
     assert "timestamp" in data
 

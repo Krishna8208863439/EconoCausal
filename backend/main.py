@@ -1,7 +1,7 @@
 """
 backend/main.py
 ===============
-EconoCausal — Week 2: FastAPI Backend
+EconoCausal — Week 2 & 3: FastAPI Backend
 Project Reference: ITS/DSML/1147
 
 Provides REST API endpoints for:
@@ -11,6 +11,7 @@ Provides REST API endpoints for:
 - Causal evaluation results, uplift curves, and Qini diagnostics
 - Dataset management (upload, preview, summary, load default)
 - Campaign budget configuration
+- Week 3: Prescriptive optimisation (budget allocation, discount matrix)
 
 Run with:
     uvicorn backend.main:app --reload --port 8000
@@ -50,6 +51,28 @@ from ml.evaluation import (
     RESULTS_JSON_PATH,
     evaluate_full_causal_system,
 )
+from ml.budget_optimizer import (
+    ALLOCATION_OUTPUT_PATH,
+    DEFAULT_BUDGET_INR,
+    DEFAULT_DISCOUNT_AMOUNT_INR,
+    MIN_ITE_THRESHOLD,
+    ITE_PREDICTIONS_PATH,
+    OptimisationError,
+    run_optimisation,
+)
+from ml.drift_detector import (
+    REFERENCE_DATA_PATH,
+    LATEST_REPORT_JSON,
+    LATEST_REPORT_MD,
+    evaluate_data_drift,
+    export_drift_reports,
+    run_drift_analysis,
+)
+from ml.business_summary import (
+    generate_prescriptive_business_summary,
+    generate_drift_business_summary,
+    generate_full_executive_briefing,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,8 +83,8 @@ log = logging.getLogger(__name__)
 
 app = FastAPI(
     title="EconoCausal API",
-    description="Double Machine Learning & Uplift Estimation API — ITS/DSML/1147",
-    version="2.0.0",
+    description="Double Machine Learning, Prescriptive Optimization & Data-Drift API — ITS/DSML/1147",
+    version="4.0.0",
 )
 
 # Enable CORS for React frontend (Vite default: http://localhost:5173)
@@ -84,13 +107,23 @@ training_state: Dict[str, Any] = {
 
 # Budget configuration storage
 budget_config_state: Dict[str, Any] = {
-    "budget": 5000,
-    "currency": "GBP",
+    "budget": 5000.0,
+    "currency": "INR",
     "discount_amount": 10.0,
     "target_segment": "All",
     "treatment_col": "discount_offered",
     "outcome_col": "purchased",
     "covariates": DEFAULT_NUMERIC_COLS + DEFAULT_CATEGORICAL_COLS,
+}
+
+# Week 3: Optimisation run state
+optimisation_state: Dict[str, Any] = {
+    "status": "idle",          # idle | running | completed | error
+    "last_run_at": None,
+    "error_message": None,
+    "summary": None,
+    "baselines": None,
+    "config_used": None,
 }
 
 
@@ -133,8 +166,63 @@ def get_health() -> Dict[str, Any]:
         "status": "ok",
         "app": "EconoCausal API",
         "reference": "ITS/DSML/1147",
-        "version": "2.0.0",
-        "week": 2,
+        "version": "4.0.0",
+        "week": 4,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    }
+
+
+@app.get("/project/status")
+def get_project_status() -> Dict[str, Any]:
+    """
+    Returns end-to-end implementation status and artifact readiness across Weeks 1 to 4.
+    """
+    cleaned_data_exists = Path(DATA_PATH).exists()
+    model_exists = MODEL_SAVE_PATH.exists()
+    predictions_exists = ITE_PREDICTIONS_PATH.exists()
+    evaluation_exists = RESULTS_JSON_PATH.exists()
+    allocation_exists = ALLOCATION_OUTPUT_PATH.exists()
+    drift_report_exists = LATEST_REPORT_JSON.exists()
+
+    drift_status = "not_evaluated"
+    if drift_report_exists:
+        try:
+            with open(LATEST_REPORT_JSON, "r", encoding="utf-8") as f:
+                d = json.load(f)
+                drift_status = d.get("overall_drift_status", "STABLE")
+        except Exception:
+            drift_status = "error_reading_report"
+
+    return {
+        "project": "EconoCausal — Dynamic Pricing via Double Machine Learning",
+        "reference": "ITS/DSML/1147",
+        "version": "4.0.0",
+        "active_week": 4,
+        "readiness": {
+            "week_1_data_and_dag": {
+                "status": "ready" if cleaned_data_exists else "missing",
+                "dataset_path": str(DATA_PATH),
+                "records": 2200 if cleaned_data_exists else 0,
+            },
+            "week_2_causal_dml": {
+                "status": "ready" if (model_exists and predictions_exists) else "pending",
+                "model_artifact": str(MODEL_SAVE_PATH),
+                "estimator_type": training_state.get("estimator_type", "causal_forest"),
+                "predictions_available": predictions_exists,
+            },
+            "week_3_prescriptive_optimization": {
+                "status": "ready" if allocation_exists else "pending",
+                "allocation_file": str(ALLOCATION_OUTPUT_PATH),
+                "last_run_status": optimisation_state.get("status", "idle"),
+            },
+            "week_4_drift_and_delivery": {
+                "status": "ready" if drift_report_exists else "pending",
+                "drift_report_file": str(LATEST_REPORT_JSON),
+                "latest_drift_status": drift_status,
+                "api_packaging": "complete",
+            },
+        },
+        "all_milestones_ready": all([cleaned_data_exists, model_exists, predictions_exists, allocation_exists]),
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
@@ -413,3 +501,304 @@ def save_budget_config(cfg: BudgetConfigPayload) -> Dict[str, Any]:
 @app.get("/budget/config")
 def get_budget_config() -> Dict[str, Any]:
     return budget_config_state
+
+
+# ── Week 3: Optimisation Endpoints ───────────────────────────────────────────
+
+class OptimisationRequest(BaseModel):
+    budget: float = Field(default=5000.0, gt=0, description="Total marketing budget (Rs.)")
+    discount_amount: float = Field(default=10.0, gt=0, description="Fixed discount cost per offer (Rs.)")
+    min_treatment_effect: float = Field(default=0.0, ge=0, description="Minimum ITE threshold for eligibility")
+    random_seed: int = Field(default=42, description="Random seed for reproducible baseline comparison")
+
+
+def _run_optimisation_task(req_dict: dict):
+    """Background task: run optimisation and update global state."""
+    global optimisation_state
+    try:
+        optimisation_state["status"] = "running"
+        optimisation_state["error_message"] = None
+        log.info("Starting optimisation: budget=%.0f, discount=%.0f", req_dict["budget"], req_dict["discount_amount"])
+
+        result = run_optimisation(
+            budget=req_dict["budget"],
+            discount_amount=req_dict["discount_amount"],
+            min_treatment_effect=req_dict["min_treatment_effect"],
+            random_seed=req_dict["random_seed"],
+        )
+
+        optimisation_state["status"] = "completed"
+        optimisation_state["last_run_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        optimisation_state["summary"] = result["summary"]
+        optimisation_state["baselines"] = result["baselines"]
+        optimisation_state["config_used"] = req_dict
+        log.info("Optimisation complete: %s", result["status_message"])
+    except OptimisationError as e:
+        log.error("Optimisation failed (business rule): %s", e)
+        optimisation_state["status"] = "error"
+        optimisation_state["error_message"] = str(e)
+    except Exception as e:
+        log.exception("Optimisation failed (unexpected): %s", e)
+        optimisation_state["status"] = "error"
+        optimisation_state["error_message"] = f"Unexpected error: {e}"
+
+
+@app.get("/optimization/config")
+def get_optimisation_config() -> Dict[str, Any]:
+    """Return current optimisation configuration and defaults."""
+    return {
+        "default_budget": budget_config_state.get("budget", DEFAULT_BUDGET_INR),
+        "default_discount_amount": budget_config_state.get("discount_amount", DEFAULT_DISCOUNT_AMOUNT_INR),
+        "default_min_treatment_effect": MIN_ITE_THRESHOLD,
+        "ite_predictions_available": ITE_PREDICTIONS_PATH.exists(),
+        "allocation_results_available": ALLOCATION_OUTPUT_PATH.exists(),
+        "current_status": optimisation_state["status"],
+        "last_run_at": optimisation_state["last_run_at"],
+        "assumptions": {
+            "treatment_contrast": "Binary: discount offered vs no discount (Week 2 DML)",
+            "objective": "Maximise sum of (ITE_i x avg_order_value_i - discount_amount) for selected customers",
+            "eligibility": "ITE_i > min_treatment_effect AND net_value_i > 0",
+            "solver": "scipy.optimize.milp (binary integer programme)",
+            "note": "Estimates are model-based predictions, NOT observed revenue.",
+        },
+    }
+
+
+@app.post("/optimization/run")
+def run_optimisation_endpoint(
+    req: OptimisationRequest,
+    background_tasks: BackgroundTasks,
+) -> Dict[str, Any]:
+    """
+    Trigger a budget optimisation run.
+    Validates inputs, then executes the MILP optimiser in a background task.
+    """
+    global optimisation_state
+
+    if optimisation_state["status"] == "running":
+        raise HTTPException(status_code=409, detail="An optimisation run is already in progress.")
+
+    if not ITE_PREDICTIONS_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="ITE predictions file not found. Please run Week 2 DML estimation first.",
+        )
+
+    if req.discount_amount > req.budget:
+        raise HTTPException(
+            status_code=422,
+            detail=f"discount_amount ({req.discount_amount}) must not exceed budget ({req.budget}).",
+        )
+
+    req_dict = req.model_dump()
+    background_tasks.add_task(_run_optimisation_task, req_dict)
+    optimisation_state["status"] = "running"
+
+    return {
+        "message": "Optimisation started. Poll GET /optimization/results for status.",
+        "status": "running",
+        "config": req_dict,
+    }
+
+
+@app.get("/optimization/results")
+def get_optimisation_results(limit: int = 100, offset: int = 0) -> Dict[str, Any]:
+    """
+    Return the current optimisation status and, if complete (or pre-generated),
+    a paginated slice of the discount allocation.
+    """
+    global optimisation_state
+
+    response: Dict[str, Any] = {
+        "status": optimisation_state["status"],
+        "last_run_at": optimisation_state["last_run_at"],
+        "error_message": optimisation_state["error_message"],
+    }
+
+    if optimisation_state["status"] == "error":
+        raise HTTPException(status_code=500, detail=optimisation_state["error_message"])
+
+    if ALLOCATION_OUTPUT_PATH.exists():
+        df = pd.read_csv(ALLOCATION_OUTPUT_PATH)
+        total = len(df)
+        # Exclude sensitive columns from the paginated response
+        cols_to_drop = [c for c in ["actual_treatment", "actual_outcome"] if c in df.columns]
+        df_safe = df.drop(columns=cols_to_drop, errors="ignore")
+        page = df_safe.iloc[offset: offset + limit].replace({np.nan: None})
+        response["total_rows"] = total
+        response["offset"] = offset
+        response["limit"] = limit
+        response["allocation"] = page.to_dict(orient="records")
+        if optimisation_state["status"] == "idle":
+            response["status"] = "completed"
+    else:
+        response["allocation"] = []
+
+    return response
+
+
+@app.get("/optimization/summary")
+def get_optimisation_summary() -> Dict[str, Any]:
+    """Return the budget utilisation summary and baseline comparison."""
+    global optimisation_state
+
+    if optimisation_state["status"] == "error":
+        raise HTTPException(status_code=500, detail=optimisation_state["error_message"])
+
+    # Auto-load or compute if allocation exists but state is empty
+    if optimisation_state["summary"] is None and ALLOCATION_OUTPUT_PATH.exists():
+        try:
+            result = run_optimisation(
+                budget=budget_config_state.get("budget", DEFAULT_BUDGET_INR),
+                discount_amount=budget_config_state.get("discount_amount", DEFAULT_DISCOUNT_AMOUNT_INR),
+                min_treatment_effect=MIN_ITE_THRESHOLD,
+            )
+            optimisation_state["status"] = "completed"
+            optimisation_state["last_run_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            optimisation_state["summary"] = result["summary"]
+            optimisation_state["baselines"] = result["baselines"]
+            optimisation_state["config_used"] = {
+                "budget": budget_config_state.get("budget", DEFAULT_BUDGET_INR),
+                "discount_amount": budget_config_state.get("discount_amount", DEFAULT_DISCOUNT_AMOUNT_INR),
+                "min_treatment_effect": MIN_ITE_THRESHOLD,
+                "random_seed": 42,
+            }
+        except Exception as e:
+            log.warning("Could not auto-generate optimisation summary: %s", e)
+
+    if optimisation_state["summary"] is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Optimisation not yet completed. POST /optimization/run to start.",
+        )
+
+    return {
+        "summary": optimisation_state["summary"],
+        "baselines": optimisation_state["baselines"],
+        "config_used": optimisation_state["config_used"],
+    }
+
+
+@app.get("/optimization/export")
+def export_allocation() -> Dict[str, Any]:
+    """
+    Return the full discount allocation as a list of records for CSV export.
+    Only exposes non-sensitive fields.
+    """
+    if not ALLOCATION_OUTPUT_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="No allocation file found. Run POST /optimization/run first.",
+        )
+
+    df = pd.read_csv(ALLOCATION_OUTPUT_PATH)
+    # Drop actual treatment/outcome (sensitive observed data)
+    cols_to_drop = [c for c in ["actual_treatment", "actual_outcome"] if c in df.columns]
+    df_safe = df.drop(columns=cols_to_drop, errors="ignore").replace({np.nan: None})
+
+    return {
+        "filename": "discount_allocation.csv",
+        "total_rows": len(df_safe),
+        "columns": list(df_safe.columns),
+        "data": df_safe.to_dict(orient="records"),
+    }
+
+
+# ── Week 4: Data Drift Detection & Business Briefing Endpoints ─────────────────
+
+@app.get("/drift/report")
+def get_drift_report() -> Dict[str, Any]:
+    """
+    Retrieve the latest automated data drift detection report.
+    If no report exists, executes a baseline drift evaluation against the approved reference dataset.
+    """
+    if LATEST_REPORT_JSON.exists():
+        try:
+            with open(LATEST_REPORT_JSON, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            log.warning("Could not read existing drift report: %s. Re-running drift analysis.", e)
+
+    try:
+        report = run_drift_analysis()
+        return report
+    except Exception as e:
+        log.exception("Drift analysis execution failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to generate drift report: {e}")
+
+
+@app.post("/drift/check")
+async def check_dataset_drift(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Evaluate an uploaded candidate dataset CSV against the approved baseline reference dataset.
+    Performs Kolmogorov-Smirnov, Chi-Square, and Population Stability Index (PSI) audits.
+    """
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are accepted for drift analysis.")
+
+    # Read and enforce size limit (max 50MB)
+    contents = await file.read()
+    if len(contents) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File size exceeds the 50MB limit.")
+
+    try:
+        import io
+        curr_df = pd.read_csv(io.BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid CSV format: {e}")
+
+    if not REFERENCE_DATA_PATH.exists():
+        raise HTTPException(status_code=404, detail="Baseline reference dataset not found.")
+
+    ref_df = pd.read_csv(REFERENCE_DATA_PATH)
+    try:
+        report = evaluate_data_drift(
+            reference_df=ref_df,
+            current_df=curr_df,
+            dataset_name=file.filename,
+        )
+        export_drift_reports(report)
+        return report
+    except Exception as e:
+        log.exception("Drift evaluation error: %s", e)
+        raise HTTPException(status_code=422, detail=f"Drift evaluation failed: {e}")
+
+
+@app.get("/summary/business")
+def get_business_summary() -> Dict[str, Any]:
+    """
+    Generate plain-language executive business briefings from verified model,
+    prescriptive optimization, and data drift diagnostic results.
+    """
+    opt_sum = optimisation_state.get("summary")
+    if opt_sum is None and ALLOCATION_OUTPUT_PATH.exists():
+        try:
+            res = run_optimisation(
+                budget=budget_config_state.get("budget", DEFAULT_BUDGET_INR),
+                discount_amount=budget_config_state.get("discount_amount", DEFAULT_DISCOUNT_AMOUNT_INR),
+            )
+            opt_sum = res["summary"]
+        except Exception:
+            pass
+
+    drift_rep = None
+    if LATEST_REPORT_JSON.exists():
+        try:
+            with open(LATEST_REPORT_JSON, "r", encoding="utf-8") as f:
+                drift_rep = json.load(f)
+        except Exception:
+            pass
+
+    causal_res = None
+    if RESULTS_JSON_PATH.exists():
+        try:
+            with open(RESULTS_JSON_PATH, "r", encoding="utf-8") as f:
+                causal_res = json.load(f)
+        except Exception:
+            pass
+
+    return generate_full_executive_briefing(
+        opt_summary=opt_sum,
+        drift_report=drift_rep,
+        causal_results=causal_res,
+    )

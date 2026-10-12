@@ -1,141 +1,126 @@
+/**
+ * frontend/src/charts/PolicyComparisonChart.jsx  (Week 3 update)
+ * ================================================================
+ * EconoCausal — Week 3: Policy Comparison Chart
+ * Compares No-Discount / Random / Blanket / Causal DML policies
+ * across incremental conversions and incremental contribution.
+ *
+ * Replaces the Week 2 version which used segment-level greedy results.
+ * Data now comes from the actual MILP optimiser baselines.
+ */
+
 import React, { useState } from 'react'
 import Plot from 'react-plotly.js'
 
-/**
- * PolicyComparisonChart
- * Compares marketing policies across incremental conversions, revenue, spend, and ROI.
- */
-export default function PolicyComparisonChart({
-  policies = [
-    { name: 'Causal DML Targeting', targeted_customers: 500, spend: 5000, incremental_conversions: 104.5, incremental_revenue: 4180, roi_percent: -16.4, mean_ite: 0.209 },
-    { name: 'Random Targeting', targeted_customers: 500, spend: 5000, incremental_conversions: 97.4, incremental_revenue: 3894, roi_percent: -22.1, mean_ite: 0.195 },
-    { name: 'Blanket Discount (All)', targeted_customers: 2200, spend: 22000, incremental_conversions: 428.4, incremental_revenue: 17136, roi_percent: -22.1, mean_ite: 0.195 },
-    { name: 'No Discount (Baseline)', targeted_customers: 0, spend: 0, incremental_conversions: 0, incremental_revenue: 0, roi_percent: 0, mean_ite: 0 },
-  ],
-  budget = 5000,
-}) {
-  const [metric, setMetric] = useState('conversions') // 'conversions' | 'revenue' | 'roi'
+const METRIC_LABELS = {
+  estimated_incremental_conversions:   { label: 'Incremental Conversions', unit: 'conversions', prefix: '+' },
+  estimated_incremental_contribution:  { label: 'Incremental Contribution (₹)', unit: '₹', prefix: '₹' },
+  actual_spend:                        { label: 'Planned Spend (₹)', unit: '₹', prefix: '₹' },
+}
 
-  const names = policies.map(p => p.name)
-  let yVals = []
-  let yTitle = ''
-  let hoverSuffix = ''
+const COLORS = {
+  'No-Discount Policy':                           '#94A3B8',
+  'Random Targeting (same budget)':               '#F59E0B',
+  'Blanket-Discount Policy (all eligible, budget-capped)': '#7C3AED',
+  'Causal DML Targeting (MILP Optimal)':          '#2563EB',
+}
 
-  if (metric === 'conversions') {
-    yVals = policies.map(p => p.incremental_conversions)
-    yTitle = 'Incremental Conversions'
-    hoverSuffix = ' buyers'
-  } else if (metric === 'revenue') {
-    yVals = policies.map(p => p.incremental_revenue)
-    yTitle = 'Incremental Revenue (£)'
-    hoverSuffix = ' £'
-  } else {
-    yVals = policies.map(p => p.roi_percent)
-    yTitle = 'Campaign ROI (%)'
-    hoverSuffix = '%'
+function shortName(name) {
+  if (name.includes('No-Discount'))  return 'No Discount'
+  if (name.includes('Random'))       return 'Random'
+  if (name.includes('Blanket'))      return 'Blanket'
+  if (name.includes('Causal'))       return 'Causal DML'
+  return name
+}
+
+export default function PolicyComparisonChart({ baselines = [] }) {
+  const [metric, setMetric] = useState('estimated_incremental_conversions')
+
+  if (!baselines.length) {
+    return (
+      <div className="loading-box">
+        <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>📊</div>
+        <div style={{ fontWeight: 600 }}>Awaiting Optimisation Results</div>
+        <div style={{ fontSize: '0.82rem', color: '#64748B' }}>Run the optimiser to see policy comparison.</div>
+      </div>
+    )
   }
 
-  const colors = ['#2563EB', '#F59E0B', '#7C3AED', '#94A3B8']
-
-  const data = [
-    {
-      x: names,
-      y: yVals,
-      type: 'bar',
-      marker: {
-        color: colors,
-      },
-      text: yVals.map(v => (metric === 'roi' ? `${v > 0 ? '+' : ''}${v.toFixed(1)}%` : metric === 'revenue' ? `£${v.toLocaleString()}` : `+${v.toFixed(1)}`)),
-      textposition: 'auto',
-      hovertemplate: '%{x}<br>' + yTitle + ': %{text}<extra></extra>',
-    },
-  ]
-
-  const layout = {
-    title: {
-      text: `<b>Policy Evaluation (Campaign Budget: £${budget.toLocaleString()})</b>`,
-      font: { size: 14, color: '#0F172A' },
-      x: 0.05,
-    },
-    autosize: true,
-    height: 380,
-    margin: { l: 55, r: 25, t: 60, b: 65 },
-    xaxis: {
-      tickangle: -15,
-      gridcolor: '#E2E8F0',
-    },
-    yaxis: {
-      title: yTitle,
-      gridcolor: '#E2E8F0',
-      zeroline: true,
-      zerolinecolor: '#94A3B8',
-    },
-    paper_bgcolor: 'transparent',
-    plot_bgcolor: 'transparent',
-  }
-
-  const config = {
-    responsive: true,
-    displayModeBar: false,
-  }
+  const metaInfo = METRIC_LABELS[metric]
+  const xLabels  = baselines.map(b => shortName(b.name))
+  const yValues  = baselines.map(b => b[metric] ?? 0)
+  const colors   = baselines.map(b => COLORS[b.name] || '#64748B')
+  const textVals = baselines.map(b => {
+    const v = b[metric] ?? 0
+    return metaInfo.prefix === '₹'
+      ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+      : `+${Number(v).toFixed(2)}`
+  })
 
   return (
-    <div className="policy-chart-wrapper" style={{ width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', gap: '8px' }}>
-        <button
-          type="button"
-          className={`btn-filter ${metric === 'conversions' ? 'active' : ''}`}
-          onClick={() => setMetric('conversions')}
-          style={{
-            padding: '4px 12px',
-            fontSize: '12px',
-            borderRadius: '4px',
-            border: '1px solid #CBD5E1',
-            backgroundColor: metric === 'conversions' ? '#2563EB' : '#FFFFFF',
-            color: metric === 'conversions' ? '#FFFFFF' : '#334155',
-            cursor: 'pointer',
-            fontWeight: 500,
-          }}
-        >
-          Conversions
-        </button>
-        <button
-          type="button"
-          className={`btn-filter ${metric === 'revenue' ? 'active' : ''}`}
-          onClick={() => setMetric('revenue')}
-          style={{
-            padding: '4px 12px',
-            fontSize: '12px',
-            borderRadius: '4px',
-            border: '1px solid #CBD5E1',
-            backgroundColor: metric === 'revenue' ? '#2563EB' : '#FFFFFF',
-            color: metric === 'revenue' ? '#FFFFFF' : '#334155',
-            cursor: 'pointer',
-            fontWeight: 500,
-          }}
-        >
-          Revenue (£)
-        </button>
-        <button
-          type="button"
-          className={`btn-filter ${metric === 'roi' ? 'active' : ''}`}
-          onClick={() => setMetric('roi')}
-          style={{
-            padding: '4px 12px',
-            fontSize: '12px',
-            borderRadius: '4px',
-            border: '1px solid #CBD5E1',
-            backgroundColor: metric === 'roi' ? '#2563EB' : '#FFFFFF',
-            color: metric === 'roi' ? '#FFFFFF' : '#334155',
-            cursor: 'pointer',
-            fontWeight: 500,
-          }}
-        >
-          ROI (%)
-        </button>
+    <div>
+      {/* Metric toggle */}
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginBottom: '8px' }}>
+        {Object.entries(METRIC_LABELS).map(([key, meta]) => (
+          <button
+            key={key}
+            onClick={() => setMetric(key)}
+            style={{
+              padding: '4px 12px', fontSize: '12px', borderRadius: '4px',
+              border: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 500,
+              backgroundColor: metric === key ? '#2563EB' : '#FFFFFF',
+              color: metric === key ? '#FFFFFF' : '#334155',
+            }}
+          >
+            {meta.label.replace(' (₹)', '').replace('Incremental ', '')}
+          </button>
+        ))}
       </div>
-      <div className="chart-container" style={{ width: '100%', minHeight: '380px' }}>
-        <Plot data={data} layout={layout} config={config} style={{ width: '100%', height: '100%' }} />
+
+      <Plot
+        data={[{
+          x: xLabels,
+          y: yValues,
+          type: 'bar',
+          marker: { color: colors },
+          text: textVals,
+          textposition: 'auto',
+          hovertemplate: '%{x}<br>' + metaInfo.label + ': %{text}<extra></extra>',
+        }]}
+        layout={{
+          title: {
+            text: `<b>Policy Comparison — ${metaInfo.label}</b>`,
+            font: { size: 13 },
+            x: 0.02,
+          },
+          height: 320, autosize: true,
+          margin: { l: 55, r: 20, t: 48, b: 55 },
+          xaxis: { tickangle: -5, gridcolor: '#E2E8F0' },
+          yaxis: {
+            title: metaInfo.label,
+            tickprefix: metaInfo.prefix === '₹' ? '₹' : '',
+            gridcolor: '#E2E8F0',
+            zeroline: true, zerolinecolor: '#94A3B8',
+          },
+          paper_bgcolor: 'transparent',
+          plot_bgcolor: 'transparent',
+          annotations: [{
+            x: shortName(baselines.find(b => b.name.includes('Causal'))?.name || ''),
+            y: baselines.find(b => b.name.includes('Causal'))?.[metric] ?? 0,
+            xref: 'x', yref: 'y',
+            text: '⭐ Optimal',
+            showarrow: true, arrowhead: 2,
+            ax: 0, ay: -35,
+            font: { size: 11, color: '#2563EB' },
+          }],
+        }}
+        config={{ responsive: true, displayModeBar: false }}
+        style={{ width: '100%' }}
+      />
+
+      {/* Assumptions note */}
+      <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '8px' }}>
+        ⚠️ <em>Model-based estimates (DML causal forest). Not observed revenue. Comparison uses same eligible population, discount amount, and budget for all policies.</em>
       </div>
     </div>
   )
