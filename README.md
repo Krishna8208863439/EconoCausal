@@ -84,6 +84,10 @@
 
 
 
+> **Health Check & Monitoring:** The backend exposes a `/health` endpoint that checks database readiness and model artifact integrity before serving live inference traffic.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
