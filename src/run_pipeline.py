@@ -40,6 +40,7 @@ log = logging.getLogger(__name__)
 def run_all(
     n_records: int = DEFAULT_N,
     seed: int = DEFAULT_SEED,
+    skip_study: bool = False,
     skip_eda: bool = False,
     skip_dag: bool = False,
 ) -> dict[str, str]:
@@ -48,46 +49,56 @@ def run_all(
     start_total = time.time()
 
     # Step 1: Data Generation
-    log.info("▶ Step 1/5: Generating synthetic dataset (n=%d, seed=%d) …", n_records, seed)
+    log.info("▶ Step 1/6: Generating synthetic dataset (n=%d, seed=%d) …", n_records, seed)
     df_raw = generate_dataset(n=n_records, seed=seed)
     raw_path = save_dataset(df_raw)
     results["step1_raw"] = str(raw_path)
 
     # Step 2: Preprocessing
-    log.info("▶ Step 2/5: Preprocessing and cleaning dataset …")
+    log.info("▶ Step 2/6: Preprocessing and cleaning dataset …")
     df_clean = run_preprocessing_pipeline(raw_path=raw_path)
     clean_path = save_cleaned(df_clean)
     results["step2_clean"] = str(clean_path)
 
-    # Step 3: Propensity & Overlap Diagnostics
-    log.info("▶ Step 3/5: Estimating propensity scores & overlap diagnostics …")
-    propensity_diag = run_propensity_analysis(data_path=clean_path)
-    results["step3_auc"] = str(propensity_diag["auc_roc"])
-    results["step3_support"] = f"{propensity_diag['common_support_share_pct']}%"
+    # Step 3: Empirical Data Study & Quality Audit
+    if not skip_study:
+        log.info("▶ Step 3/6: Conducting empirical Data Study & Quality Audit …")
+        from src.data.data_study import run_study
+        study_path = run_study(raw_path=raw_path, clean_path=clean_path)
+        results["step3_study"] = str(study_path)
+    else:
+        log.info("▶ Step 3/6: Skipping Data Study (--skip-study).")
+        results["step3_study"] = "skipped"
 
-    # Step 4: EDA & Visualization
+    # Step 4: Propensity & Overlap Diagnostics
+    log.info("▶ Step 4/6: Estimating propensity scores & overlap diagnostics …")
+    propensity_diag = run_propensity_analysis(data_path=clean_path)
+    results["step4_auc"] = str(propensity_diag["auc_roc"])
+    results["step4_support"] = f"{propensity_diag['common_support_share_pct']}%"
+
+    # Step 5: EDA & Visualization
     if not skip_eda:
-        log.info("▶ Step 4/5: Running Exploratory Data Analysis (EDA) …")
+        log.info("▶ Step 5/6: Running Exploratory Data Analysis (EDA) …")
         from src.data.eda import run_eda
         run_eda()
-        results["step4_eda"] = "completed"
+        results["step5_eda"] = "completed"
     else:
-        log.info("▶ Step 4/5: Skipping EDA (--skip-eda).")
-        results["step4_eda"] = "skipped"
+        log.info("▶ Step 5/6: Skipping EDA (--skip-eda).")
+        results["step5_eda"] = "skipped"
 
-    # Step 5: Causal DAG
+    # Step 6: Causal DAG
     if not skip_dag:
-        log.info("▶ Step 5/5: Building causal DAG …")
+        log.info("▶ Step 6/6: Building causal DAG …")
         try:
             from src.causal.build_dag import main as run_dag
             run_dag()
-            results["step5_dag"] = "completed"
+            results["step6_dag"] = "completed"
         except ImportError as e:
             log.warning("Causal DAG generation skipped (optional dependency DoWhy): %s", e)
-            results["step5_dag"] = "skipped (DoWhy not installed)"
+            results["step6_dag"] = "skipped (DoWhy not installed)"
     else:
-        log.info("▶ Step 5/5: Skipping DAG (--skip-dag).")
-        results["step5_dag"] = "skipped"
+        log.info("▶ Step 6/6: Skipping DAG (--skip-dag).")
+        results["step6_dag"] = "skipped"
 
     elapsed = time.time() - start_total
     log.info("✔ Pipeline run complete in %.2f seconds.", elapsed)
@@ -98,6 +109,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="EconoCausal Pipeline Runner")
     parser.add_argument("--n", type=int, default=DEFAULT_N, help="Number of records to generate")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Random seed")
+    parser.add_argument("--skip-study", action="store_true", help="Skip empirical data study report generation")
     parser.add_argument("--skip-eda", action="store_true", help="Skip EDA figure generation")
     parser.add_argument("--skip-dag", action="store_true", help="Skip DoWhy DAG generation")
     args = parser.parse_args()
@@ -105,6 +117,7 @@ def main() -> None:
     run_all(
         n_records=args.n,
         seed=args.seed,
+        skip_study=args.skip_study,
         skip_eda=args.skip_eda,
         skip_dag=args.skip_dag,
     )

@@ -109,6 +109,82 @@ def validate_categoricals(df: pd.DataFrame) -> None:
         log.warning("Unexpected customer_segment values: %s", bad_seg)
 
 
+def validate_business_logic(df: pd.DataFrame) -> None:
+    """
+    Validate causal and business integrity constraints:
+    1. Control customers (discount_offered == 0) must have discount_amount == 0.
+    2. Non-purchasing customers (purchased == 0) must have revenue == 0.
+    3. Log warning if discount exceeds revenue for purchasing customers (promotional loss).
+    """
+    control_leaks = df.loc[(df["discount_offered"] == 0) & (df["discount_amount"] > 0)]
+    if not control_leaks.empty:
+        raise ValueError(
+            f"Business logic violation: {len(control_leaks)} control customers have discount_amount > 0."
+        )
+
+    unpurchased_rev = df.loc[(df["purchased"] == 0) & (df["revenue"] > 0)]
+    if not unpurchased_rev.empty:
+        raise ValueError(
+            f"Business logic violation: {len(unpurchased_rev)} unpurchased customers have revenue > 0."
+        )
+
+    loss_making = df.loc[
+        (df["purchased"] == 1)
+        & (df["discount_offered"] == 1)
+        & (df["discount_amount"] > df["revenue"])
+    ]
+    if not loss_making.empty:
+        log.warning(
+            "Promotional integrity notice: %d customers purchased with discount_amount exceeding revenue "
+            "(negative promotional margin). Min net revenue: %.2f.",
+            len(loss_making),
+            (loss_making["revenue"] - loss_making["discount_amount"]).min(),
+        )
+
+    log.info("Business logic validation passed.")
+
+
+def validate_campaign_dates(df: pd.DataFrame) -> None:
+    """
+    Validate that campaign_date contains valid ISO-8601 YYYY-MM-DD date strings.
+    """
+    try:
+        parsed_dates = pd.to_datetime(df["campaign_date"], format="%Y-%m-%d", errors="raise")
+    except Exception as e:
+        raise ValueError(f"Invalid campaign_date format encountered: {e}")
+
+    log.info(
+        "Campaign date validation passed: %d records ranging from %s to %s.",
+        len(parsed_dates),
+        parsed_dates.min().strftime("%Y-%m-%d"),
+        parsed_dates.max().strftime("%Y-%m-%d"),
+    )
+
+
+def compute_margin_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute unit economics and margin metrics for business impact analysis:
+    - net_revenue: observed revenue minus discount amount
+    - is_negative_margin: indicator (1/0) for transactions where discount exceeded revenue
+    """
+    df = df.copy()
+    df["net_revenue"] = np.round(df["revenue"] - df["discount_amount"], 2)
+    df["is_negative_margin"] = (
+        (df["purchased"] == 1) & (df["discount_amount"] > df["revenue"])
+    ).astype(int)
+    return df
+
+
+def add_causal_nuisance_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add mathematically stabilized transformations for DML nuisance modeling:
+    - log_avg_order_value: log1p transformed order value to handle right-skewness.
+    """
+    df = df.copy()
+    df["log_avg_order_value"] = np.round(np.log1p(df["avg_order_value"]), 4)
+    return df
+
+
 # ── Cleaning steps ────────────────────────────────────────────────────────────
 
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
@@ -265,12 +341,14 @@ def run_pipeline(raw_path: Path | str | pd.DataFrame = RAW_PATH) -> pd.DataFrame
     validate_columns(df)
     validate_binary_columns(df)
     validate_categoricals(df)
+    validate_campaign_dates(df)
 
     # Cleaning
     df = remove_duplicates(df)
     df = impute_missing_values(df)
     df = enforce_dtypes(df)
     df = validate_revenue_sign(df)
+    validate_business_logic(df)
     df = flag_outliers(df)
 
     print_summary(df)

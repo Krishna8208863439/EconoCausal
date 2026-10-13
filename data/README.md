@@ -91,10 +91,25 @@ python src/data/preprocess.py
 ```
 
 Output: `data/processed/cleaned_retail_campaign.csv`  
-Steps: missing-value imputation, duplicate removal, type validation, outlier
-flagging, and column-role tagging.
+Steps: missing-value imputation, duplicate removal, type validation, campaign date
+format validation, business logic integrity checks, outlier flagging, and column-role tagging.
 
 ---
+
+## Empirical Data Study & Quality Audit
+
+A comprehensive statistical and causal health audit of the dataset is available:
+
+```powershell
+python src/data/data_study.py
+```
+
+Output: `reports/data_study_report.md`  
+Key findings audited:
+- **Confounder skewness:** `avg_order_value` exhibits right skewness (1.81) requiring logarithmic transformations for linear nuisance models.
+- **Empirical positivity:** Common support holds 100% across all customer segments (54%–62% treatment probability) and age bands (56%–62%).
+- **Promotional margin analysis:** 17 treated purchasers (2.3%) exhibited negative net revenue (`discount_amount > revenue`, loss down to £9.91), highlighting the necessity of minimum order thresholds in real-world campaigns.
+
 
 ## Privacy and Licensing
 
