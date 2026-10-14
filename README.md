@@ -88,6 +88,10 @@
 
 
 
+> **Containerization:** Pre-configured `Dockerfile` and `docker-compose.yml` setups are available for running both frontend and FastAPI backend in isolated containers across development and production environments.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
