@@ -1,32 +1,20 @@
-/**
- * frontend/src/components/DiscountAllocationTable.jsx
- * =====================================================
- * EconoCausal — Week 3: Customer-level Discount Allocation Matrix
- *
- * Features:
- *  - Sortable columns (ITE, discount, value, status)
- *  - Customer ID search
- *  - Filter by eligibility / selected status
- *  - Pagination (configurable page size)
- *  - CSV export
- *  - Loading / empty / error states
- *  - Units and assumptions shown inline
- */
-
 import React, { useState, useMemo, useCallback } from 'react'
-
-const PAGE_SIZE = 25
-
-const SORT_FIELDS = {
-  customer_id:                       'Customer ID',
-  estimated_treatment_effect:        'ITE',
-  recommended_discount:              'Discount (₹)',
-  estimated_incremental_conversions: 'Inc. Conversions',
-  estimated_incremental_contribution: 'Inc. Contribution (₹)',
-  optimization_status:               'Status',
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+import {
+  Search,
+  Filter,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  CheckCircle2,
+  Clock,
+  MinusCircle,
+  HelpCircle,
+  FileSpreadsheet
+} from 'lucide-react'
+import { useToast } from './Toast.jsx'
 
 function downloadCSV(rows, filename = 'discount_allocation.csv') {
   if (!rows.length) return
@@ -40,7 +28,7 @@ function downloadCSV(rows, filename = 'discount_allocation.csv') {
       return v
     }).join(',')
   ).join('\n')
-  const blob = new Blob([header + '\n' + body], { type: 'text/csv' })
+  const blob = new Blob([header + '\n' + body], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -50,40 +38,47 @@ function downloadCSV(rows, filename = 'discount_allocation.csv') {
 }
 
 function StatusBadge({ status }) {
-  const styles = {
-    selected: { background: '#D1FAE5', color: '#065F46', border: '1px solid #6EE7B7' },
-    eligible_not_selected: { background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' },
-    ineligible: { background: '#F1F5F9', color: '#64748B', border: '1px solid #CBD5E1' },
+  if (status === 'selected') {
+    return (
+      <span className="badge badge-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        <CheckCircle2 size={12} />
+        <span>Selected</span>
+      </span>
+    )
   }
-  const labels = {
-    selected: '✅ Selected',
-    eligible_not_selected: '⏳ Eligible',
-    ineligible: '⬜ Ineligible',
+  if (status === 'eligible_not_selected' || status === 'eligible') {
+    return (
+      <span className="badge badge-amber" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        <Clock size={12} />
+        <span>Eligible</span>
+      </span>
+    )
   }
-  const s = styles[status] || styles.ineligible
   return (
-    <span style={{
-      ...s, padding: '2px 8px', borderRadius: '12px',
-      fontSize: '0.75rem', fontWeight: 600, whiteSpace: 'nowrap',
-    }}>
-      {labels[status] || status}
+    <span className="badge badge-gray" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+      <MinusCircle size={12} />
+      <span>Ineligible</span>
     </span>
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
 export default function DiscountAllocationTable({ rows = [], loading = false, error = null }) {
   const [search, setSearch]         = useState('')
-  const [filterStatus, setFilter]   = useState('all')   // all | selected | eligible | ineligible
+  const [filterStatus, setFilter]   = useState('all') // all | selected | eligible | ineligible
   const [sortField, setSortField]   = useState('estimated_treatment_effect')
   const [sortDir, setSortDir]       = useState('desc')
   const [page, setPage]             = useState(1)
+  const [pageSize, setPageSize]     = useState(25)
+  const addToast = useToast()
 
   const toggleSort = useCallback((field) => {
     setSortField(f => {
-      if (f === field) { setSortDir(d => d === 'asc' ? 'desc' : 'asc'); return f }
-      setSortDir('desc'); return field
+      if (f === field) {
+        setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
+        return f
+      }
+      setSortDir('desc')
+      return field
     })
     setPage(1)
   }, [])
@@ -92,7 +87,10 @@ export default function DiscountAllocationTable({ rows = [], loading = false, er
     let data = rows
     if (search.trim()) {
       const q = search.trim().toLowerCase()
-      data = data.filter(r => String(r.customer_id || '').toLowerCase().includes(q))
+      data = data.filter(r =>
+        String(r.customer_id || '').toLowerCase().includes(q) ||
+        String(r.customer_segment || '').toLowerCase().includes(q)
+      )
     }
     if (filterStatus === 'selected')   data = data.filter(r => r.selected_for_campaign)
     if (filterStatus === 'eligible')   data = data.filter(r => r.eligible && !r.selected_for_campaign)
@@ -110,30 +108,43 @@ export default function DiscountAllocationTable({ rows = [], loading = false, er
     })
   }, [filtered, sortField, sortDir])
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
   const currentPage = Math.min(page, totalPages)
-  const pageRows = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pageRows = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
-  const SortTh = ({ field, children }) => (
-    <th
-      style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
-      onClick={() => { toggleSort(field); setPage(1) }}
-      aria-sort={sortField === field ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-    >
-      {children}
-      {sortField === field ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ' ⇅'}
-    </th>
-  )
+  const handleExport = () => {
+    downloadCSV(sorted, 'discount_allocation_matrix.csv')
+    addToast(`Exported ${sorted.length.toLocaleString()} customer records to CSV`, 'success')
+  }
 
-  // ── States ──────────────────────────────────────────────────────────────────
+  const SortTh = ({ field, children }) => {
+    const isSorted = sortField === field
+    return (
+      <th
+        style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}
+        onClick={() => toggleSort(field)}
+        aria-sort={isSorted ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <span>{children}</span>
+          {isSorted ? (
+            sortDir === 'asc' ? <ArrowUp size={13} style={{ color: '#2563EB' }} /> : <ArrowDown size={13} style={{ color: '#2563EB' }} />
+          ) : (
+            <ArrowUpDown size={12} style={{ color: '#94A3B8' }} />
+          )}
+        </div>
+      </th>
+    )
+  }
+
   if (loading) {
     return (
       <div className="loading-box" role="status" aria-live="polite">
-        <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚙️</div>
-        <div style={{ fontWeight: 600, marginBottom: '4px' }}>Running MILP Optimisation…</div>
-        <div style={{ fontSize: '0.83rem', color: '#64748B' }}>
-          Selecting optimal customer offers under budget constraint.
-        </div>
+        <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '3px solid #E2E8F0', borderTopColor: '#2563EB', animation: 'spin 1s linear infinite', margin: '0 auto 16px auto' }} />
+        <strong style={{ fontSize: '1rem', color: '#0F172A' }}>Running SciPy MILP Exact Optimisation…</strong>
+        <p style={{ fontSize: '0.84rem', color: '#64748B', marginTop: '6px' }}>
+          Solving binary integer program across 2,200 customers under marketing budget ceiling.
+        </p>
       </div>
     )
   }
@@ -141,10 +152,8 @@ export default function DiscountAllocationTable({ rows = [], loading = false, er
   if (error) {
     return (
       <div className="notice-banner notice-banner--danger" role="alert">
-        <span>❌</span>
         <div>
-          <strong>Optimisation Error</strong>
-          <div style={{ fontSize: '0.85rem', marginTop: '4px' }}>{error}</div>
+          <strong>Optimisation Error:</strong> {error}
         </div>
       </div>
     )
@@ -153,141 +162,139 @@ export default function DiscountAllocationTable({ rows = [], loading = false, er
   if (!rows.length) {
     return (
       <div className="loading-box" role="status">
-        <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📋</div>
-        <div style={{ fontWeight: 600, marginBottom: '4px' }}>No Allocation Data Yet</div>
-        <div style={{ fontSize: '0.83rem', color: '#64748B' }}>
-          Configure the budget and click <strong>Run Optimisation</strong> to generate the discount allocation matrix.
-        </div>
+        <FileSpreadsheet size={40} style={{ color: '#94A3B8', marginBottom: '12px' }} />
+        <strong style={{ fontSize: '1rem', color: '#0F172A' }}>No Allocation Matrix Generated</strong>
+        <p style={{ fontSize: '0.84rem', color: '#64748B', marginTop: '4px' }}>
+          Configure budget parameters above and click <strong>Run Prescriptive Optimiser</strong> to generate allocations.
+        </p>
       </div>
     )
   }
 
+  const selectedCount   = rows.filter(r => r.selected_for_campaign).length
+  const eligibleCount   = rows.filter(r => r.eligible && !r.selected_for_campaign).length
+  const ineligibleCount = rows.filter(r => !r.eligible).length
+
   return (
     <div>
-      {/* ── Assumptions notice ─────────────────────────────────────────── */}
-      <div className="notice-banner notice-banner--info" style={{ marginBottom: '12px', fontSize: '0.8rem' }}>
-        <span>ℹ️</span>
-        <span>
-          <strong>Model estimates — not observed results.</strong>{' '}
-          ITE = causal forest DML estimate of P(purchase | discount) − P(purchase | no discount).
-          Incremental contribution = ITE × avg_order_value − discount_cost (₹).
-          Values are predictions and carry uncertainty.
-        </span>
+      {/* ── Assumptions Notice ─────────────────────────────────────────── */}
+      <div className="notice-banner notice-banner--info" style={{ marginBottom: '16px' }}>
+        <div className="notice-banner__icon">
+          <HelpCircle size={18} className="text-primary-600" />
+        </div>
+        <div style={{ fontSize: '0.84rem' }}>
+          <strong>Customer Allocation Matrix:</strong> ITE represents the EconML CausalForestDML estimate of P(purchase | discount) - P(purchase | no discount).
+          Selected customers represent the global optimum found by the SciPy HiGHS MILP solver maximizing expected net incremental margin.
+        </div>
       </div>
 
-      {/* ── Controls ───────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px', alignItems: 'center' }}>
-        <input
-          type="search"
-          placeholder="Search by Customer ID…"
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1) }}
-          aria-label="Search customer ID"
-          style={{
-            flex: 1, minWidth: '180px', maxWidth: '260px',
-            padding: '7px 12px', border: '1px solid #CBD5E1',
-            borderRadius: '6px', fontSize: '0.87rem',
-          }}
-        />
+      {/* ── Filters & Controls Bar ─────────────────────────────────────── */}
+      <div className="filter-bar">
+        <div className="search-input-wrapper">
+          <Search size={16} />
+          <input
+            type="search"
+            className="form-input"
+            placeholder="Search by Customer ID (e.g. CUST_0042)..."
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
+            aria-label="Search customer ID"
+          />
+        </div>
 
-        <select
-          value={filterStatus}
-          onChange={e => { setFilter(e.target.value); setPage(1) }}
-          aria-label="Filter by status"
-          style={{ padding: '7px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.87rem' }}
-        >
-          <option value="all">All customers ({rows.length})</option>
-          <option value="selected">✅ Selected ({rows.filter(r => r.selected_for_campaign).length})</option>
-          <option value="eligible">⏳ Eligible, not selected</option>
-          <option value="ineligible">⬜ Ineligible</option>
-        </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <select
+            className="form-select"
+            value={filterStatus}
+            onChange={e => { setFilter(e.target.value); setPage(1) }}
+            aria-label="Filter by allocation status"
+            style={{ padding: '8px 12px', fontSize: '0.84rem' }}
+          >
+            <option value="all">All Customers ({rows.length.toLocaleString()})</option>
+            <option value="selected">Selected for Offer ({selectedCount.toLocaleString()})</option>
+            <option value="eligible">Eligible, Not Selected ({eligibleCount.toLocaleString()})</option>
+            <option value="ineligible">Ineligible ({ineligibleCount.toLocaleString()})</option>
+          </select>
 
-        <button
-          onClick={() => downloadCSV(sorted, 'discount_allocation_export.csv')}
-          style={{
-            padding: '7px 14px', border: '1px solid #CBD5E1',
-            borderRadius: '6px', background: '#F8FAFC',
-            fontSize: '0.87rem', cursor: 'pointer', fontWeight: 600,
-          }}
-          title="Export filtered view to CSV"
-        >
-          ⬇ Export CSV ({sorted.length} rows)
-        </button>
+          <select
+            className="form-select"
+            value={pageSize}
+            onChange={e => { setPageSize(Number(e.target.value)); setPage(1) }}
+            aria-label="Rows per page"
+            style={{ padding: '8px 10px', fontSize: '0.84rem' }}
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
+          </select>
 
-        <span style={{ fontSize: '0.8rem', color: '#64748B', marginLeft: 'auto' }}>
-          {sorted.length} of {rows.length} customers
-        </span>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleExport}
+            title="Download full allocation as CSV"
+          >
+            <Download size={15} />
+            <span>Export CSV ({sorted.length.toLocaleString()})</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────────── */}
       <div className="table-wrapper">
-        <table className="data-table" aria-label="Discount allocation matrix">
+        <table className="data-table" aria-label="Discount allocation customer table">
           <thead>
             <tr>
               <SortTh field="customer_id">Customer ID</SortTh>
-              <th>Eligible</th>
-              <SortTh field="estimated_treatment_effect">Est. ITE</SortTh>
-              <th style={{ fontSize: '0.7rem' }}>ITE 95% CI</th>
-              <SortTh field="recommended_discount">Disc. (₹)</SortTh>
-              <SortTh field="optimization_status">Status</SortTh>
-              <th>Disc. Cost (₹)</th>
-              <SortTh field="estimated_incremental_conversions">Inc. Conv.</SortTh>
-              <SortTh field="estimated_incremental_contribution">Inc. Contrib. (₹)</SortTh>
-              <th>Uncertain</th>
-              <th>Segment</th>
+              <SortTh field="customer_segment">Segment</SortTh>
+              <SortTh field="estimated_treatment_effect">Est. ITE Uplift</SortTh>
+              <SortTh field="ite_ci_lower_95">95% CI Range</SortTh>
+              <SortTh field="recommended_discount">Offer (₹)</SortTh>
+              <SortTh field="estimated_incremental_conversions">Incr. Conversion</SortTh>
+              <SortTh field="estimated_incremental_contribution">Net Contribution</SortTh>
+              <SortTh field="optimization_status">Allocation Status</SortTh>
             </tr>
           </thead>
           <tbody>
-            {pageRows.map((row, idx) => {
-              const isSelected = row.selected_for_campaign
+            {pageRows.map((r) => {
+              const ite = Number(r.estimated_treatment_effect ?? 0)
+              const ciLower = Number(r.ite_ci_lower_95 ?? 0)
+              const ciUpper = Number(r.ite_ci_upper_95 ?? 0)
+              const contrib = Number(r.estimated_incremental_contribution ?? 0)
+              const isSelected = r.selected_for_campaign
+
               return (
-                <tr
-                  key={row.customer_id || idx}
-                  style={{
-                    backgroundColor: isSelected
-                      ? '#F0FDF4'
-                      : idx % 2 === 0 ? '#FAFAFA' : '#FFF',
-                  }}
-                >
-                  <td style={{ fontWeight: 600, color: '#0F172A' }}>{row.customer_id}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    {row.eligible ? '✅' : '⬜'}
-                  </td>
+                <tr key={r.customer_id} style={{ background: isSelected ? '#F0FDF4' : 'transparent' }}>
                   <td>
-                    <span style={{
-                      fontWeight: 700,
-                      color: (row.estimated_treatment_effect || 0) > 0.2 ? '#059669' : '#334155',
-                    }}>
-                      +{(row.estimated_treatment_effect || 0).toFixed(4)}
+                    <code style={{ fontWeight: 600, color: isSelected ? '#15803D' : '#334155' }}>
+                      {r.customer_id}
+                    </code>
+                  </td>
+                  <td>{r.customer_segment || 'Regular'}</td>
+                  <td>
+                    <span className="badge badge-blue">
+                      +{(ite * 100).toFixed(2)} pp
                     </span>
                   </td>
-                  <td style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                    {row.treatment_effect_lower != null && row.treatment_effect_upper != null
-                      ? `[${Number(row.treatment_effect_lower).toFixed(3)}, ${Number(row.treatment_effect_upper).toFixed(3)}]`
-                      : '—'}
+                  <td>
+                    <span style={{ fontSize: '0.78rem', color: '#64748B', fontFamily: 'var(--font-mono)' }}>
+                      [+{(ciLower * 100).toFixed(1)}, +{(ciUpper * 100).toFixed(1)}] pp
+                    </span>
                   </td>
-                  <td style={{ fontWeight: 600 }}>
-                    {(row.recommended_discount || 0) > 0 ? `₹${row.recommended_discount}` : '—'}
+                  <td>
+                    <strong>₹{Number(r.recommended_discount || 0).toLocaleString()}</strong>
                   </td>
-                  <td><StatusBadge status={row.optimization_status} /></td>
-                  <td>{(row.estimated_discount_cost || 0) > 0 ? `₹${row.estimated_discount_cost}` : '₹0'}</td>
-                  <td style={{ color: '#0369A1' }}>
-                    +{(row.estimated_incremental_conversions || 0).toFixed(4)}
+                  <td style={{ color: '#059669', fontWeight: 600 }}>
+                    +{Number(r.estimated_incremental_conversions ?? 0).toFixed(3)}
                   </td>
-                  <td style={{
-                    color: (row.estimated_incremental_contribution || 0) > 0 ? '#15803D' : '#B91C1C',
-                    fontWeight: 600,
-                  }}>
-                    {(row.estimated_incremental_contribution || 0) > 0 ? '+' : ''}
-                    {(row.estimated_incremental_contribution || 0) !== 0
-                      ? `₹${Number(row.estimated_incremental_contribution).toFixed(2)}`
-                      : '₹0'}
+                  <td>
+                    <span style={{ color: contrib >= 0 ? '#059669' : '#DC2626', fontWeight: 700 }}>
+                      ₹{contrib.toFixed(2)}
+                    </span>
                   </td>
-                  <td style={{ textAlign: 'center', fontSize: '0.85rem' }}>
-                    {row.uncertain_estimate ? '⚠️' : ''}
-                  </td>
-                  <td style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                    {row.customer_segment || '—'}
+                  <td>
+                    <StatusBadge status={r.optimization_status || (isSelected ? 'selected' : 'ineligible')} />
                   </td>
                 </tr>
               )
@@ -296,16 +303,33 @@ export default function DiscountAllocationTable({ rows = [], loading = false, er
         </table>
       </div>
 
-      {/* ── Pagination ─────────────────────────────────────────────────── */}
-      {totalPages > 1 && (
-        <div className="pagination" role="navigation" aria-label="Table pagination">
-          <button onClick={() => setPage(1)} disabled={currentPage === 1}>«</button>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>‹ Prev</button>
-          <span>Page {currentPage} of {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next ›</button>
-          <button onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+      {/* ── Pagination Bar ─────────────────────────────────────────────── */}
+      <div className="pagination-bar">
+        <span className="pagination-info">
+          Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, sorted.length)} of {sorted.length.toLocaleString()} matching customers
+        </span>
+        <div className="pagination-controls">
+          <button
+            className="pagination-btn"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, padding: '0 8px' }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="pagination-btn"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            aria-label="Next page"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }

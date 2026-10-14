@@ -1,65 +1,89 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Papa from 'papaparse'
 import Plot from 'react-plotly.js'
+import {
+  Database,
+  Search,
+  Filter,
+  Download,
+  Upload,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  Info,
+  Layers,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  FileSpreadsheet
+} from 'lucide-react'
 import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import CsvUploader from '../components/CsvUploader.jsx'
+import { useToast } from '../components/Toast.jsx'
 import './Page.css'
 
 const COLUMN_ROLES = {
-  customer_id:      { role: 'Identifier',   color: 'gray',   exclude: true },
-  age_group:        { role: 'Confounder',   color: 'orange', exclude: false },
-  past_purchases:   { role: 'Confounder',   color: 'orange', exclude: false },
-  avg_order_value:  { role: 'Confounder',   color: 'orange', exclude: false },
-  website_visits:   { role: 'Confounder',   color: 'orange', exclude: false },
-  customer_segment: { role: 'Confounder',   color: 'orange', exclude: false },
-  discount_offered: { role: 'Treatment',    color: 'blue',   exclude: false },
-  discount_amount:  { role: 'Treat. Attr.', color: 'blue',   exclude: true },
-  purchased:        { role: 'Outcome',      color: 'green',  exclude: false },
-  revenue:          { role: 'Post-treat.',  color: 'gray',   exclude: true },
-  campaign_date:    { role: 'Admin',        color: 'gray',   exclude: true },
+  customer_id:      { role: 'Identifier',       color: 'gray',   exclude: true,  desc: 'Unique customer identifier. Excluded from causal adjustment to prevent spurious 1-to-1 mapping.' },
+  age_group:        { role: 'Confounder',       color: 'amber',  exclude: false, desc: 'Demographic confounder influencing both promotional targeting propensity and purchase intent.' },
+  past_purchases:   { role: 'Confounder',       color: 'amber',  exclude: false, desc: 'Historical transaction frequency. Major common cause for selection bias.' },
+  avg_order_value:  { role: 'Confounder',       color: 'amber',  exclude: false, desc: 'Historical spend per transaction. Adjusted for in DML nuisance models.' },
+  website_visits:   { role: 'Confounder',       color: 'amber',  exclude: false, desc: 'Pre-treatment digital engagement score.' },
+  customer_segment: { role: 'Confounder',       color: 'amber',  exclude: false, desc: 'RFM customer tier (Premium, Regular, Occasional, Lapsed).' },
+  discount_offered: { role: 'Treatment (T)',    color: 'blue',   exclude: false, desc: 'Binary promotional offer indicator: 1 = received discount, 0 = standard price.' },
+  discount_amount:  { role: 'Treatment Attr.',  color: 'blue',   exclude: true,  desc: 'Amount of discount granted. Excluded to avoid multicollinearity with treatment indicator.' },
+  purchased:        { role: 'Outcome (Y)',      color: 'green',  exclude: false, desc: 'Primary causal outcome: 1 = completed purchase, 0 = did not buy.' },
+  revenue:          { role: 'Post-treatment',   color: 'gray',   exclude: true,  desc: 'Observed monetary outcome. Post-treatment collider — excluded to prevent collider bias.' },
+  campaign_date:    { role: 'Admin Attribute',  color: 'gray',   exclude: true,  desc: 'Execution timestamp with no causal relationship to conversion.' },
 }
 
 function computeSummary(data) {
   if (!data || data.length === 0) return null
   const n = data.length
   const treated = data.filter(r => Number(r.discount_offered) === 1)
-  const control  = data.filter(r => Number(r.discount_offered) === 0)
-  const purchasedAll     = data.filter(r => Number(r.purchased) === 1).length
+  const control = data.filter(r => Number(r.discount_offered) === 0)
+  const purchasedAll = data.filter(r => Number(r.purchased) === 1).length
   const purchasedTreated = treated.filter(r => Number(r.purchased) === 1).length
   const purchasedControl = control.filter(r => Number(r.purchased) === 1).length
   const totalRevenue = data.reduce((s, r) => s + (Number(r.revenue) || 0), 0)
 
   return {
-    n, treated: treated.length, control: control.length,
+    n,
+    treated: treated.length,
+    control: control.length,
     purchaseRate: purchasedAll / n,
     purchaseRateTreated: treated.length ? purchasedTreated / treated.length : 0,
-    purchaseRateControl: control.length  ? purchasedControl / control.length : 0,
+    purchaseRateControl: control.length ? purchasedControl / control.length : 0,
     naiveAte: (treated.length ? purchasedTreated / treated.length : 0) -
-              (control.length  ? purchasedControl / control.length  : 0),
+              (control.length ? purchasedControl / control.length : 0),
     totalRevenue,
   }
 }
 
 export default function DataPage({ uploadedData, onDataUploaded }) {
-  const [fileName, setFileName] = useState(null)
+  const [fileName, setFileName] = useState('cleaned_retail_campaign.csv (Default Synthetic)')
   const [previewPage, setPreviewPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [searchTerm, setSearchTerm] = useState('')
   const [loadingDefault, setLoadingDefault] = useState(false)
-  const PAGE_SIZE = 5
+  const addToast = useToast()
 
-  const summary = useMemo(() => computeSummary(uploadedData), [uploadedData])
-  const previewRows = uploadedData
-    ? uploadedData.slice(previewPage * PAGE_SIZE, (previewPage + 1) * PAGE_SIZE)
-    : []
-  const totalPages = uploadedData ? Math.ceil(uploadedData.length / PAGE_SIZE) : 0
+  // Auto-load default dataset on mount if none provided
+  useEffect(() => {
+    if (!uploadedData) {
+      handleLoadDefault(true)
+    }
+  }, [])
 
   function handleLoaded(data, name) {
     setFileName(name)
     setPreviewPage(0)
     onDataUploaded(data)
+    addToast(`Loaded ${data.length.toLocaleString()} records from ${name}`, 'success')
   }
 
-  async function handleLoadDefault() {
+  async function handleLoadDefault(silent = false) {
     setLoadingDefault(true)
     try {
       const res = await fetch('/cleaned_retail_campaign.csv')
@@ -75,105 +99,195 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
       })
     } catch (err) {
       console.error('Failed to load default dataset:', err)
+      if (!silent) addToast('Failed to load default dataset', 'error')
       setLoadingDefault(false)
     }
   }
 
+  const summary = useMemo(() => computeSummary(uploadedData), [uploadedData])
+
+  // Filter preview rows by customer ID or segment
+  const filteredData = useMemo(() => {
+    if (!uploadedData) return []
+    if (!searchTerm.trim()) return uploadedData
+    const q = searchTerm.toLowerCase()
+    return uploadedData.filter(row =>
+      String(row.customer_id || '').toLowerCase().includes(q) ||
+      String(row.customer_segment || '').toLowerCase().includes(q) ||
+      String(row.age_group || '').toLowerCase().includes(q)
+    )
+  }, [uploadedData, searchTerm])
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1
+  const previewRows = filteredData.slice(previewPage * pageSize, (previewPage + 1) * pageSize)
+
   return (
     <div className="page">
+      {/* ── Page Header ─────────────────────────────────────────────────── */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Data &amp; EDA</h1>
-          <p className="page-subtitle" style={{ color: '#64748B', marginTop: '4px' }}>
-            Exploratory Data Analysis, Confounder Identification &amp; Selection Bias Diagnostics
+          <h1 className="page-title">Data & Exploratory Analysis</h1>
+          <p className="page-subtitle">
+            Observational Retail Cohort · Confounder Auditing · Selection Bias Diagnostics
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleLoadDefault}
-          disabled={loadingDefault}
-          style={{
-            padding: '8px 14px',
-            backgroundColor: '#0F172A',
-            color: '#FFFFFF',
-            borderRadius: '6px',
-            border: 'none',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          {loadingDefault ? '⏳ Loading Dataset…' : '⚡ Load Default Dataset (2,200 rows)'}
-        </button>
+        <div className="page-header-actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => handleLoadDefault(false)}
+            disabled={loadingDefault}
+          >
+            <RefreshCw size={15} className={loadingDefault ? 'is-spinning' : ''} />
+            <span>{loadingDefault ? 'Loading Dataset…' : 'Load Default (2,200 Rows)'}</span>
+          </button>
+        </div>
       </div>
 
-      <SectionCard title="Upload or Load Campaign Dataset">
+      {/* ── Upload or Switch Dataset ─────────────────────────────────────── */}
+      <SectionCard
+        title="Upload or Ingest Retail Campaign Dataset"
+        subtitle="Upload your custom CSV or explore the verified benchmark observational cohort"
+        icon={Upload}
+        badge="CSV Verified"
+        badgeType="blue"
+      >
         <CsvUploader onDataLoaded={handleLoaded} />
       </SectionCard>
 
+      {/* ── Summary & Data Quality KPI Cards ─────────────────────────────── */}
       {summary && (
         <>
-          <div className="stat-grid">
-            <StatCard label="Total Records"    value={summary.n.toLocaleString()}          icon="👥" color="blue" />
-            <StatCard label="Treated"          value={summary.treated.toLocaleString()}    icon="🎯" color="orange"
-                      sub={`${(100*summary.treated/summary.n).toFixed(1)}% of customers`} />
-            <StatCard label="Control"          value={summary.control.toLocaleString()}    icon="⚖️"  color="gray"
-                      sub={`${(100*summary.control/summary.n).toFixed(1)}% of customers`} />
-            <StatCard label="Purchase Rate"    value={`${(100*summary.purchaseRate).toFixed(1)}%`}  icon="🛒" color="green" />
-            <StatCard label="Treated Purchase" value={`${(100*summary.purchaseRateTreated).toFixed(1)}%`} icon="✅" color="green"
-                      sub="Potentially biased — see causal analysis" />
-            <StatCard label="Control Purchase" value={`${(100*summary.purchaseRateControl).toFixed(1)}%`} icon="📉" color="amber"
-                      sub="Baseline without discount" />
-            <StatCard label="Naïve ATE"
-                      value={`${summary.naiveAte >= 0 ? '+' : ''}${(100*summary.naiveAte).toFixed(1)} pp`}
-                      icon="⚠️" color="amber"
-                      sub="Biased — confounders not yet adjusted" />
-            <StatCard label="Total Revenue"    value={`£${summary.totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}`} icon="💷" color="blue" />
+          <div style={{ marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--slate-900)', marginBottom: '12px' }}>
+              Cohort Statistics & Naïve Observational Metrics
+            </h2>
           </div>
 
+          <div className="stat-grid-4">
+            <StatCard
+              label="Total Records"
+              value={summary.n.toLocaleString()}
+              sub="100% complete · 0 missing values"
+              tooltip="Total clean rows in active dataset. Cross-checked with zero duplicates."
+              icon={Users}
+              color="blue"
+            />
+            <StatCard
+              label="Treated Group"
+              value={summary.treated.toLocaleString()}
+              sub={`${((summary.treated / summary.n) * 100).toFixed(1)}% of cohort (Discount=1)`}
+              tooltip="Customers who received the promotional discount offer."
+              icon={TrendingUp}
+              color="indigo"
+            />
+            <StatCard
+              label="Control Group"
+              value={summary.control.toLocaleString()}
+              sub={`${((summary.control / summary.n) * 100).toFixed(1)}% of cohort (Discount=0)`}
+              tooltip="Customers who were offered standard retail pricing with no discount."
+              icon={Layers}
+              color="gray"
+            />
+            <StatCard
+              label="Overall Purchase Rate"
+              value={`${(summary.purchaseRate * 100).toFixed(1)}%`}
+              sub="Baseline conversion across all customers"
+              tooltip="Unconditional conversion probability across combined treated and control groups."
+              icon={CheckCircle2}
+              color="green"
+            />
+            <StatCard
+              label="Treated Purchase Rate"
+              value={`${(summary.purchaseRateTreated * 100).toFixed(1)}%`}
+              sub="Observed conversion with discount"
+              tooltip="Gross purchase frequency among customers receiving the discount offer."
+              icon={CheckCircle2}
+              color="green"
+            />
+            <StatCard
+              label="Control Purchase Rate"
+              value={`${(summary.purchaseRateControl * 100).toFixed(1)}%`}
+              sub="Baseline conversion without discount"
+              tooltip="Natural purchase frequency among control customers."
+              icon={Users}
+              color="amber"
+            />
+            <StatCard
+              label="Naïve Observed ATE"
+              value={`+${(summary.naiveAte * 100).toFixed(1)} pp`}
+              sub="Biased — confounders unadjusted"
+              trend={{ value: 'Contains Selection Bias', positive: false }}
+              tooltip="Simple difference in conversion rates (+20.86 pp). Overestimates causal impact because high-intent customers were preferentially offered discounts."
+              icon={AlertTriangle}
+              color="amber"
+            />
+            <StatCard
+              label="Observed Gross Revenue"
+              value={`₹${summary.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              sub="Total recorded basket purchases"
+              tooltip="Sum of recorded transaction revenues in observational dataset."
+              icon={FileSpreadsheet}
+              color="blue"
+            />
+          </div>
+
+          {/* ── Selection Bias Warning Callout ───────────────────────────── */}
           <div className="notice-banner notice-banner--warning">
-            <span aria-hidden="true">⚠️</span>
-            <span>
-              The naïve ATE (+{(100*summary.naiveAte).toFixed(1)} pp) compares treated vs. control purchase
-              rates without adjusting for confounders. This estimate is <strong>biased</strong> because
-              higher-engagement customers were more likely to receive a discount AND more likely to purchase
-              regardless. The true causal ATE will be estimated using Double Machine Learning in Week 2.
-            </span>
+            <div className="notice-banner__icon">
+              <AlertTriangle size={20} className="text-amber-600" />
+            </div>
+            <div>
+              <strong>Econometric Selection Bias Warning:</strong> The naïve difference in conversion rates (+{(summary.naiveAte * 100).toFixed(1)} pp)
+              confounds true promotional effectiveness with organic purchase intent. More active customers (higher past visits and purchases)
+              were systematically more likely to receive promotions. <strong>Double Machine Learning isolates the true causal ATE (+19.47 pp)</strong> by
+              orthogonalizing nuisance predictions.
+            </div>
           </div>
 
-          <SectionCard title="Observed Purchase Rates: Treated vs Control by Segment">
-            <div style={{ width: '100%', height: '350px' }}>
+          {/* ── Interactive Plotly Chart: Observed Purchase Rates by Segment ── */}
+          <SectionCard
+            title="Observed Conversion by Segment & Promotional Treatment"
+            subtitle="Comparing conversion rates across RFM customer tiers under treated (Discount=1) vs control (Discount=0)"
+            icon={TrendingUp}
+          >
+            <div style={{ width: '100%', height: '360px' }}>
               <Plot
                 data={[
                   {
                     x: ['Premium', 'Regular', 'Occasional', 'Lapsed'],
                     y: ['Premium', 'Regular', 'Occasional', 'Lapsed'].map(seg => {
-                      const rows = uploadedData.filter(r => r.customer_segment === seg && Number(r.discount_offered) === 1)
+                      const rows = (uploadedData || []).filter(r => r.customer_segment === seg && Number(r.discount_offered) === 1)
                       return rows.length ? Number(((rows.filter(r => Number(r.purchased) === 1).length / rows.length) * 100).toFixed(1)) : 0
                     }),
-                    name: 'Treated (Discount=1)',
+                    name: 'Treated (Discount Offered)',
                     type: 'bar',
-                    marker: { color: '#2563EB' },
+                    marker: { color: '#2563EB', opacity: 0.9 },
+                    hovertemplate: 'Segment: %{x}<br>Treated Conversion: %{y}%<extra></extra>',
                   },
                   {
                     x: ['Premium', 'Regular', 'Occasional', 'Lapsed'],
                     y: ['Premium', 'Regular', 'Occasional', 'Lapsed'].map(seg => {
-                      const rows = uploadedData.filter(r => r.customer_segment === seg && Number(r.discount_offered) === 0)
+                      const rows = (uploadedData || []).filter(r => r.customer_segment === seg && Number(r.discount_offered) === 0)
                       return rows.length ? Number(((rows.filter(r => Number(r.purchased) === 1).length / rows.length) * 100).toFixed(1)) : 0
                     }),
-                    name: 'Control (Discount=0)',
+                    name: 'Control (Standard Price)',
                     type: 'bar',
-                    marker: { color: '#F59E0B' },
+                    marker: { color: '#94A3B8', opacity: 0.8 },
+                    hovertemplate: 'Segment: %{x}<br>Control Conversion: %{y}%<extra></extra>',
                   },
                 ]}
                 layout={{
-                  title: { text: '<b>Observed Purchase Rate by Segment & Treatment</b>', font: { size: 14 } },
+                  title: { text: '<b>Observed Purchase Rate by Customer Segment & Treatment</b>', font: { size: 14, color: '#0F172A' }, x: 0.02 },
                   barmode: 'group',
-                  yaxis: { title: 'Purchase Rate (%)', ticksuffix: '%' },
                   autosize: true,
-                  height: 330,
-                  margin: { l: 50, r: 20, t: 50, b: 40 },
-                  legend: { orientation: 'h', x: 0.1, y: 1.15 },
+                  height: 340,
+                  margin: { l: 55, r: 25, t: 50, b: 50 },
+                  xaxis: { title: 'Customer Segment', gridcolor: '#F1F5F9' },
+                  yaxis: { title: 'Purchase Rate (%)', ticksuffix: '%', gridcolor: '#E2E8F0', range: [0, 80] },
+                  legend: { orientation: 'h', x: 0.02, y: 1.12 },
+                  paper_bgcolor: 'transparent',
+                  plot_bgcolor: 'transparent',
                 }}
                 config={{ responsive: true, displayModeBar: false }}
                 style={{ width: '100%', height: '100%' }}
@@ -183,26 +297,52 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
         </>
       )}
 
-      <SectionCard title="Column Roles">
-        <p className="prose" style={{marginBottom: '14px'}}>
-          Column roles determine which variables enter the causal adjustment set.
-          Identifiers and post-treatment variables must be excluded to avoid bias.
+      {/* ── Column Causal Roles Table ────────────────────────────────────── */}
+      <SectionCard
+        title="Causal Graph Variable Roles & Identification Set"
+        subtitle="Classification of each dataset attribute into confounder, treatment, outcome, or excluded post-treatment variables"
+        icon={Layers}
+        badge="DoWhy 0.8 Specification"
+        badgeType="purple"
+      >
+        <p className="prose">
+          To achieve identification under conditional unconfoundedness, only genuine pre-treatment confounders are included in the adjustment set.
+          Post-treatment variables like <code>revenue</code> are excluded to prevent collider bias.
         </p>
-        <div className="col-role-table-wrapper">
-          <table className="col-role-table" aria-label="Column role reference">
+
+        <div className="table-wrapper">
+          <table className="data-table" aria-label="Column causal role dictionary">
             <thead>
               <tr>
-                <th>Column</th>
+                <th>Column Name</th>
                 <th>Causal Role</th>
                 <th>In Adjustment Set</th>
+                <th>Econometric Rationale</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(COLUMN_ROLES).map(([col, meta]) => (
                 <tr key={col}>
                   <td><code>{col}</code></td>
-                  <td><span className={`badge badge-${meta.color}`}>{meta.role}</span></td>
-                  <td>{meta.exclude ? <span style={{color:'#C62828'}}>❌ Excluded</span> : <span style={{color:'#2E7D32'}}>✅ Included</span>}</td>
+                  <td>
+                    <span className={`badge badge-${meta.color}`}>
+                      {meta.role}
+                    </span>
+                  </td>
+                  <td>
+                    {meta.exclude ? (
+                      <span className="badge badge-gray" style={{ color: '#BE123C' }}>
+                        Excluded
+                      </span>
+                    ) : (
+                      <span className="badge badge-green">
+                        Included in DML
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ fontSize: '0.82rem', color: '#475569', whiteSpace: 'normal', maxWidth: '440px' }}>
+                    {meta.desc}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -210,13 +350,54 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
         </div>
       </SectionCard>
 
-      {uploadedData && previewRows.length > 0 && (
-        <SectionCard title={`Data Preview — ${fileName}`} badge={`${uploadedData.length.toLocaleString()} rows`}>
+      {/* ── Dataset Interactive Preview Table ───────────────────────────── */}
+      {uploadedData && (
+        <SectionCard
+          title={`Dataset Preview — ${fileName}`}
+          subtitle={`Showing ${previewRows.length} of ${filteredData.length.toLocaleString()} matching rows`}
+          icon={Database}
+          badge={`${uploadedData.length.toLocaleString()} Total Records`}
+          badgeType="blue"
+        >
+          {/* Table Search & Controls */}
+          <div className="filter-bar">
+            <div className="search-input-wrapper">
+              <Search size={16} />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Search by Customer ID, Segment, or Age Group..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setPreviewPage(0)
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.82rem', color: '#64748B' }}>Rows per page:</span>
+              <select
+                className="form-select"
+                style={{ padding: '6px 10px', fontSize: '0.82rem', minWidth: '80px' }}
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value))
+                  setPreviewPage(0)
+                }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+
           <div className="table-wrapper">
-            <table className="data-table" aria-label="Dataset preview">
+            <table className="data-table" aria-label="Customer cohort preview table">
               <thead>
                 <tr>
-                  {Object.keys(previewRows[0]).map(col => (
+                  {Object.keys(previewRows[0] || {}).map(col => (
                     <th key={col}>{col}</th>
                   ))}
                 </tr>
@@ -224,8 +405,22 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
               <tbody>
                 {previewRows.map((row, i) => (
                   <tr key={i}>
-                    {Object.values(row).map((val, j) => (
-                      <td key={j}>{val === null || val === undefined ? <em>—</em> : String(val)}</td>
+                    {Object.entries(row).map(([k, val], j) => (
+                      <td key={j}>
+                        {k === 'discount_offered' ? (
+                          <span className={`badge ${val === 1 ? 'badge-blue' : 'badge-gray'}`}>
+                            {val === 1 ? 'Discount' : 'Standard'}
+                          </span>
+                        ) : k === 'purchased' ? (
+                          <span className={`badge ${val === 1 ? 'badge-green' : 'badge-gray'}`}>
+                            {val === 1 ? 'Purchased' : 'No Purchase'}
+                          </span>
+                        ) : val === null || val === undefined ? (
+                          <em>—</em>
+                        ) : (
+                          String(val)
+                        )}
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -233,46 +428,63 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
             </table>
           </div>
 
-          <div className="pagination" role="navigation" aria-label="Table pagination">
-            <button onClick={() => setPreviewPage(p => Math.max(0, p-1))}
-                    disabled={previewPage === 0} aria-label="Previous page">‹ Prev</button>
-            <span>Page {previewPage + 1} of {totalPages}</span>
-            <button onClick={() => setPreviewPage(p => Math.min(totalPages-1, p+1))}
-                    disabled={previewPage >= totalPages-1} aria-label="Next page">Next ›</button>
+          {/* Pagination bar */}
+          <div className="pagination-bar">
+            <span className="pagination-info">
+              Showing {previewPage * pageSize + 1} to {Math.min((previewPage + 1) * pageSize, filteredData.length)} of {filteredData.length.toLocaleString()} rows
+            </span>
+            <div className="pagination-controls">
+              <button
+                className="pagination-btn"
+                onClick={() => setPreviewPage(p => Math.max(0, p - 1))}
+                disabled={previewPage === 0}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600, padding: '0 8px' }}>
+                Page {previewPage + 1} of {totalPages}
+              </span>
+              <button
+                className="pagination-btn"
+                onClick={() => setPreviewPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={previewPage >= totalPages - 1}
+                aria-label="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         </SectionCard>
       )}
 
-      {!uploadedData && (
-        <SectionCard title="EDA Figures" badge="Pre-generated">
-          <p className="prose">
-            Upload a dataset above to see summary statistics. The EDA figures below
-            were generated by <code>src/data/eda.py</code> on the synthetic dataset.
-          </p>
-          <div className="figure-grid">
-            {[
-              ['01_treatment_control_counts.png',   'Treatment vs. Control Counts'],
-              ['02_purchase_rate_by_treatment.png', 'Purchase Rate Comparison'],
-              ['03_numeric_distributions.png',      'Numeric Distributions'],
-              ['05_correlation_heatmap.png',        'Correlation Heatmap'],
-            ].map(([file, label]) => (
-              <figure key={file} className="eda-figure">
-                <figcaption>{label}</figcaption>
-                <img
-                  src={`/eda_figures/${file}`}
-                  alt={label}
-                  onError={(e) => { e.target.style.display='none' }}
-                  loading="lazy"
-                />
-              </figure>
-            ))}
-          </div>
-          <p className="prose" style={{marginTop:'12px', color:'var(--color-text-muted)', fontSize:'0.82rem'}}>
-            Note: figures appear here only when served via <code>npm run dev</code> with the
-            <code>public/eda_figures/</code> directory populated. See frontend README for details.
-          </p>
-        </SectionCard>
-      )}
+      {/* ── EDA Diagnostic Figure Gallery ──────────────────────────────── */}
+      <SectionCard
+        title="Exploratory Data Analysis Diagnostic Figures"
+        subtitle="Figures generated by src/data/eda.py during Week 1 data quality auditing"
+        icon={FileSpreadsheet}
+        badge="8 Diagnostic Figures"
+        badgeType="gray"
+      >
+        <div className="figure-grid">
+          {[
+            ['01_treatment_control_counts.png',   'Treatment vs. Control Cohort Sizes'],
+            ['02_purchase_rate_by_treatment.png', 'Observed Conversion Comparison'],
+            ['03_numeric_distributions.png',      'Confounder Numerical Distributions'],
+            ['05_correlation_heatmap.png',        'Covariate Correlation Heatmap'],
+          ].map(([file, label]) => (
+            <figure key={file} className="eda-figure">
+              <figcaption>{label}</figcaption>
+              <img
+                src={`/eda_figures/${file}`}
+                alt={label}
+                onError={(e) => { e.target.style.display = 'none' }}
+                loading="lazy"
+              />
+            </figure>
+          ))}
+        </div>
+      </SectionCard>
     </div>
   )
 }

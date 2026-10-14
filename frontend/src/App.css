@@ -1,4 +1,4 @@
-/* ── App Shell Layout ──────────────────────────────────────────────────── */
+/* ── Enterprise App Shell Layout ───────────────────────────────────────── */
 
 .app-shell {
   display: grid;
@@ -8,7 +8,8 @@
     "topbar topbar"
     "sidebar content";
   min-height: 100vh;
-  transition: grid-template-columns 0.25s ease;
+  transition: grid-template-columns 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--bg-app);
 }
 
 .app-shell.sidebar-closed {
@@ -17,30 +18,43 @@
 
 .main-content {
   grid-area: content;
-  padding: 28px 32px;
   overflow-y: auto;
-  max-width: 1400px;
-  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
+.content-container {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 32px 36px 64px 36px;
+}
+
+/* ── Responsive Behavior ─────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .content-container {
+    padding: 24px 24px 48px 24px;
+  }
+}
 
 @media (max-width: 768px) {
   .app-shell {
-    grid-template-columns: 0 1fr;
+    grid-template-columns: 1fr;
     grid-template-areas:
-      "topbar topbar"
-      "content content";
+      "topbar"
+      "content";
   }
 
   .app-shell.sidebar-open {
+    grid-template-columns: 1fr;
     grid-template-areas:
-      "topbar topbar"
-      "sidebar content";
-    grid-template-columns: var(--sidebar-width) 1fr;
+      "topbar"
+      "content";
   }
 
-  .main-content {
-    padding: 16px;
+  .content-container {
+    padding: 16px 16px 36px 16px;
   }
 }
