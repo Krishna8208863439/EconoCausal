@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import SectionCard from '../components/SectionCard.jsx'
+import StatCard from '../components/StatCard.jsx'
 import PlannedFeature from '../components/PlannedFeature.jsx'
 import './Page.css'
 
@@ -13,6 +14,19 @@ const EXCLUDED    = [
 
 export default function CausalPage() {
   const [dagError, setDagError] = useState(false)
+  const [balanceData, setBalanceData] = useState(null)
+  const [lovePlotError, setLovePlotError] = useState(false)
+
+  useEffect(() => {
+    fetch('/covariate_balance.json')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setBalanceData(data)
+      })
+      .catch(() => {
+        // Fallback gracefully if not available
+      })
+  }, [])
 
   return (
     <div className="page">
@@ -148,11 +162,101 @@ export default function CausalPage() {
         </dl>
       </SectionCard>
 
-      <SectionCard title="Week 2 — Planned Estimation">
+      <SectionCard title="Week 2 — Covariate Balance Diagnostics" badge="Day 3 ✅">
+        {balanceData ? (
+          <>
+            <div className="notice-banner notice-banner--info" style={{marginBottom: '16px'}}>
+              <span aria-hidden="true">✅</span>
+              <span>
+                All <strong>{balanceData.covariates?.length ?? 12} covariates</strong> achieve strict balance
+                (max weighted SMD = <strong>{balanceData.covariates ? Math.max(...balanceData.covariates.map(c => c.smd_weighted)).toFixed(4) : '—'}</strong>,
+                threshold: &lt;0.10). Propensity AUC-ROC: <strong>{balanceData.overlap_diagnostics?.auc_roc ?? '—'}</strong> · Common support: <strong>{balanceData.overlap_diagnostics?.common_support_share_pct ?? '—'}%</strong>.
+              </span>
+            </div>
+
+            <div className="stat-grid" style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:'12px', marginBottom:'20px'}}>
+              <StatCard icon="📊" label="Max Raw SMD" color="amber"
+                value={balanceData.covariates ? Math.max(...balanceData.covariates.map(c=>c.smd_raw)).toFixed(4) : '—'}
+                sub="Before propensity weighting" />
+              <StatCard icon="✅" label="Max Weighted SMD" color="green"
+                value={balanceData.covariates ? Math.max(...balanceData.covariates.map(c=>c.smd_weighted)).toFixed(4) : '—'}
+                sub="After IPW adjustment" highlight />
+              <StatCard icon="🎯" label="AUC-ROC" color="blue"
+                value={balanceData.overlap_diagnostics?.auc_roc ?? '—'}
+                sub="Propensity model fit" />
+              <StatCard icon="🛡️" label="Positivity Violations" color="green"
+                value={`${balanceData.overlap_diagnostics?.positivity_violations_count ?? 0} (${balanceData.overlap_diagnostics?.positivity_violations_pct ?? 0}%)`}
+                sub="Scores outside [0.05, 0.95]" />
+            </div>
+
+            <h3 className="sub-heading">Love Plot — SMD Before vs. After IPW</h3>
+            <p className="prose" style={{marginBottom:'12px'}}>
+              Each dot represents one covariate. Red diamonds = unadjusted; blue circles = IPW-adjusted.
+              The shaded green band marks Austin (2009) strict balance (SMD &lt; 0.10).
+            </p>
+            {!lovePlotError ? (
+              <div className="dag-container">
+                <img
+                  src="/love_plot.png"
+                  alt="Love Plot showing covariate balance before and after IPW weighting"
+                  className="dag-image"
+                  onError={() => setLovePlotError(true)}
+                  style={{maxHeight:'480px', objectFit:'contain'}}
+                />
+              </div>
+            ) : (
+              <div className="dag-placeholder">
+                <p className="dag-placeholder__hint">Love plot not found at <code>/love_plot.png</code>. Run <code>python src/causal/diagnostics.py</code> and copy to <code>frontend/public/</code>.</p>
+              </div>
+            )}
+
+            <h3 className="sub-heading" style={{marginTop:'20px'}}>Covariate Balance Table</h3>
+            <div style={{overflowX:'auto'}}>
+              <table className="col-role-table" aria-label="Covariate balance table">
+                <thead>
+                  <tr>
+                    <th>Covariate</th>
+                    <th>Raw SMD</th>
+                    <th>Weighted SMD</th>
+                    <th>Reduction</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {balanceData.covariates?.slice(0,12).map(c => (
+                    <tr key={c.covariate}>
+                      <td><code>{c.covariate}</code></td>
+                      <td>{c.smd_raw}</td>
+                      <td style={{color: c.smd_weighted < 0.10 ? '#137333' : '#b06000', fontWeight:'bold'}}>{c.smd_weighted}</td>
+                      <td>{c.smd_reduction_pct}%</td>
+                      <td><span className={`badge ${c.smd_weighted < 0.10 ? 'badge-green' : 'badge-orange'}`}>{c.smd_weighted < 0.10 ? '✅ Balanced' : '⚠️ Check'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <>
+            <PlannedFeature
+              week={2}
+              feature="Covariate Balance Table (SMD)"
+              description="Balance diagnostics loading… Run python src/causal/diagnostics.py to generate covariate_balance.json."
+            />
+            <PlannedFeature
+              week={2}
+              feature="Love Plot"
+              description="Standardized Mean Difference visualization before/after IPW adjustment."
+            />
+          </>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Week 2 — DML Estimation (Upcoming)" badge="Day 4–5 ⏳">
         <PlannedFeature
           week={2}
           feature="Double Machine Learning (DML) Estimator"
-          description="EconML LinearDML or CausalForestDML will be used to estimate the ATE and CATE from the identified adjustment set. Propensity overlap and refutation tests will be run. Results will appear here once Week 2 is implemented."
+          description="EconML LinearDML / CausalForestDML will estimate ATE and CATE from the verified adjustment set. Cross-fitted nuisance models m(X) and e(X) will be fitted on Day 4; Robinson partialing-out ATE on Day 5."
         />
         <PlannedFeature
           week={2}

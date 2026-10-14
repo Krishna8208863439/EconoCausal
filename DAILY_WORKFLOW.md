@@ -5,14 +5,14 @@
 
 ---
 
-## Roadmap Overview
+## Roadmap Overview (Accelerated — Week 2 by Day 5)
 
 | Day | Focus Area | Status | Key Deliverables |
 | :--- | :--- | :--- | :--- |
 | **Day 1** | Onboarding & Repository Hardening | ✅ Completed | `.env.example`, `CONTRIBUTING.md`, `tests/test_causal_dag.py` |
 | **Day 2** | Propensity Scoring & Overlap Diagnostics | ✅ Completed | `src/causal/propensity.py`, `tests/test_propensity.py`, `src/run_pipeline.py` |
 | **Data Study** | Empirical Data Audit & Quality Hardening | ✅ Completed | `src/data/data_study.py`, `reports/data_study_report.md`, business logic checks |
-| **Day 3** | Covariate Balance & Positivity Diagnostics | ⏳ Planned | Covariate balance tables, SMD (Standardized Mean Difference) checks |
+| **Day 3** | Covariate Balance & Positivity Diagnostics | ✅ Completed | `src/causal/diagnostics.py`, `tests/test_diagnostics.py`, Love plot, balance report |
 | **Day 4** | DML Outcome & Treatment Nuisance Models | ⏳ Planned | Cross-fitting regression models ($m(X)$ and $e(X)$) |
 | **Day 5** | Initial Double Machine Learning Estimator | ⏳ Planned | Partialing-out DML / Robinson transformation for Treatment Effects |
 
@@ -63,13 +63,45 @@
     - Added `compute_margin_metrics()`: calculates `net_revenue` and flags `is_negative_margin`.
     - Added `add_causal_nuisance_features()`: creates `log_avg_order_value` (`np.log1p`) to stabilize DML linear nuisance models.
   - [x] **Pipeline Integration ([`src/run_pipeline.py`](file:///src/run_pipeline.py)):**
-    - Added Step 3/6 executing the data study audit automatically during full pipeline runs.
+    - Added Step 3/7 executing the data study audit automatically during full pipeline runs.
   - [x] **Test Suite Expansion ([`tests/test_preprocessing.py`](file:///tests/test_preprocessing.py)):**
     - Added 7 new unit tests for business logic validation, campaign date validation, and margin metrics.
     - Total tests: 97 tests (96 passed, 1 skipped) passing in < 2 seconds.
 
 ---
 
-## Day 3 Preview — Covariate Balance & Refutation
-- Calculate Standardized Mean Differences (SMD) before and after propensity weighting.
-- Check Love plots / balance tables to verify adjustment removes observable confounding.
+## Day 3 — Covariate Balance & Positivity Diagnostics (Completed)
+- **Goal:** Implement Standardized Mean Difference (SMD) covariate balance tables, variance ratio checks, Love plot generation, and export structured diagnostics data for the dashboard — completing the pre-DML observational overlap verification required by Week 2.
+- **Tasks Completed:**
+  - [x] **Task 3.1 — Covariate Balance Engine ([`src/causal/diagnostics.py`](file:///src/causal/diagnostics.py)):**
+    - Implemented `compute_smd()`: Standardized Mean Difference with optional IPW-weighted means (Austin 2009).
+    - Implemented `compute_variance_ratio()`: Rubin (2001) variance ratio test for treated vs. control dispersion.
+    - Implemented `calculate_covariate_balance()`: full balance table covering numeric confounders and all categorical dummy levels.
+    - Empirical result: Max raw SMD = **0.1311** (avg_order_value), max weighted SMD = **0.0049** — 90.2% average reduction.
+    - All 12 covariate indicators achieve strict Austin ≤ 0.10 balance threshold after IPW adjustment.
+  - [x] **Task 3.2 — Love Plot Generation:**
+    - `generate_love_plot()`: publication-quality Love plot (300 DPI) visualizing SMD before/after adjustment.
+    - Output saved to `reports/figures/love_plot.png` and mirrored to `frontend/public/love_plot.png`.
+  - [x] **Task 3.3 — Markdown & JSON Exports:**
+    - `generate_balance_markdown_report()`: full balance table, executive summary, and methodological findings in `reports/covariate_balance.md`.
+    - `export_balance_json()`: structured JSON payload (`reports/covariate_balance.json` + `frontend/public/covariate_balance.json`) for live dashboard integration.
+  - [x] **Task 3.4 — Unit Tests ([`tests/test_diagnostics.py`](file:///tests/test_diagnostics.py)):**
+    - 16 unit tests covering SMD math correctness, variance ratio, full balance table columns, artifact generation (Love plot, Markdown, JSON), and end-to-end workflow.
+    - **Total test suite: 121 tests, 121 passed, 0 failures** in ~4 seconds.
+  - [x] **Task 3.5 — Pipeline & Dashboard Integration:**
+    - Added Step 5/7 in [`src/run_pipeline.py`](file:///src/run_pipeline.py) — balance diagnostics run automatically on every `python src/run_pipeline.py` invocation.
+    - Updated [`frontend/src/pages/CausalPage.jsx`](file:///frontend/src/pages/CausalPage.jsx) to load live balance JSON from `/covariate_balance.json` and display key metrics.
+
+---
+
+## Day 4 Preview — DML Outcome Nuisance Model $m(X)$
+- Fit cross-fitted regression model $m(X) = E[Y \mid X]$ using Random Forest / Gradient Boosting.
+- Generate residuals $\tilde{Y} = Y - \hat{m}(X)$ as input to DML partialing-out estimator.
+- Evaluate nuisance model performance (R², MAE) and verify residuals are approximately zero-mean.
+
+---
+
+## Day 5 Preview — Initial DML Treatment Effect Estimator
+- Implement Robinson (1988) partialing-out transformation: regress $\tilde{Y}$ on $\tilde{T} = T - \hat{e}(X)$.
+- Estimate ATE using LinearDML or CausalForestDML from EconML.
+- Report ATE point estimate with 95% confidence interval and heterogeneous CATE distribution.
