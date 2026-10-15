@@ -150,7 +150,7 @@ class EstimateRequest(BaseModel):
 
 class BudgetConfigPayload(BaseModel):
     budget: float = 5000.0
-    currency: str = "GBP"
+    currency: str = "INR"
     discount_amount: float = 10.0
     target_segment: str = "All"
     treatment_col: str = "discount_offered"

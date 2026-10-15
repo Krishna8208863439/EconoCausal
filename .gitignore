@@ -33,6 +33,8 @@ data/processed/*.parquet
 !data/raw/mock_retail_campaign.csv
 !data/processed/cleaned_retail_campaign.csv
 !data/processed/ite_predictions.csv
+!data/processed/discount_allocation.csv
+!data/processed/causal_evaluation_results.json
 
 # Node / frontend
 frontend/node_modules/
@@ -58,3 +60,5 @@ Thumbs.db
 *.pkl
 *.joblib
 *.h5
+!ml/models/causal_forest_dml.joblib
+

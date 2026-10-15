@@ -27,7 +27,7 @@ export const api = {
     try {
       return await safeFetch(`${API_BASE}/health`)
     } catch {
-      return { status: 'offline', version: '3.0.0', week: 3 }
+      return { status: 'offline', version: '4.0.0', week: 4 }
     }
   },
 
