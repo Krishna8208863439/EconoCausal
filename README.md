@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Drift Detection:** The PSI threshold for flagging data drift is set to `0.2` by default in `ml/drift_detector.py`. Adjust this value in the config if your dataset distribution changes significantly between training and inference time.
+> **Compliance:** Full audit documentation including data lineage, model cards, and compliance reports are stored under `reports/`. These were generated as part of the Infotact Solutions review process for project reference ITS/DSML/1147.
+
+
+> **Drift Detection:** The PSI threshold for flagging data drift is set to `0.2` by default in `ml/drift_detector.py`. Adjust this value in the config if your dataset distribution changes significantly between training and inference time.
+
 
 
 > **Model Artifacts:** Trained model files (`.joblib`) and scalers are saved to `reports/model_artifacts/`. Do not delete these files between runs as they are required by the FastAPI inference endpoints and the drift detection module.
