@@ -24,7 +24,7 @@ export default function SectionCard({
           <div className="section-card__header-left">
             {Icon && (
               <div className="section-card__icon">
-                {typeof Icon === 'function' ? <Icon size={18} /> : Icon}
+                {React.isValidElement(Icon) ? Icon : React.createElement(Icon, { size: 18 })}
               </div>
             )}
             <div>
