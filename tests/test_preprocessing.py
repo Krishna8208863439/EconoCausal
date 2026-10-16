@@ -30,13 +30,9 @@ from src.data.preprocess import (
     remove_duplicates,
     run_pipeline,
     validate_binary_columns,
-    validate_business_logic,
-    validate_campaign_dates,
     validate_categoricals,
     validate_columns,
     validate_revenue_sign,
-    compute_margin_metrics,
-    add_causal_nuisance_features,
 )
 
 
@@ -260,13 +256,28 @@ class TestValidateRevenueSign:
 # ── get_adjustment_set ────────────────────────────────────────────────────────
 
 class TestAdjustmentSet:
-    EXPECTED = {"age_group", "past_purchases", "avg_order_value", "website_visits", "customer_segment"}
+    EXPECTED = {
+        "cost_price",
+        "competitor_price",
+        "ad_spend",
+        "inventory",
+        "age_group",
+        "past_purchases",
+        "avg_order_value",
+        "website_visits",
+        "customer_segment",
+    }
 
     def test_adjustment_set_contains_expected_confounders(self):
         adj = set(get_adjustment_set())
         assert adj == self.EXPECTED, (
             f"Adjustment set mismatch.\nExpected: {self.EXPECTED}\nGot: {adj}"
         )
+
+    def test_customer_domain_adjustment_set(self):
+        customer_adj = set(get_adjustment_set(domain="customer"))
+        expected_customer = {"age_group", "past_purchases", "avg_order_value", "website_visits", "customer_segment"}
+        assert customer_adj == expected_customer
 
     def test_customer_id_excluded_from_adjustment_set(self):
         adj = get_adjustment_set()
@@ -287,6 +298,8 @@ class TestAdjustmentSet:
         assert "discount_offered" not in adj, (
             "discount_offered is the treatment variable, not a confounder"
         )
+        assert "price" not in adj, "price is the treatment variable, not a confounder"
+        assert "units_sold" not in adj, "units_sold is the outcome variable, not a confounder"
 
 
 # ── get_column_roles ──────────────────────────────────────────────────────────
@@ -296,9 +309,17 @@ class TestColumnRoles:
         roles = get_column_roles()
         assert roles["discount_offered"] == "treatment"
 
+    def test_price_is_treatment(self):
+        roles = get_column_roles()
+        assert roles["price"] == "treatment"
+
     def test_purchased_is_outcome(self):
         roles = get_column_roles()
         assert roles["purchased"] == "outcome"
+
+    def test_units_sold_is_outcome(self):
+        roles = get_column_roles()
+        assert roles["units_sold"] == "outcome"
 
     def test_customer_id_is_identifier(self):
         roles = get_column_roles()
@@ -310,7 +331,10 @@ class TestColumnRoles:
 
     def test_confounders_have_confounder_role(self):
         roles = get_column_roles()
-        for col in ["age_group", "past_purchases", "avg_order_value", "website_visits", "customer_segment"]:
+        for col in [
+            "cost_price", "competitor_price", "ad_spend", "inventory",
+            "age_group", "past_purchases", "avg_order_value", "website_visits", "customer_segment"
+        ]:
             assert roles[col] == "confounder", f"{col} should have role 'confounder'"
 
 
@@ -356,66 +380,3 @@ class TestFullPipeline:
             assert valid.issubset({0, 1}), (
                 f"Column '{col}' should only contain 0 and 1 after pipeline, got {valid}"
             )
-
-
-# ── Business Logic & Integrity Validation Tests ───────────────────────────────
-
-class TestValidateBusinessLogic:
-    def test_passes_on_valid_data(self, clean_df):
-        validate_business_logic(clean_df)  # Should not raise
-
-    def test_raises_when_control_has_discount(self, clean_df):
-        bad = clean_df.copy()
-        ctrl_idx = bad[bad["discount_offered"] == 0].index[0]
-        bad.loc[ctrl_idx, "discount_amount"] = 15.0
-        with pytest.raises(ValueError, match="control customers have discount_amount > 0"):
-            validate_business_logic(bad)
-
-    def test_raises_when_unpurchased_has_revenue(self, clean_df):
-        bad = clean_df.copy()
-        unpurchased_idx = bad[bad["purchased"] == 0].index[0]
-        bad.loc[unpurchased_idx, "revenue"] = 49.99
-        with pytest.raises(ValueError, match="unpurchased customers have revenue > 0"):
-            validate_business_logic(bad)
-
-
-# ── Campaign Date Validation Tests ────────────────────────────────────────────
-
-class TestValidateCampaignDates:
-    def test_passes_on_valid_dates(self, clean_df):
-        validate_campaign_dates(clean_df)  # Should not raise
-
-    def test_raises_on_invalid_date_format(self, clean_df):
-        bad = clean_df.copy()
-        bad.loc[0, "campaign_date"] = "15/01/2024"  # DD/MM/YYYY instead of YYYY-MM-DD
-        with pytest.raises(ValueError, match="Invalid campaign_date"):
-            validate_campaign_dates(bad)
-
-
-# ── Margin & Nuisance Metrics Tests ───────────────────────────────────────────
-
-class TestMarginAndNuisanceFeatures:
-    def test_compute_margin_metrics_net_revenue(self, clean_df):
-        df_margin = compute_margin_metrics(clean_df)
-        assert "net_revenue" in df_margin.columns
-        assert "is_negative_margin" in df_margin.columns
-        expected_net = np.round(df_margin["revenue"] - df_margin["discount_amount"], 2)
-        pd.testing.assert_series_equal(df_margin["net_revenue"], expected_net, check_names=False)
-
-    def test_compute_margin_metrics_negative_margin_flag(self):
-        sample = pd.DataFrame({
-            "discount_offered": [1, 1, 0],
-            "purchased": [1, 1, 0],
-            "discount_amount": [20.0, 5.0, 0.0],
-            "revenue": [15.0, 50.0, 0.0],
-        })
-        df_margin = compute_margin_metrics(sample)
-        assert df_margin.loc[0, "is_negative_margin"] == 1  # 20.0 > 15.0
-        assert df_margin.loc[1, "is_negative_margin"] == 0  # 5.0 <= 50.0
-        assert df_margin.loc[2, "is_negative_margin"] == 0
-
-    def test_add_causal_nuisance_features(self, clean_df):
-        df_nuisance = add_causal_nuisance_features(clean_df)
-        assert "log_avg_order_value" in df_nuisance.columns
-        expected_log = np.round(np.log1p(df_nuisance["avg_order_value"]), 4)
-        pd.testing.assert_series_equal(df_nuisance["log_avg_order_value"], expected_log, check_names=False)

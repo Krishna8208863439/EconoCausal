@@ -21,11 +21,22 @@ from src.data.generate_data import (
     DEFAULT_SEED,
     MISSING_FRACTION,
     DUPLICATE_FRACTION,
+    TRUE_PRICE_ELASTICITY,
+    TRUE_PRICE_EFFECT,
     generate_dataset,
+    save_true_price_effect,
 )
 
 REQUIRED_COLUMNS = [
     "customer_id",
+    "date",
+    "campaign_date",
+    "price",
+    "units_sold",
+    "cost_price",
+    "competitor_price",
+    "ad_spend",
+    "inventory",
     "age_group",
     "past_purchases",
     "avg_order_value",
@@ -35,18 +46,30 @@ REQUIRED_COLUMNS = [
     "discount_amount",
     "purchased",
     "revenue",
-    "campaign_date",
 ]
 
 BINARY_COLUMNS = ["discount_offered", "purchased"]
 ADJUSTMENT_SET = [
+    "cost_price",
+    "competitor_price",
+    "ad_spend",
+    "inventory",
     "age_group",
     "past_purchases",
     "avg_order_value",
     "website_visits",
     "customer_segment",
 ]
-EXCLUDED_FROM_ADJUSTMENT = ["customer_id", "revenue", "discount_amount", "campaign_date"]
+EXCLUDED_FROM_ADJUSTMENT = [
+    "customer_id",
+    "date",
+    "campaign_date",
+    "price",
+    "units_sold",
+    "revenue",
+    "discount_amount",
+    "discount_offered",
+]
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -305,3 +328,53 @@ class TestDatasetSize:
         df = generate_dataset(n=50, seed=42)
         assert len(df) >= 50
         assert df.shape[1] == len(REQUIRED_COLUMNS)
+
+
+# ── Day 1 Continuous Pricing & Demand Specification ──────────────────────────
+
+class TestDay1PricingSpecifications:
+    def test_true_price_elasticity_constant(self):
+        assert TRUE_PRICE_ELASTICITY == -1.50
+        assert TRUE_PRICE_EFFECT == -1.50
+
+    def test_pricing_columns_present_in_dataset(self, df):
+        required_day1 = [
+            "price",
+            "units_sold",
+            "cost_price",
+            "competitor_price",
+            "ad_spend",
+            "inventory",
+            "date",
+        ]
+        for col in required_day1:
+            assert col in df.columns, f"Day 1 column '{col}' missing from generated dataset"
+
+    def test_prices_are_strictly_positive(self, df):
+        assert (df["price"] > 0).all()
+        assert (df["cost_price"] > 0).all()
+        assert (df["competitor_price"] > 0).all()
+
+    def test_competitor_price_relative_to_cost(self, df):
+        # Competitor price should be above cost price on average
+        assert df["competitor_price"].mean() > df["cost_price"].mean()
+
+    def test_units_sold_are_positive_integers(self, df):
+        assert (df["units_sold"] >= 1).all()
+        assert np.issubdtype(df["units_sold"].dtype, np.integer)
+
+    def test_inventory_and_ad_spend_non_negative(self, df):
+        assert (df["inventory"] >= 0).all()
+        assert (df["ad_spend"] >= 0).all()
+
+    def test_save_true_price_effect_creates_valid_json(self, tmp_path):
+        import json
+        out_path = save_true_price_effect(output_dir=tmp_path)
+        assert out_path.exists()
+        with open(out_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        assert data["true_price_elasticity"] == -1.50
+        assert data["treatment"] == "price"
+        assert data["outcome"] == "units_sold"
+        assert "cost_price" in data["confounders"]
+

@@ -1,11 +1,10 @@
 """
 generate_data.py
 ================
-EconoCausal — Week 1 & 2
+EconoCausal — Week 1
 Project reference: ITS/DSML/1147
 
-Generates a reproducible synthetic retail marketing campaign dataset with
-pricing-domain variables for Double Machine Learning (DML) estimation.
+Generates a reproducible synthetic retail marketing campaign dataset.
 
 IMPORTANT
 ---------
@@ -29,20 +28,6 @@ likely to purchase.  This intentional confounding means that a naive
 difference in purchase rates between treated and untreated groups will
 over-estimate the true discount effect, which is exactly the challenge
 Double Machine Learning is designed to address in Week 2.
-
-Week 2 additions
-----------------
-The dataset now includes pricing-domain columns required for continuous-
-treatment DML estimation (price elasticity):
-    - price:            Retail price (continuous treatment)
-    - units_sold:       Sales volume outcome (driven by TRUE_PRICE_ELASTICITY)
-    - cost_price:       Cost of goods (confounder — affects price-setting)
-    - competitor_price: Competitor's price (confounder — affects firm pricing)
-    - ad_spend:         Advertising expenditure (confounder — drives demand)
-    - inventory:        Available stock (confounder — affects pricing decisions)
-
-The constant TRUE_PRICE_ELASTICITY is stored so that DML can verify
-whether it recovers the planted causal effect.
 """
 
 from __future__ import annotations
@@ -51,6 +36,7 @@ import argparse
 import logging
 import os
 import sys
+import json
 from pathlib import Path
 
 import numpy as np
@@ -68,18 +54,21 @@ log = logging.getLogger(__name__)
 DEFAULT_N: int = 2_200
 DEFAULT_SEED: int = 42
 RAW_DIR: Path = Path(__file__).resolve().parents[2] / "data" / "raw"
+PROCESSED_DIR: Path = Path(__file__).resolve().parents[2] / "data" / "processed"
 OUTPUT_FILE: str = "mock_retail_campaign.csv"
+TRUE_EFFECTS_FILE: str = "true_price_effect.json"
+
+# ── Causal Pricing Ground Truth (Day 1 Specification) ────────────────────────
+# Continuous treatment: Price
+# Outcome: Units Sold (sales / demand)
+# In log(units_sold) ~ alpha + beta * log(price) + gamma * X:
+# The true price elasticity of demand is -1.50 (elastic pricing)
+TRUE_PRICE_ELASTICITY: float = -1.50
+TRUE_PRICE_EFFECT: float = -1.50
 
 # Fraction of rows that will have introduced data-quality issues
 MISSING_FRACTION: float = 0.03   # ~3 % of rows get a missing value
 DUPLICATE_FRACTION: float = 0.02  # ~2 % of rows are duplicated
-
-# ── Ground truth for DML verification ─────────────────────────────────────────
-# TRUE_PRICE_ELASTICITY is the planted causal coefficient: when we regress
-# log(units_sold) on log(price) controlling for confounders, DML should
-# recover a value close to this.  A value of −0.4 means a 1 % price
-# increase causes a 0.4 % decrease in units sold.
-TRUE_PRICE_ELASTICITY: float = -0.4
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -118,9 +107,6 @@ def generate_dataset(n: int = DEFAULT_N, seed: int = DEFAULT_SEED) -> pd.DataFra
     -------
     pd.DataFrame
         Raw dataset including controlled missing values and duplicates.
-        Contains both the original binary-treatment columns (discount_offered,
-        purchased) and the new pricing-domain columns (price, units_sold,
-        cost_price, competitor_price, ad_spend, inventory).
     """
     rng = np.random.default_rng(seed)
     log.info("Generating synthetic dataset  n=%d  seed=%d", n, seed)
@@ -176,7 +162,7 @@ def generate_dataset(n: int = DEFAULT_N, seed: int = DEFAULT_SEED) -> pd.DataFra
         0.0,
     )
 
-    # ── 4. Outcome generation (binary) ────────────────────────────────────────
+    # ── 4. Outcome generation ─────────────────────────────────────────────────
     # True average treatment effect (ATE) on purchase probability: +0.08
     # Outcome also driven by pre-treatment features (confounding).
     outcome_logit = (
@@ -206,104 +192,80 @@ def generate_dataset(n: int = DEFAULT_N, seed: int = DEFAULT_SEED) -> pd.DataFra
         for d in day_offsets
     ]
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # ── 7. WEEK 2: Pricing-domain columns for continuous-treatment DML ────────
-    # ══════════════════════════════════════════════════════════════════════════
-    #
-    # The project image (assigned brief) treats price as the continuous
-    # treatment and units_sold as the outcome.  We generate these with a
-    # known causal structure so DML can be evaluated:
-    #
-    #   Confounders → price  (treatment)
-    #   Confounders → units_sold  (outcome)
-    #   price → units_sold  (causal, elasticity = TRUE_PRICE_ELASTICITY)
+    # ── 6b. Continuous pricing engine data (Day 1 Specification) ─────────────
+    # Sub-stream RNG initialized deterministically with seed + 1000
+    rng_price = np.random.default_rng(seed + 1000)
 
-    # -- 7a. Additional confounders that influence both price & demand --------
+    # Cost price (£20 - £75): wholesale cost per unit
+    cost_price = np.round(rng_price.uniform(20.0, 75.0, size=n), 2)
 
-    # cost_price: wholesale / COGS — drives retailer's price floor
-    #   log-normal centred around £15–£80
-    cost_price = np.round(rng.lognormal(mean=3.4, sigma=0.5, size=n), 2)
+    # Competitor price (£25 - £110): market reference price correlated with cost
+    competitor_markup = rng_price.uniform(1.15, 1.60, size=n)
+    competitor_price = np.round(cost_price * competitor_markup + rng_price.normal(0, 1.5, size=n), 2)
+    competitor_price = np.maximum(competitor_price, np.round(cost_price * 1.05, 2))
 
-    # competitor_price: market benchmark — correlated with cost structure
-    competitor_price = np.round(
-        cost_price * rng.uniform(1.05, 1.60, size=n), 2
+    # Ad spend (£10 - £150): marketing spend for product/campaign
+    ad_spend = np.round(rng_price.gamma(shape=3.5, scale=12.0, size=n), 2)
+
+    # Inventory level (40 - 500 units): available stock
+    inventory = rng_price.integers(40, 500, size=n).astype(int)
+
+    # Price (continuous treatment): determined by cost, competitor price, inventory, ad spend
+    # Higher inventory induces promotional discounts; higher costs/competitor prices raise price
+    log_price = (
+        0.55 * np.log(cost_price)
+        + 0.35 * np.log(competitor_price)
+        + 0.04 * np.log(ad_spend + 1.0)
+        - 0.05 * np.log(inventory)
+        + 0.15
+        + rng_price.normal(0, 0.05, size=n)
     )
+    price = np.round(np.exp(log_price), 2)
 
-    # ad_spend: advertising £ per customer — drives demand independently
-    ad_spend = np.round(rng.exponential(scale=8.0, size=n), 2)
-
-    # inventory: units in stock — low inventory may push price up
-    inventory = rng.poisson(lam=120, size=n).astype(int)
-
-    # -- 7b. Price (continuous treatment) — confounded, not exogenous ---------
-    # Price is set as a markup on cost, influenced by competition, inventory,
-    # and segment.  This confounding means naive OLS of sales on price is
-    # biased — exactly the problem DML solves.
-    log_base_price = (
-        np.log(cost_price)
-        + 0.30                                               # base markup
-        + 0.15 * (competitor_price / cost_price - 1.3)       # competitive pressure
-        - 0.002 * (inventory - 120)                          # low stock → higher price
-        + np.where(np.isin(customer_segment, ["Premium"]), 0.10, 0.0)
-        + rng.normal(0, 0.08, size=n)                        # idiosyncratic noise
-    )
-    price = np.round(np.exp(log_base_price), 2)
-    # Enforce price ≥ cost_price (retailer doesn't sell below cost)
-    price = np.maximum(price, cost_price + 0.01)
-
-    # -- 7c. Units sold (continuous outcome) — driven by price + confounders --
-    # DGP:  log(units) = α + β·log(price) + γ·X + ε
-    #   where β = TRUE_PRICE_ELASTICITY = −0.4
+    # Units sold (outcome): log-log demand curve with true price elasticity = -1.50
+    # Confounders: competitor_price (+0.55 cross-price elasticity), ad_spend (+0.20), past_purchases (+0.12), inventory (+0.08)
     log_units = (
-        5.5                                                  # intercept
-        + TRUE_PRICE_ELASTICITY * np.log(price)              # ← causal effect
-        + 0.03 * ad_spend                                    # ad spend boosts demand
-        + 0.005 * past_purchases                             # loyal customers buy more
-        + 0.002 * website_visits                             # engagement effect
-        - 0.10 * np.log(competitor_price / price + 0.01)     # relative price effect
-        + np.where(np.isin(customer_segment, ["Premium"]), 0.15, 0.0)
-        + np.where(np.isin(customer_segment, ["Lapsed"]), -0.20, 0.0)
-        + rng.normal(0, 0.25, size=n)                        # demand shock
+        6.20
+        + TRUE_PRICE_ELASTICITY * np.log(price)
+        + 0.55 * np.log(competitor_price)
+        + 0.20 * np.log(ad_spend + 1.0)
+        + 0.12 * np.log(past_purchases + 1.0)
+        + 0.08 * np.log(inventory)
+        + np.where(customer_segment == "Premium", 0.15, 0.0)
+        + np.where(customer_segment == "Lapsed", -0.20, 0.0)
+        + rng_price.normal(0, 0.08, size=n)
     )
-    units_sold = np.clip(np.round(np.exp(log_units)).astype(int), 0, None)
+    units_sold = np.maximum(1, np.round(np.exp(log_units))).astype(int)
+    date_col = list(campaign_dates)
 
-    log.info(
-        "Pricing DGP planted: TRUE_PRICE_ELASTICITY = %.2f  "
-        "(mean price = £%.2f, mean units = %.1f)",
-        TRUE_PRICE_ELASTICITY, price.mean(), units_sold.mean(),
-    )
-
-    # ── 8. Assemble DataFrame ─────────────────────────────────────────────────
+    # ── 7. Assemble DataFrame ─────────────────────────────────────────────────
     df = pd.DataFrame(
         {
             "customer_id": customer_ids,
-            "age_group": age_groups,
-            "past_purchases": past_purchases,
-            "avg_order_value": avg_order_value,
-            "website_visits": website_visits,
-            "customer_segment": customer_segment,
-            # Binary treatment / outcome (Week 1)
-            "discount_offered": discount_offered,
-            "discount_amount": discount_amount,
-            "purchased": purchased,
-            "revenue": revenue,
-            # Pricing-domain columns (Week 2)
+            "date": date_col,
+            "campaign_date": campaign_dates,
             "price": price,
             "units_sold": units_sold,
             "cost_price": cost_price,
             "competitor_price": competitor_price,
             "ad_spend": ad_spend,
             "inventory": inventory,
-            # Admin
-            "campaign_date": campaign_dates,
+            "age_group": age_groups,
+            "past_purchases": past_purchases,
+            "avg_order_value": avg_order_value,
+            "website_visits": website_visits,
+            "customer_segment": customer_segment,
+            "discount_offered": discount_offered,
+            "discount_amount": discount_amount,
+            "purchased": purchased,
+            "revenue": revenue,
         }
     )
 
-    # ── 9. Introduce controlled data-quality issues ───────────────────────────
+    # ── 8. Introduce controlled data-quality issues ───────────────────────────
     # Missing values — randomly blank a small fraction of numeric fields
     n_missing = max(1, int(MISSING_FRACTION * n))
-    for col in ["past_purchases", "avg_order_value", "website_visits",
-                "ad_spend", "inventory"]:
+    for col in ["past_purchases", "avg_order_value", "website_visits"]:
         missing_idx = rng.choice(n, size=n_missing, replace=False)
         df.loc[missing_idx, col] = np.nan
 
@@ -323,12 +285,43 @@ def generate_dataset(n: int = DEFAULT_N, seed: int = DEFAULT_SEED) -> pd.DataFra
     return df
 
 
+def save_true_price_effect(output_dir: Path = RAW_DIR) -> Path:
+    """Save the true price effect ground truth metadata to JSON."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = output_dir / TRUE_EFFECTS_FILE
+    data = {
+        "true_price_elasticity": TRUE_PRICE_ELASTICITY,
+        "true_price_effect": TRUE_PRICE_EFFECT,
+        "functional_form": "log(units_sold) ~ alpha + beta * log(price) + confounders",
+        "treatment": "price",
+        "outcome": "units_sold",
+        "confounders": [
+            "cost_price",
+            "competitor_price",
+            "ad_spend",
+            "inventory",
+            "past_purchases",
+            "website_visits",
+            "customer_segment",
+            "age_group",
+        ],
+        "seed": DEFAULT_SEED,
+        "timestamp": "2026-10-15T00:00:00+00:00",
+    }
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    log.info("Saved true price effect ground truth → %s", out_path)
+    return out_path
+
+
 def save_dataset(df: pd.DataFrame, output_dir: Path = RAW_DIR) -> Path:
     """Save the dataset to CSV and return the output path."""
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / OUTPUT_FILE
     df.to_csv(out_path, index=False)
     log.info("Saved raw dataset → %s", out_path)
+    save_true_price_effect(output_dir)
+    save_true_price_effect(PROCESSED_DIR)
     return out_path
 
 

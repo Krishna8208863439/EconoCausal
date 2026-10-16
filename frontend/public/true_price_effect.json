@@ -1,0 +1,19 @@
+{
+  "true_price_elasticity": -1.5,
+  "true_price_effect": -1.5,
+  "functional_form": "log(units_sold) ~ alpha + beta * log(price) + confounders",
+  "treatment": "price",
+  "outcome": "units_sold",
+  "confounders": [
+    "cost_price",
+    "competitor_price",
+    "ad_spend",
+    "inventory",
+    "past_purchases",
+    "website_visits",
+    "customer_segment",
+    "age_group"
+  ],
+  "seed": 42,
+  "timestamp": "2026-10-15T00:00:00+00:00"
+}

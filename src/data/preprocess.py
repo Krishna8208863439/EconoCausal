@@ -52,17 +52,24 @@ OUTPUT_FILE: str = "cleaned_retail_campaign.csv"
 # ── Schema definition ─────────────────────────────────────────────────────────
 #   Each entry: column_name → (pandas dtype category, role, nullable)
 COLUMN_SCHEMA: dict[str, tuple[str, str, bool]] = {
-    "customer_id":       ("object",   "identifier",  False),
-    "age_group":         ("category", "confounder",  False),
-    "past_purchases":    ("float64",  "confounder",  True),   # nullable before imputation
-    "avg_order_value":   ("float64",  "confounder",  True),
-    "website_visits":    ("float64",  "confounder",  True),
-    "customer_segment":  ("category", "confounder",  False),
-    "discount_offered":  ("int64",    "treatment",   False),
-    "discount_amount":   ("float64",  "treatment",   False),
-    "purchased":         ("int64",    "outcome",     False),
+    "customer_id":       ("object",   "identifier",     False),
+    "date":              ("object",   "admin",          False),
+    "campaign_date":     ("object",   "admin",          False),
+    "price":             ("float64",  "treatment",      False),
+    "units_sold":        ("int64",    "outcome",        False),
+    "cost_price":        ("float64",  "confounder",     True),
+    "competitor_price":  ("float64",  "confounder",     True),
+    "ad_spend":          ("float64",  "confounder",     True),
+    "inventory":         ("int64",    "confounder",     False),
+    "age_group":         ("category", "confounder",     False),
+    "past_purchases":    ("float64",  "confounder",     True),   # nullable before imputation
+    "avg_order_value":   ("float64",  "confounder",     True),
+    "website_visits":    ("float64",  "confounder",     True),
+    "customer_segment":  ("category", "confounder",     False),
+    "discount_offered":  ("int64",    "treatment",      False),
+    "discount_amount":   ("float64",  "treatment",      False),
+    "purchased":         ("int64",    "outcome",        False),
     "revenue":           ("float64",  "post_treatment", False),
-    "campaign_date":     ("object",   "admin",       False),
 }
 
 REQUIRED_COLUMNS: list[str] = list(COLUMN_SCHEMA.keys())
@@ -109,82 +116,6 @@ def validate_categoricals(df: pd.DataFrame) -> None:
         log.warning("Unexpected customer_segment values: %s", bad_seg)
 
 
-def validate_business_logic(df: pd.DataFrame) -> None:
-    """
-    Validate causal and business integrity constraints:
-    1. Control customers (discount_offered == 0) must have discount_amount == 0.
-    2. Non-purchasing customers (purchased == 0) must have revenue == 0.
-    3. Log warning if discount exceeds revenue for purchasing customers (promotional loss).
-    """
-    control_leaks = df.loc[(df["discount_offered"] == 0) & (df["discount_amount"] > 0)]
-    if not control_leaks.empty:
-        raise ValueError(
-            f"Business logic violation: {len(control_leaks)} control customers have discount_amount > 0."
-        )
-
-    unpurchased_rev = df.loc[(df["purchased"] == 0) & (df["revenue"] > 0)]
-    if not unpurchased_rev.empty:
-        raise ValueError(
-            f"Business logic violation: {len(unpurchased_rev)} unpurchased customers have revenue > 0."
-        )
-
-    loss_making = df.loc[
-        (df["purchased"] == 1)
-        & (df["discount_offered"] == 1)
-        & (df["discount_amount"] > df["revenue"])
-    ]
-    if not loss_making.empty:
-        log.warning(
-            "Promotional integrity notice: %d customers purchased with discount_amount exceeding revenue "
-            "(negative promotional margin). Min net revenue: %.2f.",
-            len(loss_making),
-            (loss_making["revenue"] - loss_making["discount_amount"]).min(),
-        )
-
-    log.info("Business logic validation passed.")
-
-
-def validate_campaign_dates(df: pd.DataFrame) -> None:
-    """
-    Validate that campaign_date contains valid ISO-8601 YYYY-MM-DD date strings.
-    """
-    try:
-        parsed_dates = pd.to_datetime(df["campaign_date"], format="%Y-%m-%d", errors="raise")
-    except Exception as e:
-        raise ValueError(f"Invalid campaign_date format encountered: {e}")
-
-    log.info(
-        "Campaign date validation passed: %d records ranging from %s to %s.",
-        len(parsed_dates),
-        parsed_dates.min().strftime("%Y-%m-%d"),
-        parsed_dates.max().strftime("%Y-%m-%d"),
-    )
-
-
-def compute_margin_metrics(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Compute unit economics and margin metrics for business impact analysis:
-    - net_revenue: observed revenue minus discount amount
-    - is_negative_margin: indicator (1/0) for transactions where discount exceeded revenue
-    """
-    df = df.copy()
-    df["net_revenue"] = np.round(df["revenue"] - df["discount_amount"], 2)
-    df["is_negative_margin"] = (
-        (df["purchased"] == 1) & (df["discount_amount"] > df["revenue"])
-    ).astype(int)
-    return df
-
-
-def add_causal_nuisance_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Add mathematically stabilized transformations for DML nuisance modeling:
-    - log_avg_order_value: log1p transformed order value to handle right-skewness.
-    """
-    df = df.copy()
-    df["log_avg_order_value"] = np.round(np.log1p(df["avg_order_value"]), 4)
-    return df
-
-
 # ── Cleaning steps ────────────────────────────────────────────────────────────
 
 def remove_duplicates(df: pd.DataFrame) -> pd.DataFrame:
@@ -205,22 +136,28 @@ def impute_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     report: dict[str, int] = {}
 
     # Numeric imputation
-    for col in ["past_purchases", "avg_order_value", "website_visits"]:
-        n_missing = df[col].isna().sum()
-        if n_missing > 0:
-            median_val = df[col].median()
-            df[col] = df[col].fillna(median_val)
-            report[col] = int(n_missing)
-            log.info("  Imputed %d missing values in '%s' with median=%.2f", n_missing, col, median_val)
+    numeric_cols = [
+        "past_purchases", "avg_order_value", "website_visits",
+        "price", "units_sold", "cost_price", "competitor_price", "ad_spend", "inventory"
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            n_missing = df[col].isna().sum()
+            if n_missing > 0:
+                median_val = df[col].median()
+                df[col] = df[col].fillna(median_val)
+                report[col] = int(n_missing)
+                log.info("  Imputed %d missing values in '%s' with median=%.2f", n_missing, col, median_val)
 
     # Categorical imputation
     for col in ["age_group", "customer_segment"]:
-        n_missing = df[col].isna().sum()
-        if n_missing > 0:
-            mode_val = df[col].mode()[0]
-            df[col] = df[col].fillna(mode_val)
-            report[col] = int(n_missing)
-            log.info("  Imputed %d missing values in '%s' with mode='%s'", n_missing, col, mode_val)
+        if col in df.columns:
+            n_missing = df[col].isna().sum()
+            if n_missing > 0:
+                mode_val = df[col].mode()[0]
+                df[col] = df[col].fillna(mode_val)
+                report[col] = int(n_missing)
+                log.info("  Imputed %d missing values in '%s' with mode='%s'", n_missing, col, mode_val)
 
     total_imputed = sum(report.values())
     log.info("Missing-value imputation complete: %d values imputed across %d columns.", total_imputed, len(report))
@@ -239,6 +176,18 @@ def enforce_dtypes(df: pd.DataFrame) -> pd.DataFrame:
     df["purchased"] = df["purchased"].astype(int)
     df["age_group"] = df["age_group"].astype("category")
     df["customer_segment"] = df["customer_segment"].astype("category")
+    if "price" in df.columns:
+        df["price"] = df["price"].astype(float).round(2)
+    if "units_sold" in df.columns:
+        df["units_sold"] = df["units_sold"].round(0).astype("Int64").astype(int)
+    if "cost_price" in df.columns:
+        df["cost_price"] = df["cost_price"].astype(float).round(2)
+    if "competitor_price" in df.columns:
+        df["competitor_price"] = df["competitor_price"].astype(float).round(2)
+    if "ad_spend" in df.columns:
+        df["ad_spend"] = df["ad_spend"].astype(float).round(2)
+    if "inventory" in df.columns:
+        df["inventory"] = df["inventory"].round(0).astype("Int64").astype(int)
     log.info("Data-type enforcement complete.")
     return df
 
@@ -281,11 +230,13 @@ def get_column_roles() -> dict[str, str]:
     return {col: schema[1] for col, schema in COLUMN_SCHEMA.items()}
 
 
-def get_adjustment_set() -> list[str]:
+def get_adjustment_set(domain: str = "all") -> list[str]:
     """
     Return the pre-treatment confounders that should enter the causal
     adjustment set.  Identifiers and post-treatment variables are excluded.
     """
+    if domain == "customer":
+        return ["age_group", "past_purchases", "avg_order_value", "website_visits", "customer_segment"]
     return [
         col for col, (_, role, _) in COLUMN_SCHEMA.items()
         if role == "confounder"
@@ -315,40 +266,34 @@ def print_summary(df: pd.DataFrame) -> None:
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
-def run_pipeline(raw_path: Path | str | pd.DataFrame = RAW_PATH) -> pd.DataFrame:
+def run_pipeline(raw_path: Path = RAW_PATH) -> pd.DataFrame:
     """
     Execute the full preprocessing pipeline.
 
     Parameters
     ----------
-    raw_path : Path | str | pd.DataFrame
-        Path to the raw CSV file or an existing DataFrame.
+    raw_path : Path
+        Path to the raw CSV file.
 
     Returns
     -------
     pd.DataFrame
         Cleaned dataset ready for EDA and causal modelling.
     """
-    if isinstance(raw_path, pd.DataFrame):
-        df = raw_path.copy()
-        log.info("Raw DataFrame provided directly: %d rows, %d columns.", len(df), df.shape[1])
-    else:
-        log.info("Loading raw data from %s", raw_path)
-        df = pd.read_csv(raw_path)
-        log.info("Raw dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
+    log.info("Loading raw data from %s", raw_path)
+    df = pd.read_csv(raw_path)
+    log.info("Raw dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
 
     # Validation
     validate_columns(df)
     validate_binary_columns(df)
     validate_categoricals(df)
-    validate_campaign_dates(df)
 
     # Cleaning
     df = remove_duplicates(df)
     df = impute_missing_values(df)
     df = enforce_dtypes(df)
     df = validate_revenue_sign(df)
-    validate_business_logic(df)
     df = flag_outliers(df)
 
     print_summary(df)

@@ -1,0 +1,8 @@
+{
+  "name": "EconoCausal Dashboard",
+  "description": "Dynamic Pricing and Uplift Modeling via Double Machine Learning and Prescriptive Budget Optimization.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

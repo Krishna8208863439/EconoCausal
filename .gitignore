@@ -30,8 +30,16 @@ data/processed/*.parquet
 # Allow the sample synthetic file only
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/raw/mock_retail_campaign.csv
+!data/processed/cleaned_retail_campaign.csv
+!data/processed/ite_predictions.csv
+!data/processed/discount_allocation.csv
+!data/processed/causal_evaluation_results.json
 
 # Node / frontend
+node_modules/
+dist/
+.vite/
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
@@ -55,3 +63,5 @@ Thumbs.db
 *.pkl
 *.joblib
 *.h5
+!ml/models/causal_forest_dml.joblib
+

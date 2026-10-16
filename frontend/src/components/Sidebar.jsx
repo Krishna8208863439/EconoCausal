@@ -1,52 +1,170 @@
 import React from 'react'
+import {
+  LayoutDashboard,
+  Database,
+  GitFork,
+  Sliders,
+  TrendingUp,
+  Target,
+  ShieldCheck,
+  Presentation,
+  CheckCircle,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles
+} from 'lucide-react'
 import './Sidebar.css'
 
 const NAV_ITEMS = [
-  { id: 'overview', label: 'Overview',          icon: '🏠', week: 1 },
-  { id: 'data',     label: 'Data & EDA',         icon: '📊', week: 1 },
-  { id: 'causal',   label: 'Causal Analysis',    icon: '🔗', week: 1 },
-  { id: 'budget',   label: 'Budget Config',       icon: '💰', week: 1 },
-  { id: 'uplift',   label: 'Uplift Analysis',     icon: '📈', week: 2, planned: true },
+  {
+    id: 'overview',
+    label: 'Overview',
+    description: 'Executive KPI dashboard',
+    icon: LayoutDashboard,
+    badge: 'Live',
+    badgeType: 'green',
+  },
+  {
+    id: 'data',
+    label: 'Data & EDA',
+    description: 'Dataset & exploratory stats',
+    icon: Database,
+    badge: '2.2k',
+    badgeType: 'blue',
+  },
+  {
+    id: 'causal',
+    label: 'Causal Analysis',
+    description: 'DAG & DML identification',
+    icon: GitFork,
+    badge: 'DoWhy',
+    badgeType: 'purple',
+  },
+  {
+    id: 'budget',
+    label: 'Budget Config',
+    description: 'Simulate campaign spend',
+    icon: Sliders,
+    badge: 'Config',
+    badgeType: 'gray',
+  },
+  {
+    id: 'uplift',
+    label: 'Uplift Analysis',
+    description: 'Qini & treatment curves',
+    icon: TrendingUp,
+    badge: '+19.5%',
+    badgeType: 'blue',
+  },
+  {
+    id: 'optimization',
+    label: 'Discount Allocation',
+    description: 'Prescriptive MILP matrix',
+    icon: Target,
+    badge: 'Optimal',
+    badgeType: 'green',
+  },
+  {
+    id: 'drift',
+    label: 'Data Drift Monitor',
+    description: 'KS & PSI stability audits',
+    icon: ShieldCheck,
+    badge: 'Stable',
+    badgeType: 'green',
+  },
+  {
+    id: 'report',
+    label: 'Final Delivery & Deck',
+    description: 'Executive slides & reports',
+    icon: Presentation,
+    badge: '10 Slides',
+    badgeType: 'amber',
+  },
 ]
 
-export default function Sidebar({ activePage, onNavigate, isOpen }) {
+export default function Sidebar({ activePage, onNavigate, isOpen, onClose }) {
   return (
-    <nav
-      className={`sidebar ${isOpen ? 'open' : 'closed'}`}
-      aria-label="Main navigation"
-    >
-      <div className="sidebar-section-label">Navigation</div>
+    <>
+      {/* Mobile backdrop overlay */}
+      <div
+        className={`sidebar-mobile-backdrop ${isOpen ? 'active' : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      <ul className="nav-list" role="list">
-        {NAV_ITEMS.map(item => (
-          <li key={item.id}>
-            <button
-              className={`nav-item ${activePage === item.id ? 'active' : ''} ${item.planned ? 'planned' : ''}`}
-              onClick={() => !item.planned && onNavigate(item.id)}
-              aria-current={activePage === item.id ? 'page' : undefined}
-              aria-disabled={item.planned ? 'true' : undefined}
-              title={item.planned ? `Week ${item.week} — not yet implemented` : item.label}
-            >
-              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-              {item.planned && (
-                <span className="badge badge-gray nav-badge">Week {item.week}</span>
-              )}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <nav
+        className={`sidebar ${isOpen ? 'open' : 'closed'}`}
+        aria-label="Main navigation"
+      >
+        <div className="sidebar-header">
+          <div className="sidebar-nav-title">
+            <span>Modules</span>
+            <span className="modules-count">8 Modules</span>
+          </div>
+          {/* Close button for mobile */}
+          <button
+            className="sidebar-close-btn"
+            onClick={onClose}
+            aria-label="Close sidebar"
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-      <div className="sidebar-footer">
-        <div className="status-block">
-          <span className="status-dot active" aria-hidden="true" />
-          <span>Complete</span>
+        <div className="sidebar-scrollable">
+          <ul className="nav-list" role="list">
+            {NAV_ITEMS.map(item => {
+              const Icon = item.icon
+              const isActive = activePage === item.id
+              return (
+                <li key={item.id} className="nav-list-item">
+                  <button
+                    className={`nav-item-btn ${isActive ? 'active' : ''}`}
+                    onClick={() => {
+                      onNavigate(item.id)
+                      if (window.innerWidth <= 768 && onClose) {
+                        onClose()
+                      }
+                    }}
+                    aria-current={isActive ? 'page' : undefined}
+                    title={item.description}
+                  >
+                    <div className="nav-icon-box">
+                      <Icon size={18} className="nav-icon" />
+                    </div>
+                    <div className="nav-text-block">
+                      <span className="nav-label">{item.label}</span>
+                      <span className="nav-desc">{item.description}</span>
+                    </div>
+                    {item.badge && (
+                      <span className={`nav-pill badge-${item.badgeType}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
         </div>
-        <div className="status-block planned">
-          <span className="status-dot planned" aria-hidden="true" />
-          <span>Week 2–3 planned</span>
+
+        <div className="sidebar-footer">
+          <div className="causal-engine-badge">
+            <div className="engine-badge-header">
+              <Sparkles size={14} className="engine-sparkle" />
+              <span className="engine-title">Double Machine Learning</span>
+            </div>
+            <p className="engine-meta">
+              EconML CausalForest · 5-Fold Cross-Fitting · MILP HiGHS
+            </p>
+            <div className="engine-status-row">
+              <span className="pulse-dot green" />
+              <span className="engine-status-text">Production Causal Engine</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   )
 }

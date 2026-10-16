@@ -21,21 +21,28 @@ data/
 
 ## Data Dictionary
 
-### mock_retail_campaign.csv  (raw)
+### mock_retail_campaign.csv  (raw) & cleaned_retail_campaign.csv (processed)
 
 | # | Column | Type | Role | Description |
 |---|--------|------|------|-------------|
 | 1 | `customer_id` | string | Identifier | Pseudonymous customer key (`CUST_XXXXX`). **Must not enter the causal adjustment set.** |
-| 2 | `age_group` | categorical | Pre-treatment confounder | Customer age band: `18-24`, `25-34`, `35-44`, `45-54`, `55+`. Measured before the campaign. |
-| 3 | `past_purchases` | integer | Pre-treatment confounder | Number of purchases in the 90 days before the campaign. Correlates with both treatment propensity and purchase outcome. |
-| 4 | `avg_order_value` | float | Pre-treatment confounder | Mean order value (£) in the 90 days before the campaign. Proxy for customer spending capacity. |
-| 5 | `website_visits` | integer | Pre-treatment confounder | Number of website visits in the 30 days before the campaign. Proxy for current engagement level. |
-| 6 | `customer_segment` | categorical | Pre-treatment confounder | CRM segment assigned before the campaign: `Premium`, `Regular`, `Occasional`, `Lapsed`. |
-| 7 | `discount_offered` | binary (0/1) | **Treatment** | Whether the customer was offered a promotional discount during the campaign window. 1 = offered, 0 = control. |
-| 8 | `discount_amount` | float | Treatment attribute | Discount value (£) offered to the customer. Zero for control customers. Post-assignment; use with care. |
-| 9 | `purchased` | binary (0/1) | **Primary outcome** | Whether the customer made at least one purchase within the 14-day campaign window. |
-| 10 | `revenue` | float | Secondary outcome / post-treatment | Observed revenue (£) within the campaign window. **Post-treatment variable — exclude from confounder adjustment set.** |
-| 11 | `campaign_date` | date | Administrative | Date the campaign communication was sent (`YYYY-MM-DD`). |
+| 2 | `date` | date | Administrative | Observation timestamp (`YYYY-MM-DD`). |
+| 3 | `campaign_date` | date | Administrative | Date campaign communication was dispatched (`YYYY-MM-DD`). |
+| 4 | `price` | float | **Treatment (Continuous)** | Unit price (£25–£120) for the dynamic pricing engine. |
+| 5 | `units_sold` | integer | **Outcome (Continuous)** | Units sold / sales volume governed by true price elasticity ($\beta = -1.50$). |
+| 6 | `cost_price` | float | Pre-treatment confounder | Unit wholesale cost of goods (£20–£75). |
+| 7 | `competitor_price` | float | Pre-treatment confounder | Competitor market reference price (£25–£110). |
+| 8 | `ad_spend` | float | Pre-treatment confounder | Promotional advertising spend (£10–£150). |
+| 9 | `inventory` | integer | Pre-treatment confounder | Stock inventory level on hand (40–500 units). |
+| 10 | `age_group` | categorical | Pre-treatment confounder | Customer age band: `18-24`, `25-34`, `35-44`, `45-54`, `55+`. |
+| 11 | `past_purchases` | integer | Pre-treatment confounder | Number of purchases in the 90 days before campaign. |
+| 12 | `avg_order_value` | float | Pre-treatment confounder | Mean order value (£) in the 90 days before campaign. |
+| 13 | `website_visits` | integer | Pre-treatment confounder | Number of website visits in the 30 days before campaign. |
+| 14 | `customer_segment` | categorical | Pre-treatment confounder | CRM segment: `Premium`, `Regular`, `Occasional`, `Lapsed`. |
+| 15 | `discount_offered` | binary (0/1) | **Treatment (Binary)** | Promotional coupon offer indicator. |
+| 16 | `discount_amount` | float | Treatment attribute | Coupon amount (£5–£20). |
+| 17 | `purchased` | binary (0/1) | **Primary outcome (Binary)** | Binary conversion indicator (1 = converted, 0 = not). |
+| 18 | `revenue` | float | Post-treatment outcome | Realized basket revenue (£). **Post-treatment variable — excluded from adjustment set.** |
 
 ---
 
@@ -44,12 +51,14 @@ data/
 | Role | Variables |
 |------|-----------|
 | **Identifier** (exclude from model) | `customer_id` |
-| **Pre-treatment confounders** (adjust for) | `age_group`, `past_purchases`, `avg_order_value`, `website_visits`, `customer_segment` |
-| **Treatment** | `discount_offered` |
+| **Pre-treatment confounders** (adjust for) | `cost_price`, `competitor_price`, `ad_spend`, `inventory`, `age_group`, `past_purchases`, `avg_order_value`, `website_visits`, `customer_segment` |
+| **Continuous Treatment** | `price` |
+| **Continuous Demand Outcome** | `units_sold` |
+| **Binary Treatment** | `discount_offered` |
+| **Binary Outcome** | `purchased` |
 | **Treatment attribute** (do not use as confounder) | `discount_amount` |
-| **Primary outcome** | `purchased` |
 | **Post-treatment / secondary outcome** | `revenue` |
-| **Administrative** | `campaign_date` |
+| **Administrative** | `date`, `campaign_date` |
 
 ---
 
@@ -91,25 +100,10 @@ python src/data/preprocess.py
 ```
 
 Output: `data/processed/cleaned_retail_campaign.csv`  
-Steps: missing-value imputation, duplicate removal, type validation, campaign date
-format validation, business logic integrity checks, outlier flagging, and column-role tagging.
+Steps: missing-value imputation, duplicate removal, type validation, outlier
+flagging, and column-role tagging.
 
 ---
-
-## Empirical Data Study & Quality Audit
-
-A comprehensive statistical and causal health audit of the dataset is available:
-
-```powershell
-python src/data/data_study.py
-```
-
-Output: `reports/data_study_report.md`  
-Key findings audited:
-- **Confounder skewness:** `avg_order_value` exhibits right skewness (1.81) requiring logarithmic transformations for linear nuisance models.
-- **Empirical positivity:** Common support holds 100% across all customer segments (54%–62% treatment probability) and age bands (56%–62%).
-- **Promotional margin analysis:** 17 treated purchasers (2.3%) exhibited negative net revenue (`discount_amount > revenue`, loss down to £9.91), highlighting the necessity of minimum order thresholds in real-world campaigns.
-
 
 ## Privacy and Licensing
 
