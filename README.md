@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Compliance:** Full audit documentation including data lineage, model cards, and compliance reports are stored under `reports/`. These were generated as part of the Infotact Solutions review process for project reference ITS/DSML/1147.
+> **Frontend Dev:** The React dashboard is built with Vite and served on port 5173. Run `npm run dev` inside the `frontend/` directory. Ensure the backend API is running on port 8000 before loading the dashboard to avoid empty data screens.
+
+
+> **Compliance:** Full audit documentation including data lineage, model cards, and compliance reports are stored under `reports/`. These were generated as part of the Infotact Solutions review process for project reference ITS/DSML/1147.
+
 
 
 > **Drift Detection:** The PSI threshold for flagging data drift is set to `0.2` by default in `ml/drift_detector.py`. Adjust this value in the config if your dataset distribution changes significantly between training and inference time.
