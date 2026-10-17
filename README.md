@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Frontend Dev:** The React dashboard is built with Vite and served on port 5173. Run `npm run dev` inside the `frontend/` directory. Ensure the backend API is running on port 8000 before loading the dashboard to avoid empty data screens.
+> **Budget Optimizer:** The prescriptive optimization engine (`ml/budget_optimizer.py`) allocates a fixed marketing budget across customers by ranking them on estimated CATE scores. Only customers with positive uplift estimates are considered for discount offers.
+
+
+> **Frontend Dev:** The React dashboard is built with Vite and served on port 5173. Run `npm run dev` inside the `frontend/` directory. Ensure the backend API is running on port 8000 before loading the dashboard to avoid empty data screens.
+
 
 
 > **Compliance:** Full audit documentation including data lineage, model cards, and compliance reports are stored under `reports/`. These were generated as part of the Infotact Solutions review process for project reference ITS/DSML/1147.
