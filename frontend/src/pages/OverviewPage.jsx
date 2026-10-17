@@ -151,17 +151,6 @@ export default function OverviewPage({ onNavigatePage }) {
             Causal Machine Learning & Prescriptive Discount Allocation Platform · Project Reference ITS/DSML/1147
           </p>
         </div>
-        <div className="page-header-actions">
-          <span className={`badge ${health?.status === 'ok' ? 'badge-green' : 'badge-gray'}`}>
-            <span className={`pulse-dot ${health?.status === 'ok' ? 'green' : 'gray'}`} />
-            {health?.status === 'ok' ? 'API LIVE' : 'API OFFLINE'}
-          </span>
-          <span className="badge badge-blue">v{health?.version || '4.0.0'}</span>
-          <span className={`badge ${driftReport?.overall_drift_status === 'STABLE' ? 'badge-green' : 'badge-amber'}`}>
-            <ShieldCheck size={13} />
-            Drift: {driftReport?.overall_drift_status || 'STABLE'}
-          </span>
-        </div>
       </div>
 
       {/* ── Methodological Transparency Notice ─────────────────────────── */}

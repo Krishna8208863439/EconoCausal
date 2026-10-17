@@ -100,16 +100,6 @@ export default function CausalPage() {
             Directed Acyclic Graph (DAG) · Identification Assumptions · Robinson Orthogonalization
           </p>
         </div>
-        <div className="page-header-actions">
-          <span className="badge badge-purple">
-            <Cpu size={13} />
-            EconML CausalForestDML
-          </span>
-          <span className="badge badge-green">
-            <ShieldCheck size={13} />
-            DoWhy 0.8 Verified
-          </span>
-        </div>
       </div>
 
       {/* ── Methodological Callout Banner ────────────────────────────────── */}

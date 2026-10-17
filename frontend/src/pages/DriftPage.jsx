@@ -98,10 +98,6 @@ export default function DriftPage() {
           </p>
         </div>
         <div className="page-header-actions">
-          <span className={`badge ${overallStatus === 'STABLE' ? 'badge-green' : 'badge-amber'}`}>
-            <ShieldCheck size={13} />
-            Status: {overallStatus}
-          </span>
           <button
             type="button"
             className="btn btn-secondary"

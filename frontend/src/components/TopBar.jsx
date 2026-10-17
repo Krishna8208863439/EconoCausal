@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import {
   Menu,
-  Activity,
-  ShieldCheck,
   RefreshCw,
   GitFork,
-  ExternalLink,
-  ChevronRight,
-  Database
+  ChevronRight
 } from 'lucide-react'
 import { api } from '../services/api.js'
 import './TopBar.css'
@@ -26,7 +22,7 @@ export default function TopBar({ onMenuToggle, activePage = 'overview' }) {
     uplift: 'Uplift & Treatment Evaluation',
     optimization: 'Discount Allocation Matrix',
     drift: 'Automated Data Drift Monitor',
-    report: 'Final Delivery & Executive Deck',
+    report: 'Final Delivery & Reports',
   }
 
   const loadStatus = async () => {
@@ -93,34 +89,6 @@ export default function TopBar({ onMenuToggle, activePage = 'overview' }) {
       </div>
 
       <div className="topbar-right">
-        {/* Status Pills */}
-        <div className="topbar-status-group">
-          {/* API Live status pill */}
-          <div
-            className={`status-pill ${isLive ? 'status-pill-live' : 'status-pill-offline'}`}
-            title={isLive ? 'FastAPI Backend Connected & Healthy' : 'Backend is currently offline or unreachable'}
-          >
-            <span className={`pulse-dot ${isLive ? 'green' : 'gray'}`} />
-            <span className="status-pill-text">{isLive ? 'API LIVE' : 'API OFFLINE'}</span>
-          </div>
-
-          {/* Version Badge */}
-          <div className="status-pill status-pill-version" title="System Engine Version">
-            <span className="version-label">v{health?.version || '4.0.0'}</span>
-          </div>
-
-          {/* Drift Status Badge */}
-          <div
-            className={`status-pill ${isDriftStable ? 'status-pill-stable' : 'status-pill-warning'}`}
-            title="Covariate Distribution Drift Status (KS & PSI Audit)"
-          >
-            <ShieldCheck size={14} />
-            <span className="status-pill-text">
-              Drift: {driftReport?.overall_drift_status || 'STABLE'}
-            </span>
-          </div>
-        </div>
-
         {/* Timestamp & Refresh */}
         <div className="topbar-actions">
           <span className="last-sync-time" title="Last checked with backend API">
@@ -134,17 +102,6 @@ export default function TopBar({ onMenuToggle, activePage = 'overview' }) {
           >
             <RefreshCw size={15} />
           </button>
-
-          <a
-            href="http://localhost:8000/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="api-docs-link"
-            title="Open Swagger REST API Documentation"
-          >
-            <span>API Docs</span>
-            <ExternalLink size={13} />
-          </a>
         </div>
       </div>
     </header>

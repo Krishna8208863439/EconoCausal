@@ -181,16 +181,6 @@ export default function BudgetOptimization() {
             Mixed-Integer Linear Programming (SciPy MILP) · Hard Budget Ceiling · Customer-Level Offer Targeting
           </p>
         </div>
-        <div className="page-header-actions">
-          <span className="badge badge-purple">
-            <Sparkles size={13} />
-            SciPy HiGHS Solver
-          </span>
-          <span className="badge badge-green">
-            <CheckCircle2 size={13} />
-            Global Optimum Converged
-          </span>
-        </div>
       </div>
 
       {/* ── Causal Estimates Disclaimer ─────────────────────────────────── */}
@@ -201,7 +191,7 @@ export default function BudgetOptimization() {
         <div>
           <strong>Prescriptive Formulation:</strong> Instead of blanket discounts or predictive intent scores,
           the system solves a <strong>0-1 Knapsack Mixed-Integer Linear Program</strong> to allocate promotions exclusively to
-          customers whose expected incremental basket margin ($\tau_i \cdot \text{AOV}_i - \text{Discount}$) is positive and maximized.
+          customers whose expected incremental basket margin (&tau;<sub>i</sub> &times; AOV<sub>i</sub> &minus; Discount) is positive and maximized.
         </div>
       </div>
 

@@ -1,8 +1,8 @@
 .sidebar {
   grid-area: sidebar;
   width: var(--sidebar-width);
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border-light);
+  background: #F0FDF4;
+  border-right: 1px solid #DCFCE7;
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--topbar-height));
@@ -35,14 +35,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--slate-400);
+  color: #15803D;
 }
 
 .modules-count {
   font-size: 0.68rem;
   font-weight: 600;
-  background: var(--slate-100);
-  color: var(--slate-600);
+  background: #DCFCE7;
+  color: #166534;
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -54,7 +54,7 @@
   width: 28px;
   height: 28px;
   border-radius: var(--radius-sm);
-  color: var(--slate-500);
+  color: #166534;
 }
 
 .sidebar-scrollable {
@@ -78,19 +78,19 @@
   padding: 10px 12px;
   border-radius: var(--radius-md);
   text-align: left;
-  color: var(--slate-600);
+  color: #1E293B;
   transition: all 0.15s ease;
   position: relative;
 }
 
 .nav-item-btn:hover {
-  background: var(--slate-100);
-  color: var(--slate-900);
+  background: #DCFCE7;
+  color: #14532D;
 }
 
 .nav-item-btn.active {
-  background: var(--primary-50);
-  color: var(--primary-700);
+  background: #DCFCE7;
+  color: #14532D;
   font-weight: 600;
 }
 
@@ -101,7 +101,7 @@
   top: 6px;
   bottom: 6px;
   width: 3.5px;
-  background: var(--primary-600);
+  background: #16A34A;
   border-radius: 0 4px 4px 0;
 }
 
@@ -119,15 +119,15 @@
 }
 
 .nav-item-btn:hover .nav-icon-box {
-  background: var(--bg-surface);
-  color: var(--primary-600);
+  background: #FFFFFF;
+  color: #16A34A;
   box-shadow: var(--shadow-xs);
 }
 
 .nav-item-btn.active .nav-icon-box {
-  background: var(--primary-600);
+  background: #16A34A;
   color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35);
 }
 
 .nav-text-block {
@@ -146,7 +146,7 @@
 
 .nav-desc {
   font-size: 0.72rem;
-  color: var(--slate-400);
+  color: #4B5563;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -154,7 +154,7 @@
 }
 
 .nav-item-btn.active .nav-desc {
-  color: var(--primary-500);
+  color: #15803D;
 }
 
 .nav-pill {
@@ -168,15 +168,16 @@
 
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid var(--border-light);
-  background: var(--bg-surface);
+  border-top: 1px solid #DCFCE7;
+  background: #F0FDF4;
 }
 
 .causal-engine-badge {
-  background: linear-gradient(135deg, var(--slate-50) 0%, var(--primary-50) 100%);
-  border: 1px solid var(--primary-100);
+  background: #FFFFFF;
+  border: 1px solid #BBF7D0;
   border-radius: var(--radius-md);
   padding: 12px;
+  box-shadow: 0 1px 3px rgba(22, 101, 52, 0.05);
 }
 
 .engine-badge-header {

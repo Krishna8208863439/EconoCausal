@@ -143,10 +143,6 @@ export default function UpliftPage() {
           </p>
         </div>
         <div className="page-header-actions">
-          <span className="badge badge-green">
-            <CheckCircle2 size={13} />
-            Model Trained & Ready
-          </span>
           <button
             type="button"
             className="btn btn-secondary"

@@ -188,12 +188,6 @@ export default function BudgetPage() {
             Configure campaign marketing spend · Real-time CATE greedy simulation · Policy benchmarking
           </p>
         </div>
-        <div className="page-header-actions">
-          <span className="badge badge-green">
-            <CheckCircle2 size={13} />
-            Simulator Active
-          </span>
-        </div>
       </div>
 
       {/* ── Simulation KPI Summary ──────────────────────────────────────── */}

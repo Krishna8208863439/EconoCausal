@@ -22,64 +22,48 @@ const NAV_ITEMS = [
     label: 'Overview',
     description: 'Executive KPI dashboard',
     icon: LayoutDashboard,
-    badge: 'Live',
-    badgeType: 'green',
   },
   {
     id: 'data',
     label: 'Data & EDA',
     description: 'Dataset & exploratory stats',
     icon: Database,
-    badge: '2.2k',
-    badgeType: 'blue',
   },
   {
     id: 'causal',
     label: 'Causal Analysis',
     description: 'DAG & DML identification',
     icon: GitFork,
-    badge: 'DoWhy',
-    badgeType: 'purple',
   },
   {
     id: 'budget',
     label: 'Budget Config',
     description: 'Simulate campaign spend',
     icon: Sliders,
-    badge: 'Config',
-    badgeType: 'gray',
   },
   {
     id: 'uplift',
     label: 'Uplift Analysis',
     description: 'Qini & treatment curves',
     icon: TrendingUp,
-    badge: '+19.5%',
-    badgeType: 'blue',
   },
   {
     id: 'optimization',
     label: 'Discount Allocation',
     description: 'Prescriptive MILP matrix',
     icon: Target,
-    badge: 'Optimal',
-    badgeType: 'green',
   },
   {
     id: 'drift',
     label: 'Data Drift Monitor',
     description: 'KS & PSI stability audits',
     icon: ShieldCheck,
-    badge: 'Stable',
-    badgeType: 'green',
   },
   {
     id: 'report',
-    label: 'Final Delivery & Deck',
-    description: 'Executive slides & reports',
+    label: 'Final Delivery & Reports',
+    description: 'Executive reports & briefings',
     icon: Presentation,
-    badge: '10 Slides',
-    badgeType: 'amber',
   },
 ]
 
@@ -137,11 +121,6 @@ export default function Sidebar({ activePage, onNavigate, isOpen, onClose }) {
                       <span className="nav-label">{item.label}</span>
                       <span className="nav-desc">{item.description}</span>
                     </div>
-                    {item.badge && (
-                      <span className={`nav-pill badge-${item.badgeType}`}>
-                        {item.badge}
-                      </span>
-                    )}
                   </button>
                 </li>
               )
