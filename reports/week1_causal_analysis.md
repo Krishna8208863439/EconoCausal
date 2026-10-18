@@ -3,7 +3,7 @@
 **Project:** EconoCausal: Dynamic Pricing via Double Machine Learning  
 **Reference:** ITS/DSML/1147  
 **Date:** 2026-10-10  
-**DoWhy version:** 0.8  
+**DoWhy version:** 0.14  
 
 ---
 

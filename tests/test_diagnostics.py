@@ -1,236 +1,131 @@
 """
-test_diagnostics.py
-===================
-EconoCausal — Week 2
-Project reference: ITS/DSML/1147
+tests/test_diagnostics.py
+=========================
+EconoCausal — Week 2: Day 3 Causal Diagnostics & Refutation Tests
+Project Reference: ITS/DSML/1147
 
-Unit tests for covariate balance, SMD calculations, variance ratio, Love plot
-generation, and positivity diagnostics in src/causal/diagnostics.py.
+Unit & integration tests verifying:
+- Continuous overlap & positivity (real variation in price residuals)
+- Residual orthogonality to pre-treatment confounders (Robinson orthogonalization)
+- DoWhy refutation falsification tests:
+  1. Placebo Treatment Refutation
+  2. Random Common Cause Refutation
+  3. Data Subset Refutation (80% holdout subsampling)
+- Sensitivity across learner configurations and cross-fitting fold counts
+- Ground truth recovery validation and JSON artifact generation
 """
-
-from __future__ import annotations
 
 import json
 from pathlib import Path
-import sys
-
-import numpy as np
-import pandas as pd
 import pytest
 
-# ── Import modules under test ─────────────────────────────────────────────────
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.causal.diagnostics import (
-    SMD_ACCEPTABLE_THRESHOLD,
-    SMD_EXCELLENT_THRESHOLD,
-    calculate_covariate_balance,
-    compute_smd,
-    compute_variance_ratio,
-    export_balance_json,
-    generate_balance_markdown_report,
-    generate_love_plot,
-    run_balance_diagnostics,
+    CausalDiagnosticsRunner,
+    _fit_ols,
+    _pearson_r,
+    DIAG_JSON_PATH,
+    FRONTEND_DIAG_PATH,
+    REPORTS_DIAG_PATH,
 )
-from src.data.generate_data import generate_dataset
-from src.data.preprocess import run_pipeline
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DATA_PATH = ROOT_DIR / "data" / "processed" / "cleaned_retail_campaign.csv"
 
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
-
-@pytest.fixture(scope="module")
-def sample_cleaned_df() -> pd.DataFrame:
-    """Provide a small, valid cleaned DataFrame for testing."""
-    raw = generate_dataset(n=200, seed=42)
-    return run_pipeline(raw)
+@pytest.fixture
+def diagnostics_runner():
+    assert DATA_PATH.exists(), f"Cleaned data must exist at {DATA_PATH}"
+    return CausalDiagnosticsRunner(data_path=DATA_PATH, random_state=42)
 
 
-# ── Test Suites ───────────────────────────────────────────────────────────────
+class TestCausalDiagnostics:
+    def test_runner_initialization(self, diagnostics_runner):
+        assert diagnostics_runner.data_path == DATA_PATH
+        assert diagnostics_runner.random_state == 42
+        assert diagnostics_runner.results == {}
 
-class TestSmdCalculation:
-    """Verify Standardized Mean Difference (SMD) mathematical correctness."""
+    def test_pearson_r_helper(self):
+        # Perfectly correlated
+        x = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y = [2.0, 4.0, 6.0, 8.0, 10.0]
+        r, p = _pearson_r(x, y)
+        assert abs(r - 1.0) < 1e-5
 
-    def test_smd_identical_distributions_is_zero(self):
-        vals = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        smd, m1, m0, sd = compute_smd(vals, vals)
-        assert smd == 0.0
-        assert m1 == m0 == 3.0
-        assert sd > 0.0
+        # Uncorrelated noise
+        x_uncorr = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y_uncorr = [5.0, 1.0, 4.0, 2.0, 3.0]
+        r_uncorr, _ = _pearson_r(x_uncorr, y_uncorr)
+        assert abs(r_uncorr) < 0.6
 
-    def test_smd_known_shift(self):
-        # Two normal samples with known difference in mean
-        v1 = np.array([10.0, 10.0, 10.0])
-        v0 = np.array([8.0, 8.0, 8.0])
-        # Pooled SD if provided
-        smd, m1, m0, _ = compute_smd(v1, v0, pooled_sd=2.0)
-        assert smd == pytest.approx(1.0, abs=1e-5)
-        assert m1 == 10.0
-        assert m0 == 8.0
+    def test_fit_ols_ridge_stabilization(self):
+        X = [[1.0, 1.0], [1.0, 2.0], [1.0, 3.0], [1.0, 4.0]]
+        y = [2.0, 4.0, 6.0, 8.0]
+        beta = _fit_ols(X, y)
+        assert len(beta) == 2
+        # Slope close to 2.0
+        assert abs(beta[1] - 2.0) < 0.1
 
-    def test_smd_empty_arrays(self):
-        smd, m1, m0, sd = compute_smd(np.array([]), np.array([]))
-        assert smd == 0.0
-        assert m1 == 0.0
-        assert m0 == 0.0
-        assert sd == 0.0
+    def test_residual_variation_positivity(self, diagnostics_runner):
+        X, d, y, segments = diagnostics_runner._load_data()
+        d_res, _ = diagnostics_runner._get_residuals(X, d, y, n_folds=5)
+        res_check = diagnostics_runner.run_residual_variation_check(d_res)
 
-    def test_smd_zero_variance_handled(self):
-        v1 = np.array([5.0, 5.0])
-        v0 = np.array([5.0, 5.0])
-        smd, m1, m0, sd = compute_smd(v1, v0)
-        assert smd == 0.0
-        assert sd == 0.0
+        assert res_check["has_real_variation"] is True
+        assert res_check["variance"] > 0.001
+        assert res_check["std_deviation"] > 0.02
+        assert res_check["iqr"] > 0.01
 
-    def test_weighted_smd_adjusts_means(self):
-        # Treated: [10, 20], weights [1, 3] -> mean = (10*1 + 20*3)/4 = 17.5
-        v1 = np.array([10.0, 20.0])
-        w1 = np.array([1.0, 3.0])
-        v0 = np.array([10.0, 10.0])
-        w0 = np.array([1.0, 1.0])
-        smd, m1, m0, _ = compute_smd(v1, v0, w_1=w1, w_0=w0, pooled_sd=5.0)
-        assert m1 == pytest.approx(17.5)
-        assert m0 == pytest.approx(10.0)
-        assert smd == pytest.approx((17.5 - 10.0) / 5.0)
+    def test_residual_orthogonality(self, diagnostics_runner):
+        X, d, y, _ = diagnostics_runner._load_data()
+        d_res, _ = diagnostics_runner._get_residuals(X, d, y, n_folds=5)
+        ortho_check = diagnostics_runner.run_residual_orthogonality_check(X, d_res)
 
+        assert ortho_check["all_orthogonal"] is True
+        assert ortho_check["max_absolute_correlation"] < 0.08
+        for feat, details in ortho_check["feature_correlations"].items():
+            assert details["is_orthogonal"] is True
 
-class TestVarianceRatio:
-    """Verify variance ratio calculations."""
+    def test_refutations_execution(self, diagnostics_runner):
+        X, d, y, _ = diagnostics_runner._load_data()
+        d_res, y_res = diagnostics_runner._get_residuals(X, d, y, n_folds=5)
+        ref_results = diagnostics_runner.run_refutation_tests(d_res, y_res)
 
-    def test_equal_variance_ratio_is_one(self):
-        v1 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        v0 = np.array([10.0, 11.0, 12.0, 13.0, 14.0])
-        vr = compute_variance_ratio(v1, v0)
-        assert vr == pytest.approx(1.0, abs=1e-4)
+        # Placebo treatment refutation
+        placebo = ref_results["placebo_treatment"]
+        assert placebo["passed"] is True
+        assert abs(placebo["estimated_effect"]) < 0.15
 
-    def test_unequal_variance_ratio(self):
-        v1 = np.array([1.0, 5.0])   # var = 8
-        v0 = np.array([1.0, 3.0])   # var = 2
-        vr = compute_variance_ratio(v1, v0)
-        assert vr == pytest.approx(4.0, abs=1e-4)
+        # Random common cause refutation
+        rcc = ref_results["random_common_cause"]
+        assert rcc["passed"] is True
+        assert rcc["absolute_shift"] < 0.08
 
-    def test_single_element_array_returns_one(self):
-        vr = compute_variance_ratio(np.array([1.0]), np.array([2.0]))
-        assert vr == 1.0
+        # Data subset refutation
+        subset = ref_results["data_subset"]
+        assert subset["passed"] is True
+        assert abs(subset["mean_subset_effect"] - ref_results["baseline_dml_beta"]) < 0.10
 
+    def test_learner_fold_sensitivity(self, diagnostics_runner):
+        X, d, y, _ = diagnostics_runner._load_data()
+        sens = diagnostics_runner.run_learner_and_fold_comparison(X, d, y)
+        comparisons = sens["learner_fold_sensitivity"]
+        assert len(comparisons) >= 3
+        for comp in comparisons:
+            assert comp["folds"] in (3, 5, 10)
+            assert -2.0 <= comp["price_elasticity"] <= -0.5
+            assert comp["ci_lower"] <= comp["price_elasticity"] <= comp["ci_upper"]
 
-class TestCalculateCovariateBalance:
-    """Verify covariate balance table generation on real datasets."""
+    def test_execute_all_and_artifacts(self, diagnostics_runner):
+        results = diagnostics_runner.execute_all()
+        assert results["all_tests_passed"] is True
+        assert "continuous_positivity" in results
+        assert "residual_orthogonality" in results
+        assert "refutations" in results
+        assert "ground_truth_validation" in results
 
-    def test_balance_table_columns(self, sample_cleaned_df: pd.DataFrame):
-        balance_df = calculate_covariate_balance(sample_cleaned_df)
-        expected_cols = {
-            "covariate",
-            "covariate_type",
-            "treated_mean_raw",
-            "control_mean_raw",
-            "pooled_sd",
-            "smd_raw",
-            "var_ratio_raw",
-            "treated_mean_weighted",
-            "control_mean_weighted",
-            "smd_weighted",
-            "var_ratio_weighted",
-            "smd_reduction_pct",
-            "balance_status",
-        }
-        assert expected_cols.issubset(set(balance_df.columns))
-
-    def test_all_confounders_represented(self, sample_cleaned_df: pd.DataFrame):
-        balance_df = calculate_covariate_balance(sample_cleaned_df)
-        covariates = set(balance_df["covariate"])
-        # Numeric confounders
-        assert "past_purchases" in covariates
-        assert "avg_order_value" in covariates
-        assert "website_visits" in covariates
-        # Dummies for categories
-        assert any(c.startswith("age_group_") for c in covariates)
-        assert any(c.startswith("customer_segment_") for c in covariates)
-
-    def test_valid_balance_statuses(self, sample_cleaned_df: pd.DataFrame):
-        balance_df = calculate_covariate_balance(sample_cleaned_df)
-        valid_statuses = {
-            "Well-balanced (SMD < 0.10)",
-            "Acceptable (SMD < 0.25)",
-            "Imbalanced (SMD >= 0.25)",
-        }
-        for status in balance_df["balance_status"]:
-            assert status in valid_statuses
-
-    def test_weighting_reduces_confounder_smd(self, sample_cleaned_df: pd.DataFrame):
-        from src.causal.propensity import compute_ipw_weights, fit_propensity_model
-        _, scores = fit_propensity_model(sample_cleaned_df)
-        weights = compute_ipw_weights(scores, sample_cleaned_df["discount_offered"])
-
-        balance_df = calculate_covariate_balance(sample_cleaned_df, weights=weights)
-        # Average weighted SMD should be significantly lower than raw SMD
-        mean_raw = balance_df["smd_raw"].mean()
-        mean_w = balance_df["smd_weighted"].mean()
-        assert mean_w < mean_raw
-        assert mean_w < SMD_EXCELLENT_THRESHOLD
-
-
-class TestArtifactGeneration:
-    """Verify figure, markdown report, and JSON exports."""
-
-    def test_generate_love_plot(self, sample_cleaned_df: pd.DataFrame, tmp_path: Path):
-        balance_df = calculate_covariate_balance(sample_cleaned_df)
-        out_plot = tmp_path / "love_plot.png"
-        generate_love_plot(balance_df, output_path=out_plot)
-
-        assert out_plot.exists()
-        assert out_plot.stat().st_size > 1000
-
-    def test_generate_markdown_report(self, sample_cleaned_df: pd.DataFrame, tmp_path: Path):
-        balance_df = calculate_covariate_balance(sample_cleaned_df)
-        mock_diag = {
-            "auc_roc": 0.58,
-            "brier_score": 0.24,
-            "overall_min": 0.35,
-            "overall_max": 0.85,
-            "positivity_violations_count": 0,
-            "positivity_violations_pct": 0.0,
-            "common_support_share_pct": 100.0,
-        }
-        out_md = tmp_path / "covariate_balance.md"
-        generate_balance_markdown_report(balance_df, mock_diag, output_path=out_md)
-
-        assert out_md.exists()
-        content = out_md.read_text(encoding="utf-8")
-        assert "EconoCausal" in content
-        assert "Love Plot" in content
-        assert "Comprehensive Covariate Balance Table" in content
-
-    def test_export_balance_json(self, sample_cleaned_df: pd.DataFrame, tmp_path: Path):
-        balance_df = calculate_covariate_balance(sample_cleaned_df)
-        mock_diag = {"auc_roc": 0.58, "common_support_share_pct": 100.0}
-        out_json = tmp_path / "covariate_balance.json"
-        export_balance_json(balance_df, mock_diag, output_path=out_json)
-
-        assert out_json.exists()
-        with open(out_json, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        assert "overlap_diagnostics" in data
-        assert "covariates" in data
-        assert len(data["covariates"]) > 0
-
-
-class TestRunBalanceDiagnosticsWorkflow:
-    """Verify end-to-end diagnostics execution."""
-
-    def test_run_balance_diagnostics_executes(self, tmp_path: Path):
-        from src.data.generate_data import generate_dataset, save_dataset
-        raw = generate_dataset(n=120, seed=99)
-        raw_p = save_dataset(raw, output_dir=tmp_path)
-        clean = run_pipeline(raw_p)
-        clean_p = tmp_path / "clean.csv"
-        clean.to_csv(clean_p, index=False)
-
-        summary = run_balance_diagnostics(
-            data_path=clean_p,
-            figures_dir=tmp_path / "figures",
-            reports_dir=tmp_path / "reports",
-        )
-
-        assert "max_smd_raw" in summary
-        assert "max_smd_weighted" in summary
-        assert summary["max_smd_weighted"] < summary["max_smd_raw"]
-        assert summary["max_smd_weighted"] < SMD_ACCEPTABLE_THRESHOLD
+        # Verify artifacts exist on disk
+        for p in (DIAG_JSON_PATH, FRONTEND_DIAG_PATH, REPORTS_DIAG_PATH):
+            assert p.exists(), f"Expected artifact {p} should exist"
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            assert data["all_tests_passed"] is True

@@ -1,0 +1,885 @@
+{
+  "status": "success",
+  "model_type": "Double Machine Learning (LinearDML / Robinson Transformation)",
+  "treatment": "price",
+  "treatment_transformation": "log(price)",
+  "outcome": "units_sold",
+  "outcome_transformation": "log(units_sold)",
+  "total_samples": 2200,
+  "train_samples": 1760,
+  "test_samples": 440,
+  "n_folds": 5,
+  "dml_estimates": {
+    "price_elasticity": -1.1551,
+    "std_error": 0.0311,
+    "ci_lower_95": -1.2161,
+    "ci_upper_95": -1.0942,
+    "t_statistic": -37.1613,
+    "p_value": 0.0,
+    "interpretation": "A 1% price increase causally reduces unit sales by 1.16%."
+  },
+  "naive_ols": {
+    "price_elasticity": -0.899,
+    "std_error": 0.0134,
+    "ci_lower_95": -0.9253,
+    "ci_upper_95": -0.8728,
+    "p_value": 0.0001,
+    "bias_direction": "Attenuated towards 0 due to demand-shifting confounders (cost, competitor price, ad spend)"
+  },
+  "ground_truth_recovery": {
+    "true_price_elasticity": -1.5,
+    "dml_estimate": -1.1551,
+    "naive_estimate": -0.899,
+    "dml_error": 0.3449,
+    "naive_bias": 0.601,
+    "bias_reduction_percent": 42.6,
+    "recovered_within_ci": false
+  },
+  "nuisance_model_metrics": {
+    "outcome_model_ey_x": {
+      "mae": 0.1001,
+      "rmse": 0.1271,
+      "r2": 0.8755
+    },
+    "price_model_ed_x": {
+      "mae": 0.0579,
+      "rmse": 0.0731,
+      "r2": 0.9507
+    }
+  },
+  "segment_effects": {
+    "Lapsed": {
+      "segment": "Lapsed",
+      "elasticity": -1.1385,
+      "ci_lower": -1.2668,
+      "ci_upper": -1.0103,
+      "sample_size": 350
+    },
+    "Occasional": {
+      "segment": "Occasional",
+      "elasticity": -1.2126,
+      "ci_lower": -1.3233,
+      "ci_upper": -1.1019,
+      "sample_size": 549
+    },
+    "Premium": {
+      "segment": "Premium",
+      "elasticity": -1.175,
+      "ci_lower": -1.2913,
+      "ci_upper": -1.0588,
+      "sample_size": 431
+    },
+    "Regular": {
+      "segment": "Regular",
+      "elasticity": -1.0938,
+      "ci_lower": -1.1856,
+      "ci_upper": -1.0019,
+      "sample_size": 870
+    }
+  },
+  "demand_curve": [
+    {
+      "price": 25.0,
+      "expected_units": 140.1,
+      "units_lower": 137.29,
+      "units_upper": 142.98,
+      "expected_revenue": 3502.61,
+      "expected_profit": -2802.09
+    },
+    {
+      "price": 27.5,
+      "expected_units": 125.5,
+      "units_lower": 123.69,
+      "units_upper": 127.33,
+      "expected_revenue": 3451.21,
+      "expected_profit": -2196.22
+    },
+    {
+      "price": 30.0,
+      "expected_units": 113.5,
+      "units_lower": 112.46,
+      "units_upper": 114.55,
+      "expected_revenue": 3404.93,
+      "expected_profit": -1702.47
+    },
+    {
+      "price": 32.5,
+      "expected_units": 103.47,
+      "units_lower": 103.03,
+      "units_upper": 103.92,
+      "expected_revenue": 3362.92,
+      "expected_profit": -1293.43
+    },
+    {
+      "price": 35.0,
+      "expected_units": 94.99,
+      "units_lower": 94.97,
+      "units_upper": 95.0,
+      "expected_revenue": 3324.48,
+      "expected_profit": -949.85
+    },
+    {
+      "price": 37.5,
+      "expected_units": 87.71,
+      "units_lower": 87.32,
+      "units_upper": 88.1,
+      "expected_revenue": 3289.08,
+      "expected_profit": -657.82
+    },
+    {
+      "price": 40.0,
+      "expected_units": 81.41,
+      "units_lower": 80.73,
+      "units_upper": 82.09,
+      "expected_revenue": 3256.32,
+      "expected_profit": -407.04
+    },
+    {
+      "price": 42.5,
+      "expected_units": 75.9,
+      "units_lower": 74.99,
+      "units_upper": 76.82,
+      "expected_revenue": 3225.84,
+      "expected_profit": -189.76
+    },
+    {
+      "price": 45.0,
+      "expected_units": 71.05,
+      "units_lower": 69.96,
+      "units_upper": 72.16,
+      "expected_revenue": 3197.36,
+      "expected_profit": 0.0
+    },
+    {
+      "price": 47.5,
+      "expected_units": 66.75,
+      "units_lower": 65.51,
+      "units_upper": 68.02,
+      "expected_revenue": 3170.65,
+      "expected_profit": 166.88
+    },
+    {
+      "price": 50.0,
+      "expected_units": 62.91,
+      "units_lower": 61.55,
+      "units_upper": 64.31,
+      "expected_revenue": 3145.52,
+      "expected_profit": 314.55
+    },
+    {
+      "price": 52.5,
+      "expected_units": 59.46,
+      "units_lower": 58.0,
+      "units_upper": 60.96,
+      "expected_revenue": 3121.81,
+      "expected_profit": 445.97
+    },
+    {
+      "price": 55.0,
+      "expected_units": 56.35,
+      "units_lower": 54.81,
+      "units_upper": 57.94,
+      "expected_revenue": 3099.36,
+      "expected_profit": 563.52
+    },
+    {
+      "price": 57.5,
+      "expected_units": 53.53,
+      "units_lower": 51.93,
+      "units_upper": 55.19,
+      "expected_revenue": 3078.06,
+      "expected_profit": 669.14
+    },
+    {
+      "price": 60.0,
+      "expected_units": 50.96,
+      "units_lower": 49.31,
+      "units_upper": 52.68,
+      "expected_revenue": 3057.8,
+      "expected_profit": 764.45
+    },
+    {
+      "price": 62.5,
+      "expected_units": 48.62,
+      "units_lower": 46.92,
+      "units_upper": 50.37,
+      "expected_revenue": 3038.5,
+      "expected_profit": 850.78
+    },
+    {
+      "price": 65.0,
+      "expected_units": 46.46,
+      "units_lower": 44.73,
+      "units_upper": 48.26,
+      "expected_revenue": 3020.07,
+      "expected_profit": 929.25
+    },
+    {
+      "price": 67.5,
+      "expected_units": 44.48,
+      "units_lower": 42.73,
+      "units_upper": 46.31,
+      "expected_revenue": 3002.44,
+      "expected_profit": 1000.81
+    },
+    {
+      "price": 70.0,
+      "expected_units": 42.65,
+      "units_lower": 40.88,
+      "units_upper": 44.5,
+      "expected_revenue": 2985.55,
+      "expected_profit": 1066.27
+    },
+    {
+      "price": 72.5,
+      "expected_units": 40.96,
+      "units_lower": 39.17,
+      "units_upper": 42.82,
+      "expected_revenue": 2969.34,
+      "expected_profit": 1126.3
+    },
+    {
+      "price": 75.0,
+      "expected_units": 39.38,
+      "units_lower": 37.59,
+      "units_upper": 41.26,
+      "expected_revenue": 2953.76,
+      "expected_profit": 1181.51
+    },
+    {
+      "price": 77.5,
+      "expected_units": 37.92,
+      "units_lower": 36.12,
+      "units_upper": 39.81,
+      "expected_revenue": 2938.78,
+      "expected_profit": 1232.39
+    },
+    {
+      "price": 80.0,
+      "expected_units": 36.55,
+      "units_lower": 34.75,
+      "units_upper": 38.45,
+      "expected_revenue": 2924.34,
+      "expected_profit": 1279.4
+    },
+    {
+      "price": 82.5,
+      "expected_units": 35.28,
+      "units_lower": 33.48,
+      "units_upper": 37.18,
+      "expected_revenue": 2910.41,
+      "expected_profit": 1322.91
+    },
+    {
+      "price": 85.0,
+      "expected_units": 34.08,
+      "units_lower": 32.28,
+      "units_upper": 35.98,
+      "expected_revenue": 2896.97,
+      "expected_profit": 1363.28
+    },
+    {
+      "price": 87.5,
+      "expected_units": 32.96,
+      "units_lower": 31.16,
+      "units_upper": 34.86,
+      "expected_revenue": 2883.97,
+      "expected_profit": 1400.78
+    },
+    {
+      "price": 90.0,
+      "expected_units": 31.9,
+      "units_lower": 30.11,
+      "units_upper": 33.8,
+      "expected_revenue": 2871.39,
+      "expected_profit": 1435.7
+    },
+    {
+      "price": 92.5,
+      "expected_units": 30.91,
+      "units_lower": 29.13,
+      "units_upper": 32.8,
+      "expected_revenue": 2859.21,
+      "expected_profit": 1468.24
+    },
+    {
+      "price": 95.0,
+      "expected_units": 29.97,
+      "units_lower": 28.2,
+      "units_upper": 31.86,
+      "expected_revenue": 2847.41,
+      "expected_profit": 1498.64
+    },
+    {
+      "price": 97.5,
+      "expected_units": 29.09,
+      "units_lower": 27.32,
+      "units_upper": 30.97,
+      "expected_revenue": 2835.96,
+      "expected_profit": 1527.05
+    },
+    {
+      "price": 100.0,
+      "expected_units": 28.25,
+      "units_lower": 26.49,
+      "units_upper": 30.12,
+      "expected_revenue": 2824.84,
+      "expected_profit": 1553.66
+    },
+    {
+      "price": 102.5,
+      "expected_units": 27.45,
+      "units_lower": 25.71,
+      "units_upper": 29.32,
+      "expected_revenue": 2814.04,
+      "expected_profit": 1578.61
+    },
+    {
+      "price": 105.0,
+      "expected_units": 26.7,
+      "units_lower": 24.97,
+      "units_upper": 28.55,
+      "expected_revenue": 2803.54,
+      "expected_profit": 1602.02
+    },
+    {
+      "price": 107.5,
+      "expected_units": 25.98,
+      "units_lower": 24.26,
+      "units_upper": 27.83,
+      "expected_revenue": 2793.33,
+      "expected_profit": 1624.03
+    },
+    {
+      "price": 110.0,
+      "expected_units": 25.3,
+      "units_lower": 23.59,
+      "units_upper": 27.14,
+      "expected_revenue": 2783.38,
+      "expected_profit": 1644.73
+    },
+    {
+      "price": 112.5,
+      "expected_units": 24.66,
+      "units_lower": 22.96,
+      "units_upper": 26.48,
+      "expected_revenue": 2773.69,
+      "expected_profit": 1664.22
+    },
+    {
+      "price": 115.0,
+      "expected_units": 24.04,
+      "units_lower": 22.35,
+      "units_upper": 25.85,
+      "expected_revenue": 2764.25,
+      "expected_profit": 1682.59
+    }
+  ],
+  "actual_vs_predicted": [
+    {
+      "actual": 102.0,
+      "predicted": 106.9,
+      "price": 35.78
+    },
+    {
+      "actual": 85.0,
+      "predicted": 96.0,
+      "price": 36.35
+    },
+    {
+      "actual": 118.0,
+      "predicted": 140.1,
+      "price": 28.52
+    },
+    {
+      "actual": 68.0,
+      "predicted": 73.6,
+      "price": 47.38
+    },
+    {
+      "actual": 104.0,
+      "predicted": 118.3,
+      "price": 38.68
+    },
+    {
+      "actual": 111.0,
+      "predicted": 108.2,
+      "price": 30.44
+    },
+    {
+      "actual": 74.0,
+      "predicted": 58.0,
+      "price": 51.59
+    },
+    {
+      "actual": 54.0,
+      "predicted": 68.3,
+      "price": 43.69
+    },
+    {
+      "actual": 189.0,
+      "predicted": 156.4,
+      "price": 21.26
+    },
+    {
+      "actual": 70.0,
+      "predicted": 62.8,
+      "price": 43.02
+    },
+    {
+      "actual": 81.0,
+      "predicted": 70.8,
+      "price": 55.04
+    },
+    {
+      "actual": 161.0,
+      "predicted": 193.5,
+      "price": 28.69
+    },
+    {
+      "actual": 128.0,
+      "predicted": 124.3,
+      "price": 38.95
+    },
+    {
+      "actual": 97.0,
+      "predicted": 100.5,
+      "price": 33.36
+    },
+    {
+      "actual": 64.0,
+      "predicted": 57.7,
+      "price": 50.39
+    },
+    {
+      "actual": 106.0,
+      "predicted": 121.9,
+      "price": 36.1
+    },
+    {
+      "actual": 80.0,
+      "predicted": 83.6,
+      "price": 50.21
+    },
+    {
+      "actual": 112.0,
+      "predicted": 122.4,
+      "price": 28.87
+    },
+    {
+      "actual": 96.0,
+      "predicted": 103.9,
+      "price": 50.18
+    },
+    {
+      "actual": 197.0,
+      "predicted": 151.3,
+      "price": 20.6
+    },
+    {
+      "actual": 84.0,
+      "predicted": 89.0,
+      "price": 43.35
+    },
+    {
+      "actual": 122.0,
+      "predicted": 107.3,
+      "price": 31.74
+    },
+    {
+      "actual": 78.0,
+      "predicted": 67.8,
+      "price": 46.84
+    },
+    {
+      "actual": 70.0,
+      "predicted": 65.1,
+      "price": 43.19
+    },
+    {
+      "actual": 121.0,
+      "predicted": 118.4,
+      "price": 33.05
+    },
+    {
+      "actual": 94.0,
+      "predicted": 77.4,
+      "price": 49.61
+    },
+    {
+      "actual": 54.0,
+      "predicted": 56.6,
+      "price": 51.79
+    },
+    {
+      "actual": 199.0,
+      "predicted": 150.4,
+      "price": 17.37
+    },
+    {
+      "actual": 85.0,
+      "predicted": 84.9,
+      "price": 36.41
+    },
+    {
+      "actual": 107.0,
+      "predicted": 141.6,
+      "price": 29.19
+    },
+    {
+      "actual": 82.0,
+      "predicted": 97.1,
+      "price": 50.15
+    },
+    {
+      "actual": 161.0,
+      "predicted": 165.1,
+      "price": 21.31
+    },
+    {
+      "actual": 60.0,
+      "predicted": 53.8,
+      "price": 57.87
+    },
+    {
+      "actual": 87.0,
+      "predicted": 79.3,
+      "price": 39.64
+    },
+    {
+      "actual": 143.0,
+      "predicted": 166.1,
+      "price": 30.92
+    },
+    {
+      "actual": 53.0,
+      "predicted": 51.0,
+      "price": 48.26
+    },
+    {
+      "actual": 71.0,
+      "predicted": 63.8,
+      "price": 53.57
+    },
+    {
+      "actual": 93.0,
+      "predicted": 83.8,
+      "price": 26.44
+    },
+    {
+      "actual": 68.0,
+      "predicted": 72.8,
+      "price": 34.49
+    },
+    {
+      "actual": 92.0,
+      "predicted": 96.8,
+      "price": 33.81
+    },
+    {
+      "actual": 48.0,
+      "predicted": 47.2,
+      "price": 45.12
+    },
+    {
+      "actual": 68.0,
+      "predicted": 54.6,
+      "price": 44.74
+    },
+    {
+      "actual": 41.0,
+      "predicted": 45.8,
+      "price": 48.83
+    },
+    {
+      "actual": 87.0,
+      "predicted": 88.9,
+      "price": 39.62
+    },
+    {
+      "actual": 126.0,
+      "predicted": 136.4,
+      "price": 21.41
+    },
+    {
+      "actual": 94.0,
+      "predicted": 87.3,
+      "price": 35.23
+    },
+    {
+      "actual": 99.0,
+      "predicted": 107.2,
+      "price": 25.33
+    },
+    {
+      "actual": 162.0,
+      "predicted": 150.0,
+      "price": 17.56
+    },
+    {
+      "actual": 99.0,
+      "predicted": 110.8,
+      "price": 32.72
+    },
+    {
+      "actual": 159.0,
+      "predicted": 145.3,
+      "price": 21.14
+    },
+    {
+      "actual": 82.0,
+      "predicted": 69.4,
+      "price": 42.14
+    },
+    {
+      "actual": 109.0,
+      "predicted": 89.8,
+      "price": 42.87
+    },
+    {
+      "actual": 64.0,
+      "predicted": 64.1,
+      "price": 52.73
+    },
+    {
+      "actual": 108.0,
+      "predicted": 88.1,
+      "price": 35.16
+    },
+    {
+      "actual": 101.0,
+      "predicted": 90.6,
+      "price": 47.55
+    },
+    {
+      "actual": 70.0,
+      "predicted": 75.7,
+      "price": 38.94
+    },
+    {
+      "actual": 95.0,
+      "predicted": 78.0,
+      "price": 49.76
+    },
+    {
+      "actual": 99.0,
+      "predicted": 117.9,
+      "price": 35.45
+    },
+    {
+      "actual": 66.0,
+      "predicted": 59.0,
+      "price": 54.07
+    },
+    {
+      "actual": 97.0,
+      "predicted": 95.6,
+      "price": 43.24
+    },
+    {
+      "actual": 78.0,
+      "predicted": 56.6,
+      "price": 47.83
+    },
+    {
+      "actual": 124.0,
+      "predicted": 123.7,
+      "price": 24.14
+    },
+    {
+      "actual": 119.0,
+      "predicted": 98.3,
+      "price": 21.12
+    },
+    {
+      "actual": 69.0,
+      "predicted": 62.8,
+      "price": 52.2
+    },
+    {
+      "actual": 84.0,
+      "predicted": 74.8,
+      "price": 42.96
+    },
+    {
+      "actual": 112.0,
+      "predicted": 122.3,
+      "price": 25.47
+    },
+    {
+      "actual": 54.0,
+      "predicted": 45.1,
+      "price": 56.49
+    },
+    {
+      "actual": 181.0,
+      "predicted": 174.5,
+      "price": 30.14
+    },
+    {
+      "actual": 72.0,
+      "predicted": 71.0,
+      "price": 40.84
+    },
+    {
+      "actual": 97.0,
+      "predicted": 99.4,
+      "price": 37.28
+    },
+    {
+      "actual": 83.0,
+      "predicted": 87.9,
+      "price": 41.22
+    },
+    {
+      "actual": 148.0,
+      "predicted": 132.1,
+      "price": 26.4
+    },
+    {
+      "actual": 113.0,
+      "predicted": 96.8,
+      "price": 39.72
+    },
+    {
+      "actual": 69.0,
+      "predicted": 63.3,
+      "price": 44.72
+    },
+    {
+      "actual": 88.0,
+      "predicted": 72.2,
+      "price": 37.43
+    },
+    {
+      "actual": 83.0,
+      "predicted": 81.0,
+      "price": 45.39
+    },
+    {
+      "actual": 101.0,
+      "predicted": 135.2,
+      "price": 28.64
+    },
+    {
+      "actual": 180.0,
+      "predicted": 178.5,
+      "price": 31.43
+    },
+    {
+      "actual": 188.0,
+      "predicted": 161.1,
+      "price": 17.96
+    },
+    {
+      "actual": 62.0,
+      "predicted": 68.4,
+      "price": 37.59
+    },
+    {
+      "actual": 98.0,
+      "predicted": 87.7,
+      "price": 38.2
+    },
+    {
+      "actual": 94.0,
+      "predicted": 90.3,
+      "price": 44.29
+    },
+    {
+      "actual": 102.0,
+      "predicted": 97.9,
+      "price": 37.81
+    },
+    {
+      "actual": 73.0,
+      "predicted": 69.5,
+      "price": 43.71
+    },
+    {
+      "actual": 94.0,
+      "predicted": 106.6,
+      "price": 22.3
+    },
+    {
+      "actual": 88.0,
+      "predicted": 88.1,
+      "price": 43.12
+    },
+    {
+      "actual": 102.0,
+      "predicted": 95.8,
+      "price": 32.13
+    },
+    {
+      "actual": 54.0,
+      "predicted": 60.3,
+      "price": 58.29
+    },
+    {
+      "actual": 161.0,
+      "predicted": 151.9,
+      "price": 21.29
+    },
+    {
+      "actual": 116.0,
+      "predicted": 122.1,
+      "price": 29.23
+    },
+    {
+      "actual": 91.0,
+      "predicted": 108.9,
+      "price": 24.22
+    },
+    {
+      "actual": 47.0,
+      "predicted": 47.0,
+      "price": 59.33
+    },
+    {
+      "actual": 89.0,
+      "predicted": 92.0,
+      "price": 31.83
+    },
+    {
+      "actual": 108.0,
+      "predicted": 109.5,
+      "price": 31.99
+    },
+    {
+      "actual": 218.0,
+      "predicted": 174.5,
+      "price": 20.6
+    },
+    {
+      "actual": 120.0,
+      "predicted": 110.3,
+      "price": 36.59
+    },
+    {
+      "actual": 102.0,
+      "predicted": 110.8,
+      "price": 29.84
+    },
+    {
+      "actual": 52.0,
+      "predicted": 58.7,
+      "price": 38.09
+    },
+    {
+      "actual": 101.0,
+      "predicted": 101.3,
+      "price": 31.54
+    },
+    {
+      "actual": 83.0,
+      "predicted": 77.8,
+      "price": 47.63
+    }
+  ],
+  "price_residuals_diagnostics": {
+    "variance": 0.0056,
+    "std": 0.0748,
+    "has_real_variation": true
+  }
+}

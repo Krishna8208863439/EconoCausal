@@ -148,3 +148,46 @@ def test_causal_dag_endpoint():
     assert "assumptions" in data
     assert len(data["nodes"]) >= 5
     assert len(data["edges"]) >= 5
+
+
+def test_data_validate_endpoint():
+    """POST /data/validate audits active dataset against continuous pricing schema."""
+    resp = client.post("/data/validate")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "is_valid" in data
+    assert data["is_valid"] is True
+    assert data["row_count"] == 2200
+    assert "columns" in data
+    assert "price" in data["columns"]
+    assert "units_sold" in data["columns"]
+
+
+def test_causal_pricing_results_endpoint():
+    """GET /causal/pricing-results returns Day 2 continuous DML estimates."""
+    resp = client.get("/causal/pricing-results")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "dml_estimates" in data
+    assert "price_elasticity" in data["dml_estimates"]
+    assert "ci_lower_95" in data["dml_estimates"]
+    assert "demand_curve" in data
+    assert len(data["demand_curve"]) > 0
+
+
+def test_causal_diagnostics_endpoint_day3():
+    """GET /causal/diagnostics returns Day 3 refutations and residual diagnostics."""
+    resp = client.get("/causal/diagnostics")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert ("continuous_positivity" in data) or ("nuisance_diagnostics" in data)
+
+
+def test_pricing_optimization_results_endpoint():
+    """GET /pricing/optimization-results returns Day 4 4-policy comparison."""
+    resp = client.get("/pricing/optimization-results")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "policy_comparison" in data
+    assert "causal_dml_optimal" in data["policy_comparison"]
+    assert "action_distribution" in data

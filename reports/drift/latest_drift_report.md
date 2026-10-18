@@ -1,5 +1,5 @@
 # EconoCausal — Automated Data Drift & Quality Report
-**Generated:** 2026-10-16T10:32:38.566583+00:00  
+**Generated:** 2026-10-18T11:37:09.050494+00:00  
 **Status:** **STABLE**  
 **Reference Records:** 2,200 | **Current Records:** 5  
 

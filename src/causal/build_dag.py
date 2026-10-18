@@ -64,18 +64,35 @@ log = logging.getLogger(__name__)
 _ROOT = Path(__file__).resolve().parents[2]
 CLEANED_PATH = _ROOT / "data" / "processed" / "cleaned_retail_campaign.csv"
 FIGURES_DIR  = _ROOT / "reports" / "figures"
+FRONTEND_PUBLIC = _ROOT / "frontend" / "public"
 DAG_PNG      = FIGURES_DIR / "causal_dag.png"
+PRICING_DAG_PNG = FIGURES_DIR / "causal_pricing_dag.png"
+DAG_SCHEMA_JSON = _ROOT / "data" / "processed" / "causal_dag_schema.json"
+FRONTEND_DAG_SCHEMA_JSON = FRONTEND_PUBLIC / "causal_dag_schema.json"
 
 
-# ── Causal model definition ───────────────────────────────────────────────────
+# ── Causal model definitions ───────────────────────────────────────────────────
 
+# Track A: Binary Discount Brief (Baseline)
 TREATMENT = "discount_offered"
 OUTCOME   = "purchased"
 
-# Pre-treatment confounders — variables that influence both treatment assignment
-# and outcome, measured before the campaign.
 COMMON_CAUSES = [
     "age_group",
+    "past_purchases",
+    "avg_order_value",
+    "website_visits",
+    "customer_segment",
+]
+
+# Track B: Continuous Pricing Brief (Assigned Brief)
+PRICING_TREATMENT = "price"
+PRICING_OUTCOME   = "units_sold"
+PRICING_COMMON_CAUSES = [
+    "cost_price",
+    "competitor_price",
+    "ad_spend",
+    "inventory",
     "past_purchases",
     "avg_order_value",
     "website_visits",
@@ -215,6 +232,166 @@ def visualise_dag_networkx(
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     log.info("DAG visualisation saved → %s", output_path)
+
+    # Mirror to frontend public directory
+    FRONTEND_PUBLIC.mkdir(parents=True, exist_ok=True)
+    frontend_copy = FRONTEND_PUBLIC / output_path.name
+    import shutil
+    shutil.copyfile(output_path, frontend_copy)
+    log.info("Mirrored DAG visualisation to frontend → %s", frontend_copy)
+
+
+def visualise_pricing_dag_networkx(
+    output_path: Path = PRICING_DAG_PNG,
+) -> None:
+    """
+    Render the Continuous Pricing Causal DAG using networkx + matplotlib.
+    Specification:
+        Treatment: price (P)
+        Outcome: units_sold (Q)
+        Confounders: cost_price, competitor_price, ad_spend, inventory,
+                     past_purchases, avg_order_value, website_visits, customer_segment
+    """
+    log.info("Rendering Continuous Pricing DAG with networkx + matplotlib …")
+    G = nx.DiGraph()
+
+    G.add_node(PRICING_TREATMENT)
+    G.add_node(PRICING_OUTCOME)
+    for cause in PRICING_COMMON_CAUSES:
+        G.add_node(cause)
+        G.add_edge(cause, PRICING_TREATMENT)
+        G.add_edge(cause, PRICING_OUTCOME)
+
+    # Market structural links: cost conditions competitor price
+    G.add_edge("cost_price", "competitor_price")
+    # Causal structural link: price directly determines units demanded
+    G.add_edge(PRICING_TREATMENT, PRICING_OUTCOME)
+
+    pos = {}
+    n_causes = len(PRICING_COMMON_CAUSES)
+    x_spacing = 1.6
+    y_spacing = 3.0
+
+    # Top layer: confounders
+    for i, cause in enumerate(PRICING_COMMON_CAUSES):
+        x_offset = (i - (n_causes - 1) / 2) * x_spacing
+        pos[cause] = (x_offset, 2 * y_spacing)
+
+    # Middle layer: price treatment
+    pos[PRICING_TREATMENT] = (-2.0, y_spacing)
+    # Bottom layer: units sold outcome
+    pos[PRICING_OUTCOME]   = (2.0, 0.0)
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    node_colors = []
+    for node in G.nodes():
+        if node == PRICING_TREATMENT:
+            node_colors.append("#2563EB")   # blue
+        elif node == PRICING_OUTCOME:
+            node_colors.append("#10B981")   # green
+        else:
+            node_colors.append("#F59E0B")   # amber / orange (market & consumer confounders)
+
+    nx.draw_networkx_nodes(
+        G, pos, ax=ax, node_size=3200, node_color=node_colors, alpha=0.92
+    )
+    nx.draw_networkx_labels(
+        G, pos, ax=ax, font_size=8.5, font_weight="bold", font_color="white"
+    )
+    nx.draw_networkx_edges(
+        G, pos, ax=ax, edge_color="#64748B", arrows=True,
+        arrowstyle="->", arrowsize=18, width=1.5, alpha=0.65
+    )
+
+    ax.set_title(
+        "Continuous Pricing Causal DAG: Retail Price → Units Sold\n"
+        "(Day 1 & Day 2 Assigned Brief: Microeconomic Identification & Backdoor Blocking)",
+        fontsize=13, fontweight="bold", pad=18,
+    )
+    ax.axis("off")
+    fig.tight_layout()
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    log.info("Continuous Pricing DAG saved → %s", output_path)
+
+    # Mirror to frontend public
+    FRONTEND_PUBLIC.mkdir(parents=True, exist_ok=True)
+    frontend_copy = FRONTEND_PUBLIC / output_path.name
+    import shutil
+    shutil.copyfile(output_path, frontend_copy)
+    log.info("Mirrored Continuous Pricing DAG to frontend → %s", frontend_copy)
+
+
+def export_dag_schema_json() -> None:
+    """Exports structured DAG graph schemas for both pipelines to JSON."""
+    schema = {
+        "continuous_pricing_dag": {
+            "name": "Continuous Pricing DAG",
+            "treatment": PRICING_TREATMENT,
+            "outcome": PRICING_OUTCOME,
+            "confounders": PRICING_COMMON_CAUSES,
+            "nodes": [
+                {"id": PRICING_TREATMENT, "label": "Retail Price (Treatment)", "type": "treatment", "color": "#2563EB"},
+                {"id": PRICING_OUTCOME, "label": "Units Sold (Outcome)", "type": "outcome", "color": "#10B981"},
+            ] + [
+                {"id": c, "label": c.replace("_", " ").title(), "type": "confounder", "color": "#F59E0B"}
+                for c in PRICING_COMMON_CAUSES
+            ],
+            "edges": [
+                {"from": c, "to": PRICING_TREATMENT, "role": "backdoor_treatment"}
+                for c in PRICING_COMMON_CAUSES
+            ] + [
+                {"from": c, "to": PRICING_OUTCOME, "role": "backdoor_outcome"}
+                for c in PRICING_COMMON_CAUSES
+            ] + [
+                {"from": "cost_price", "to": "competitor_price", "role": "market_cost_markup"},
+                {"from": PRICING_TREATMENT, "to": PRICING_OUTCOME, "role": "structural_causal_effect"},
+            ],
+            "structural_equation": "ln(units_sold) = alpha + beta * ln(price) + gamma * X + epsilon",
+            "assumptions": [
+                "Unconfoundedness: (Units(p)) _||_ Price | Cost, Competitor, AdSpend, Inventory, Covariates",
+                "Continuous Positivity: Price has non-degenerate residual variation conditional on X",
+                "SUTVA: Unit sales of one item do not interfere with other inventory records",
+            ],
+        },
+        "binary_discount_dag": {
+            "name": "Binary Discount Uplift DAG",
+            "treatment": TREATMENT,
+            "outcome": OUTCOME,
+            "confounders": COMMON_CAUSES,
+            "nodes": [
+                {"id": TREATMENT, "label": "Discount Offered (Treatment)", "type": "treatment", "color": "#2196F3"},
+                {"id": OUTCOME, "label": "Purchased (Outcome)", "type": "outcome", "color": "#4CAF50"},
+            ] + [
+                {"id": c, "label": c.replace("_", " ").title(), "type": "confounder", "color": "#FF9800"}
+                for c in COMMON_CAUSES
+            ],
+            "edges": [
+                {"from": c, "to": TREATMENT, "role": "backdoor_treatment"}
+                for c in COMMON_CAUSES
+            ] + [
+                {"from": c, "to": OUTCOME, "role": "backdoor_outcome"}
+                for c in COMMON_CAUSES
+            ] + [
+                {"from": TREATMENT, "to": OUTCOME, "role": "causal_effect"},
+            ],
+            "assumptions": [
+                "Consistency and SUTVA",
+                "Common Support / Overlap: 0 < P(T=1|X) < 1",
+                "Conditional Exchangeability: (Y(1), Y(0)) _||_ T | X",
+            ],
+        },
+    }
+
+    import json
+    for out_path in (DAG_SCHEMA_JSON, FRONTEND_DAG_SCHEMA_JSON):
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(schema, f, indent=2)
+        log.info("Exported causal DAG schema JSON → %s", out_path)
 
 
 # ── Report generation ─────────────────────────────────────────────────────────
@@ -458,13 +635,21 @@ def main() -> None:
     df = pd.read_csv(CLEANED_PATH)
     log.info("Dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
 
+    # 1. Binary Discount DAG
     model = build_causal_model(df)
     visualise_dag_networkx(model, output_path=DAG_PNG)
 
+    # 2. Continuous Pricing DAG (Assigned Brief)
+    visualise_pricing_dag_networkx(output_path=PRICING_DAG_PNG)
+
+    # 3. Export DAG Schema JSON for API & Frontend
+    export_dag_schema_json()
+
+    # 4. Generate Causal Analysis Report
     report_path = _ROOT / "reports" / "week1_causal_analysis.md"
     generate_report(model, output_path=report_path)
 
-    log.info("Causal DAG and report complete.")
+    log.info("Causal DAGs, JSON schemas, and report generation complete.")
 
 
 if __name__ == "__main__":

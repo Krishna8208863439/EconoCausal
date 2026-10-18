@@ -1,0 +1,295 @@
+{
+  "continuous_pricing_dag": {
+    "name": "Continuous Pricing DAG",
+    "treatment": "price",
+    "outcome": "units_sold",
+    "confounders": [
+      "cost_price",
+      "competitor_price",
+      "ad_spend",
+      "inventory",
+      "past_purchases",
+      "avg_order_value",
+      "website_visits",
+      "customer_segment"
+    ],
+    "nodes": [
+      {
+        "id": "price",
+        "label": "Retail Price (Treatment)",
+        "type": "treatment",
+        "color": "#2563EB"
+      },
+      {
+        "id": "units_sold",
+        "label": "Units Sold (Outcome)",
+        "type": "outcome",
+        "color": "#10B981"
+      },
+      {
+        "id": "cost_price",
+        "label": "Cost Price",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "competitor_price",
+        "label": "Competitor Price",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "ad_spend",
+        "label": "Ad Spend",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "inventory",
+        "label": "Inventory",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "past_purchases",
+        "label": "Past Purchases",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "avg_order_value",
+        "label": "Avg Order Value",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "website_visits",
+        "label": "Website Visits",
+        "type": "confounder",
+        "color": "#F59E0B"
+      },
+      {
+        "id": "customer_segment",
+        "label": "Customer Segment",
+        "type": "confounder",
+        "color": "#F59E0B"
+      }
+    ],
+    "edges": [
+      {
+        "from": "cost_price",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "competitor_price",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "ad_spend",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "inventory",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "past_purchases",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "avg_order_value",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "website_visits",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "customer_segment",
+        "to": "price",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "cost_price",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "competitor_price",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "ad_spend",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "inventory",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "past_purchases",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "avg_order_value",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "website_visits",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "customer_segment",
+        "to": "units_sold",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "cost_price",
+        "to": "competitor_price",
+        "role": "market_cost_markup"
+      },
+      {
+        "from": "price",
+        "to": "units_sold",
+        "role": "structural_causal_effect"
+      }
+    ],
+    "structural_equation": "ln(units_sold) = alpha + beta * ln(price) + gamma * X + epsilon",
+    "assumptions": [
+      "Unconfoundedness: (Units(p)) _||_ Price | Cost, Competitor, AdSpend, Inventory, Covariates",
+      "Continuous Positivity: Price has non-degenerate residual variation conditional on X",
+      "SUTVA: Unit sales of one item do not interfere with other inventory records"
+    ]
+  },
+  "binary_discount_dag": {
+    "name": "Binary Discount Uplift DAG",
+    "treatment": "discount_offered",
+    "outcome": "purchased",
+    "confounders": [
+      "age_group",
+      "past_purchases",
+      "avg_order_value",
+      "website_visits",
+      "customer_segment"
+    ],
+    "nodes": [
+      {
+        "id": "discount_offered",
+        "label": "Discount Offered (Treatment)",
+        "type": "treatment",
+        "color": "#2196F3"
+      },
+      {
+        "id": "purchased",
+        "label": "Purchased (Outcome)",
+        "type": "outcome",
+        "color": "#4CAF50"
+      },
+      {
+        "id": "age_group",
+        "label": "Age Group",
+        "type": "confounder",
+        "color": "#FF9800"
+      },
+      {
+        "id": "past_purchases",
+        "label": "Past Purchases",
+        "type": "confounder",
+        "color": "#FF9800"
+      },
+      {
+        "id": "avg_order_value",
+        "label": "Avg Order Value",
+        "type": "confounder",
+        "color": "#FF9800"
+      },
+      {
+        "id": "website_visits",
+        "label": "Website Visits",
+        "type": "confounder",
+        "color": "#FF9800"
+      },
+      {
+        "id": "customer_segment",
+        "label": "Customer Segment",
+        "type": "confounder",
+        "color": "#FF9800"
+      }
+    ],
+    "edges": [
+      {
+        "from": "age_group",
+        "to": "discount_offered",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "past_purchases",
+        "to": "discount_offered",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "avg_order_value",
+        "to": "discount_offered",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "website_visits",
+        "to": "discount_offered",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "customer_segment",
+        "to": "discount_offered",
+        "role": "backdoor_treatment"
+      },
+      {
+        "from": "age_group",
+        "to": "purchased",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "past_purchases",
+        "to": "purchased",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "avg_order_value",
+        "to": "purchased",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "website_visits",
+        "to": "purchased",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "customer_segment",
+        "to": "purchased",
+        "role": "backdoor_outcome"
+      },
+      {
+        "from": "discount_offered",
+        "to": "purchased",
+        "role": "causal_effect"
+      }
+    ],
+    "assumptions": [
+      "Consistency and SUTVA",
+      "Common Support / Overlap: 0 < P(T=1|X) < 1",
+      "Conditional Exchangeability: (Y(1), Y(0)) _||_ T | X"
+    ]
+  }
+}

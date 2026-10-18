@@ -34,7 +34,14 @@ data/processed/*.parquet
 !data/processed/cleaned_retail_campaign.csv
 !data/processed/ite_predictions.csv
 !data/processed/discount_allocation.csv
+!data/processed/pricing_decisions.csv
 !data/processed/causal_evaluation_results.json
+!data/processed/dml_pricing_results.json
+!data/processed/causal_diagnostics_results.json
+!data/processed/pricing_optimization_results.json
+!data/processed/true_price_effect.json
+!data/processed/causal_dag_schema.json
+!data/raw/true_price_effect.json
 
 # Node / frontend
 node_modules/

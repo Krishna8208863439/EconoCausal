@@ -162,12 +162,35 @@ class BudgetConfigPayload(BaseModel):
 
 @app.get("/health")
 def get_health() -> Dict[str, Any]:
+    db_ok = False
+    run_count = 0
+    db_file = _ROOT / "data" / "econocausal.db"
+    if db_file.exists():
+        try:
+            import sqlite3
+            conn = sqlite3.connect(db_file)
+            c = conn.cursor()
+            c.execute("SELECT COUNT(*) FROM pipeline_runs")
+            run_count = c.fetchone()[0]
+            conn.close()
+            db_ok = True
+        except Exception:
+            pass
+
     return {
         "status": "ok",
         "app": "EconoCausal API",
         "reference": "ITS/DSML/1147",
         "version": "4.0.0",
         "week": 4,
+        "database": {
+            "type": "SQLite",
+            "connected": db_ok,
+            "pipeline_runs_stored": run_count,
+            "path": str(db_file),
+        },
+        "pricing_results_ready": (_ROOT / "data" / "processed" / "dml_pricing_results.json").exists(),
+        "diagnostics_ready": (_ROOT / "data" / "processed" / "causal_diagnostics_results.json").exists(),
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 
@@ -363,6 +386,55 @@ def get_causal_diagnostics() -> Dict[str, Any]:
     }
 
 
+@app.get("/causal/pricing-results")
+def get_causal_pricing_results() -> Dict[str, Any]:
+    """
+    Returns Day 2/3 Double Machine Learning continuous pricing results,
+    including price elasticity beta, confidence intervals, naive OLS comparison,
+    demand curves, and segment effects.
+    """
+    pricing_path = _ROOT / "data" / "processed" / "dml_pricing_results.json"
+    if not pricing_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Continuous DML pricing results not found. Run src/causal/dml_estimator.py first.",
+        )
+    with open(pricing_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.get("/causal/diagnostics")
+def get_causal_diagnostics() -> Dict[str, Any]:
+    """
+    Returns Day 3 causal diagnostics: continuous overlap / residual variance,
+    residual orthogonality, DoWhy refutations, and fold/learner sensitivity.
+    """
+    diag_path = _ROOT / "data" / "processed" / "causal_diagnostics_results.json"
+    if not diag_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Causal diagnostics results not found. Run src/causal/diagnostics.py first.",
+        )
+    with open(diag_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+@app.get("/pricing/optimization-results")
+def get_pricing_optimization_results() -> Dict[str, Any]:
+    """
+    Returns Day 4 dynamic pricing optimization benchmark, segment policies,
+    and microeconomic profit comparison.
+    """
+    opt_path = _ROOT / "data" / "processed" / "pricing_optimization_results.json"
+    if not opt_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Pricing optimization results not found. Run src/causal/pricing_optimizer.py first.",
+        )
+    with open(opt_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 # ── Data & EDA Endpoints ──────────────────────────────────────────────────────
 
 @app.get("/data/summary")
@@ -454,6 +526,109 @@ def load_default_dataset() -> Dict[str, Any]:
         "path": str(cleaned_path),
         "status": "success",
     }
+
+
+@app.post("/data/validate")
+async def validate_dataset(file: Optional[UploadFile] = File(None)) -> Dict[str, Any]:
+    """
+    Validates uploaded or active dataset against continuous pricing and causal schema.
+    Verifies column existence, null counts, positivity, and price-cost bounds.
+    Logs audit results into SQLite for Mid-Review evaluation.
+    """
+    target_path = DATA_PATH
+    is_temp = False
+
+    if file is not None and file.filename:
+        temp_path = _ROOT / "data" / "processed" / "temp_validate.csv"
+        with open(temp_path, "wb") as buf:
+            shutil.copyfileobj(file.file, buf)
+        target_path = temp_path
+        is_temp = True
+
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="Dataset not found for validation.")
+
+    try:
+        df = pd.read_csv(target_path)
+        required_cols = [
+            "price",
+            "units_sold",
+            "cost_price",
+            "competitor_price",
+            "ad_spend",
+            "inventory",
+            "past_purchases",
+            "avg_order_value",
+            "website_visits",
+            "customer_segment",
+            "age_group",
+        ]
+        missing = [c for c in required_cols if c not in df.columns]
+
+        errors = []
+        warnings = []
+        if missing:
+            errors.append(f"Missing required columns: {missing}")
+
+        null_counts = {c: int(df[c].isna().sum()) for c in df.columns if df[c].isna().sum() > 0}
+        if null_counts:
+            warnings.append(f"Null values detected in columns: {null_counts}")
+
+        if "price" in df.columns and (df["price"] <= 0).any():
+            errors.append("Invalid prices detected: prices must be strictly positive.")
+
+        if "units_sold" in df.columns and (df["units_sold"] < 0).any():
+            errors.append("Negative units sold detected.")
+
+        if "cost_price" in df.columns and "competitor_price" in df.columns:
+            inverted = int((df["competitor_price"] < df["cost_price"]).sum())
+            if inverted > 0:
+                warnings.append(f"{inverted} rows have competitor_price < cost_price.")
+
+        is_valid = len(errors) == 0
+
+        # Log validation check to SQLite
+        db_file = _ROOT / "data" / "econocausal.db"
+        if db_file.exists():
+            try:
+                import sqlite3
+                conn = sqlite3.connect(db_file)
+                cur = conn.cursor()
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS validation_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        row_count INTEGER,
+                        is_valid INTEGER,
+                        error_count INTEGER,
+                        warning_count INTEGER
+                    )
+                """)
+                cur.execute(
+                    "INSERT INTO validation_logs (row_count, is_valid, error_count, warning_count) VALUES (?, ?, ?, ?)",
+                    (len(df), 1 if is_valid else 0, len(errors), len(warnings)),
+                )
+                conn.commit()
+                conn.close()
+            except Exception as sql_err:
+                log.warning("Could not write validation log to SQLite: %s", sql_err)
+
+        return {
+            "status": "valid" if is_valid else "invalid",
+            "is_valid": is_valid,
+            "row_count": len(df),
+            "column_count": len(df.columns),
+            "columns": list(df.columns),
+            "errors": errors,
+            "warnings": warnings,
+            "null_counts": null_counts,
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Validation failed: {e}")
+    finally:
+        if is_temp and target_path.exists():
+            target_path.unlink(missing_ok=True)
 
 
 # ── Causal DAG & Budget Config ───────────────────────────────────────────────
