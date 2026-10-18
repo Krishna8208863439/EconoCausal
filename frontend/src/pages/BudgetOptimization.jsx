@@ -411,55 +411,6 @@ export default function BudgetOptimization() {
         />
       </SectionCard>
 
-      {/* ── Mathematical Formulation & Economic Framework ───────────────── */}
-      <SectionCard
-        title="Prescriptive Formulation & Economic Framework"
-        subtitle="Mathematical formulation and econometric assumptions underlying the prescriptive engine"
-        icon={Scale}
-      >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-          <div style={{ background: '#F8FAFC', padding: '18px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
-            <h4 style={{ margin: '0 0 8px 0', color: '#1E293B', fontSize: '0.95rem', fontWeight: 700 }}>
-              📐 Binary Integer Program (BIP) Formulation
-            </h4>
-            <p style={{ margin: '0 0 10px 0', fontSize: '0.82rem', color: '#64748B' }}>
-              We formulate the discount assignment as a 0-1 knapsack optimization problem solved via SciPy's HiGHS solver:
-            </p>
-            <pre style={{ background: '#0F172A', color: '#38BDF8', padding: '14px', borderRadius: '8px', fontSize: '0.82rem', overflowX: 'auto', fontFamily: 'var(--font-mono)' }}>
-{`maximize   ∑  x_i · [ τ_i · M_i − d ]
-subject to ∑  x_i · d ≤ Budget
-           x_i ∈ {0, 1}   ∀ i ∈ {1, ..., N}
-           τ_i > τ_min,   τ_i · M_i > d`}
-            </pre>
-            <ul style={{ paddingLeft: '20px', margin: '10px 0 0 0', fontSize: '0.8rem', color: '#475569', lineHeight: '1.6' }}>
-              <li><strong>x_i ∈ &#123;0, 1&#125;:</strong> Binary decision variable (1 = offer discount, 0 = do not offer)</li>
-              <li><strong>τ_i:</strong> Individual Treatment Effect (ITE) from Week 2 Causal Forest</li>
-              <li><strong>M_i:</strong> Margin proxy (Customer average order value, ₹55 baseline)</li>
-              <li><strong>d:</strong> Fixed discount cost per coupon offer (₹10)</li>
-            </ul>
-          </div>
-
-          <div style={{ background: '#F8FAFC', padding: '18px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
-            <h4 style={{ margin: '0 0 8px 0', color: '#1E293B', fontSize: '0.95rem', fontWeight: 700 }}>
-              ⚖️ Economic & Causal Governance Principles
-            </h4>
-            <ul style={{ paddingLeft: '18px', margin: 0, fontSize: '0.82rem', color: '#475569', lineHeight: '1.7' }}>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Strict Budget Invariance:</strong> Planned spend is mathematically guaranteed never to exceed the defined budget (∑ x_i · d ≤ B).
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Economic Viability Gate:</strong> Only customers with positive net expected contribution (τ_i · M_i &gt; d) are eligible, ensuring no loss-making discounts are ever issued.
-              </li>
-              <li style={{ marginBottom: '8px' }}>
-                <strong>Binary Treatment Contrast:</strong> The causal model estimates the contrast between receiving a discount vs not receiving a discount. Multi-tier discount dosage is excluded.
-              </li>
-              <li>
-                <strong>Uncertainty Flagging:</strong> Customers whose 95% confidence lower bound τ_lower ≤ 0 are marked with ⚠️ for business transparency, while retaining optimal point-estimate ranking.
-              </li>
-            </ul>
-          </div>
-        </div>
-      </SectionCard>
     </div>
   )
 }

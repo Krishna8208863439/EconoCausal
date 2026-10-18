@@ -17,12 +17,10 @@ export default function TopBar({ onMenuToggle, activePage = 'overview' }) {
   const PAGE_NAMES = {
     overview: 'Overview & Executive Summary',
     data: 'Data & Exploratory Analysis',
-    causal: 'Causal Inference & DAG',
     budget: 'Campaign Budget Configuration',
     uplift: 'Uplift & Treatment Evaluation',
     optimization: 'Discount Allocation Matrix',
     drift: 'Automated Data Drift Monitor',
-    report: 'Final Delivery & Reports',
   }
 
   const loadStatus = async () => {

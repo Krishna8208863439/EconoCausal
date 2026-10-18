@@ -254,63 +254,6 @@ export default function UpliftPage() {
         />
       </div>
 
-      {/* ── 2x2 Interactive Charts Grid ─────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-        {/* 1. CATE Distribution */}
-        <SectionCard
-          title="Treatment Effect Distribution (CATE)"
-          subtitle="Heterogeneous uplift distribution estimated via CausalForestDML"
-          icon={TrendingUp}
-        >
-          <TreatmentEffectChart
-            meanAte={m.mean_ate}
-            ciLower={m.ci_lower_95}
-            ciUpper={m.ci_upper_95}
-            sampleSize={d.total_records}
-            minIte={m.min_ite}
-            maxIte={m.max_ite}
-            stdIte={m.std_ite}
-          />
-        </SectionCard>
-
-        {/* 2. Cumulative Uplift Curve */}
-        <SectionCard
-          title="Cumulative Uplift Curve"
-          subtitle="Customer response ranked by predicted ITE vs random baseline"
-          icon={TrendingUp}
-        >
-          <UpliftCurve
-            fractions={u.fractions}
-            causalGain={u.causal_gain}
-            randomGain={u.random_gain}
-            totalIncremental={u.total_incremental_conversions}
-          />
-        </SectionCard>
-
-        {/* 3. Qini Evaluation Curve */}
-        <SectionCard
-          title="Cumulative Qini Evaluation Curve"
-          subtitle={`Qini Score: +${u.qini_score.toFixed(3)} (Excess area above random)`}
-          icon={BarChart3}
-        >
-          <QiniCurve
-            fractions={u.fractions}
-            causalGain={u.causal_gain}
-            randomGain={u.random_gain}
-            qiniScore={u.qini_score}
-          />
-        </SectionCard>
-
-        {/* 4. Policy Comparison Under Budget */}
-        <SectionCard
-          title="Policy Benchmark Under Budget"
-          subtitle="Causal DML vs Blanket vs Random vs No-Discount at ₹5,000 spend"
-          icon={Target}
-        >
-          <PolicyComparisonChart baselines={baselines} />
-        </SectionCard>
-      </div>
-
       {/* ── Segment CATE Breakdown & Real-Time Customer Scoring Simulator ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: '20px', marginBottom: '28px' }}>
         {/* Segment CATE Table */}

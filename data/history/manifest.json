@@ -1,0 +1,36 @@
+[
+  {
+    "id": "csv_098a65a6f3",
+    "filename": "econocausal_campaign_dataset_schema_fixed (1).csv",
+    "storage_filename": "csv_098a65a6f3_econocausal_campaign_dataset_schema_fixed1.csv",
+    "name": "econocausal_campaign_dataset_schema_fixed (1).csv",
+    "upload_time": "2026-10-18T16:50:31.750705",
+    "formatted_date": "18 Oct 2026, 04:50 PM",
+    "rows": 2200,
+    "size_bytes": 163129,
+    "size_formatted": "159.3 KB",
+    "is_default": false,
+    "is_active": true,
+    "columns_count": 16,
+    "treated_count": 1231,
+    "control_count": 969,
+    "source": "User Upload"
+  },
+  {
+    "id": "default_benchmark",
+    "filename": "cleaned_retail_campaign.csv",
+    "storage_filename": "cleaned_retail_campaign_default.csv",
+    "name": "Benchmark Observational Cohort (Default)",
+    "upload_time": "2026-10-18T16:43:51.588169",
+    "formatted_date": "18 Oct 2026, 04:43 PM",
+    "rows": 2200,
+    "size_bytes": 139971,
+    "size_formatted": "136.7 KB",
+    "is_default": true,
+    "is_active": false,
+    "columns_count": 11,
+    "treated_count": 1293,
+    "control_count": 907,
+    "source": "Benchmark Synthetic"
+  }
+]

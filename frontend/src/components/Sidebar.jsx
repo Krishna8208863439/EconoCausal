@@ -30,12 +30,6 @@ const NAV_ITEMS = [
     icon: Database,
   },
   {
-    id: 'causal',
-    label: 'Causal Analysis',
-    description: 'DAG & DML identification',
-    icon: GitFork,
-  },
-  {
     id: 'budget',
     label: 'Budget Config',
     description: 'Simulate campaign spend',
@@ -59,12 +53,6 @@ const NAV_ITEMS = [
     description: 'KS & PSI stability audits',
     icon: ShieldCheck,
   },
-  {
-    id: 'report',
-    label: 'Final Delivery & Reports',
-    description: 'Executive reports & briefings',
-    icon: Presentation,
-  },
 ]
 
 export default function Sidebar({ activePage, onNavigate, isOpen, onClose }) {
@@ -84,7 +72,7 @@ export default function Sidebar({ activePage, onNavigate, isOpen, onClose }) {
         <div className="sidebar-header">
           <div className="sidebar-nav-title">
             <span>Modules</span>
-            <span className="modules-count">8 Modules</span>
+            <span className="modules-count">6 Modules</span>
           </div>
           {/* Close button for mobile */}
           <button

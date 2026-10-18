@@ -61,7 +61,7 @@ export default function CsvUploader({ onDataLoaded }) {
           type: 'success',
           message: `Loaded ${results.data.length.toLocaleString()} rows from "${file.name}".`,
         })
-        onDataLoaded(results.data, file.name)
+        onDataLoaded(results.data, file.name, file)
       },
       error: (err) => {
         setStatus({ type: 'error', message: `Parse error: ${err.message}` })

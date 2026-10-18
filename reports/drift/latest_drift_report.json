@@ -1,91 +1,302 @@
 {
-  "dataset_name": "test_cohort.csv",
-  "timestamp": "2026-10-14T16:06:12.648475+00:00",
+  "dataset_name": "econocausal_drift_candidate_test.csv",
+  "timestamp": "2026-10-18T11:28:10.553756+00:00",
   "reference_sample_size": 2200,
-  "current_sample_size": 5,
+  "current_sample_size": 2200,
   "schema_status": "valid",
   "schema_warnings": [],
-  "overall_drift_status": "STABLE",
-  "high_drift_features": [],
+  "overall_drift_status": "DRIFT_DETECTED",
+  "high_drift_features": [
+    "past_purchases",
+    "avg_order_value",
+    "website_visits",
+    "age_group",
+    "customer_segment"
+  ],
   "moderate_drift_features": [],
   "features": {
     "past_purchases": {
       "test": "Kolmogorov-Smirnov & Decile PSI",
-      "ks_statistic": 0.1241,
-      "p_value": 0.99997,
-      "psi": 0.0,
-      "ref_mean": 9.38,
-      "curr_mean": 8.8,
-      "ref_std": 5.11,
-      "curr_std": 4.76,
-      "drift_detected": false,
-      "severity": "none",
-      "status_label": "Stable",
-      "bin_details": [],
+      "ks_statistic": 0.3709,
+      "p_value": 0.0,
+      "psi": 0.8575,
+      "ref_mean": 3.25,
+      "curr_mean": 5.22,
+      "ref_std": 1.83,
+      "curr_std": 2.24,
+      "drift_detected": true,
+      "severity": "high",
+      "status_label": "Significant Drift",
+      "bin_details": [
+        {
+          "bin_range": "[-inf, 1.00)",
+          "ref_pct": 4.18,
+          "curr_pct": 0.5,
+          "psi_contribution": 0.0782
+        },
+        {
+          "bin_range": "[1.00, 2.00)",
+          "ref_pct": 12.91,
+          "curr_pct": 2.91,
+          "psi_contribution": 0.14901
+        },
+        {
+          "bin_range": "[2.00, 3.00)",
+          "ref_pct": 20.14,
+          "curr_pct": 6.64,
+          "psi_contribution": 0.14985
+        },
+        {
+          "bin_range": "[3.00, 4.00)",
+          "ref_pct": 21.09,
+          "curr_pct": 13.59,
+          "psi_contribution": 0.03296
+        },
+        {
+          "bin_range": "[4.00, 5.00)",
+          "ref_pct": 18.82,
+          "curr_pct": 16.41,
+          "psi_contribution": 0.0033
+        },
+        {
+          "bin_range": "[5.00, 6.00)",
+          "ref_pct": 11.41,
+          "curr_pct": 16.59,
+          "psi_contribution": 0.0194
+        },
+        {
+          "bin_range": "[6.00, +inf)",
+          "ref_pct": 11.45,
+          "curr_pct": 43.36,
+          "psi_contribution": 0.42478
+        }
+      ],
       "feature_type": "numerical"
     },
     "avg_order_value": {
       "test": "Kolmogorov-Smirnov & Decile PSI",
-      "ks_statistic": 0.3905,
-      "p_value": 0.33678,
-      "psi": 0.0,
-      "ref_mean": 55.61,
-      "curr_mean": 58.0,
-      "ref_std": 35.74,
-      "curr_std": 15.25,
-      "drift_detected": false,
-      "severity": "none",
-      "status_label": "Stable",
-      "bin_details": [],
+      "ks_statistic": 0.2668,
+      "p_value": 0.0,
+      "psi": 0.45,
+      "ref_mean": 71.6,
+      "curr_mean": 88.5,
+      "ref_std": 22.34,
+      "curr_std": 26.81,
+      "drift_detected": true,
+      "severity": "high",
+      "status_label": "Significant Drift",
+      "bin_details": [
+        {
+          "bin_range": "[-inf, 42.69)",
+          "ref_pct": 9.95,
+          "curr_pct": 3.68,
+          "psi_contribution": 0.06239
+        },
+        {
+          "bin_range": "[42.69, 52.62)",
+          "ref_pct": 10.05,
+          "curr_pct": 5.5,
+          "psi_contribution": 0.02738
+        },
+        {
+          "bin_range": "[52.62, 59.68)",
+          "ref_pct": 10.0,
+          "curr_pct": 5.64,
+          "psi_contribution": 0.02502
+        },
+        {
+          "bin_range": "[59.68, 65.55)",
+          "ref_pct": 9.95,
+          "curr_pct": 5.86,
+          "psi_contribution": 0.02165
+        },
+        {
+          "bin_range": "[65.55, 71.65)",
+          "ref_pct": 10.0,
+          "curr_pct": 5.73,
+          "psi_contribution": 0.02381
+        },
+        {
+          "bin_range": "[71.65, 77.30)",
+          "ref_pct": 10.05,
+          "curr_pct": 7.59,
+          "psi_contribution": 0.00688
+        },
+        {
+          "bin_range": "[77.30, 84.06)",
+          "ref_pct": 10.0,
+          "curr_pct": 9.86,
+          "psi_contribution": 2e-05
+        },
+        {
+          "bin_range": "[84.06, 91.20)",
+          "ref_pct": 10.0,
+          "curr_pct": 11.32,
+          "psi_contribution": 0.00163
+        },
+        {
+          "bin_range": "[91.20, 100.20)",
+          "ref_pct": 10.0,
+          "curr_pct": 11.59,
+          "psi_contribution": 0.00235
+        },
+        {
+          "bin_range": "[100.20, +inf)",
+          "ref_pct": 10.0,
+          "curr_pct": 33.23,
+          "psi_contribution": 0.27891
+        }
+      ],
       "feature_type": "numerical"
     },
     "website_visits": {
       "test": "Kolmogorov-Smirnov & Decile PSI",
-      "ks_statistic": 0.2441,
-      "p_value": 0.86358,
-      "psi": 0.0,
-      "ref_mean": 5.97,
-      "curr_mean": 6.2,
-      "ref_std": 2.51,
-      "curr_std": 3.7,
-      "drift_detected": false,
-      "severity": "none",
-      "status_label": "Stable",
-      "bin_details": [],
+      "ks_statistic": 0.3723,
+      "p_value": 0.0,
+      "psi": 0.8064,
+      "ref_mean": 5.49,
+      "curr_mean": 7.95,
+      "ref_std": 2.29,
+      "curr_std": 2.89,
+      "drift_detected": true,
+      "severity": "high",
+      "status_label": "Significant Drift",
+      "bin_details": [
+        {
+          "bin_range": "[-inf, 3.00)",
+          "ref_pct": 8.64,
+          "curr_pct": 2.05,
+          "psi_contribution": 0.09493
+        },
+        {
+          "bin_range": "[3.00, 4.00)",
+          "ref_pct": 11.05,
+          "curr_pct": 2.55,
+          "psi_contribution": 0.12476
+        },
+        {
+          "bin_range": "[4.00, 5.00)",
+          "ref_pct": 15.05,
+          "curr_pct": 6.32,
+          "psi_contribution": 0.07572
+        },
+        {
+          "bin_range": "[5.00, 6.00)",
+          "ref_pct": 18.18,
+          "curr_pct": 9.86,
+          "psi_contribution": 0.05087
+        },
+        {
+          "bin_range": "[6.00, 7.00)",
+          "ref_pct": 16.27,
+          "curr_pct": 11.18,
+          "psi_contribution": 0.0191
+        },
+        {
+          "bin_range": "[7.00, 9.00)",
+          "ref_pct": 20.68,
+          "curr_pct": 27.5,
+          "psi_contribution": 0.01943
+        },
+        {
+          "bin_range": "[9.00, +inf)",
+          "ref_pct": 10.14,
+          "curr_pct": 40.55,
+          "psi_contribution": 0.42156
+        }
+      ],
       "feature_type": "numerical"
     },
     "age_group": {
       "test": "Chi-Square & Categorical PSI",
-      "chi2_statistic": 0.0,
-      "p_value": 1.0,
-      "psi": 0.0,
-      "drift_detected": false,
-      "severity": "insufficient_data",
-      "status_label": "Insufficient Data",
+      "chi2_statistic": 263.7573,
+      "p_value": 0.0,
+      "psi": 0.2674,
+      "drift_detected": true,
+      "severity": "high",
+      "status_label": "Significant Drift",
+      "bin_details": [
+        {
+          "category": "18-25",
+          "ref_pct": 16.09,
+          "curr_pct": 3.73,
+          "psi_contribution": 0.18083
+        },
+        {
+          "category": "26-35",
+          "ref_pct": 18.32,
+          "curr_pct": 12.41,
+          "psi_contribution": 0.02301
+        },
+        {
+          "category": "36-45",
+          "ref_pct": 17.45,
+          "curr_pct": 26.68,
+          "psi_contribution": 0.03916
+        },
+        {
+          "category": "46-55",
+          "ref_pct": 20.09,
+          "curr_pct": 27.55,
+          "psi_contribution": 0.02352
+        },
+        {
+          "category": "56-70",
+          "ref_pct": 28.05,
+          "curr_pct": 29.64,
+          "psi_contribution": 0.00088
+        }
+      ],
       "feature_type": "categorical"
     },
     "customer_segment": {
       "test": "Chi-Square & Categorical PSI",
-      "chi2_statistic": 0.0,
-      "p_value": 1.0,
-      "psi": 0.0,
-      "drift_detected": false,
-      "severity": "insufficient_data",
-      "status_label": "Insufficient Data",
+      "chi2_statistic": 353.3523,
+      "p_value": 0.0,
+      "psi": 0.3387,
+      "drift_detected": true,
+      "severity": "high",
+      "status_label": "Significant Drift",
+      "bin_details": [
+        {
+          "category": "High Value",
+          "ref_pct": 11.91,
+          "curr_pct": 29.27,
+          "psi_contribution": 0.15616
+        },
+        {
+          "category": "Loyal",
+          "ref_pct": 28.18,
+          "curr_pct": 35.95,
+          "psi_contribution": 0.01893
+        },
+        {
+          "category": "New",
+          "ref_pct": 24.14,
+          "curr_pct": 10.09,
+          "psi_contribution": 0.12249
+        },
+        {
+          "category": "Regular",
+          "ref_pct": 35.77,
+          "curr_pct": 24.68,
+          "psi_contribution": 0.04116
+        }
+      ],
       "feature_type": "categorical"
     }
   },
   "target_and_treatment_drift": {
     "treatment_rate": {
-      "reference_rate": 0.5877,
-      "current_rate": 0.6,
-      "absolute_diff": 0.0123,
-      "alert": false
+      "reference_rate": 0.5595,
+      "current_rate": 0.4218,
+      "absolute_diff": 0.1377,
+      "alert": true
     },
     "conversion_rate": {
-      "reference_rate": 0.4809,
-      "current_rate": 0.4,
-      "absolute_diff": 0.0809,
+      "reference_rate": 0.5259,
+      "current_rate": 0.6509,
+      "absolute_diff": 0.125,
       "alert": true
     }
   },
@@ -122,7 +333,7 @@
     }
   },
   "recommendations": [
-    "All monitored covariates exhibit stable distributions (PSI < 0.10). No intervention needed.",
+    "Significant distribution shift observed in ['past_purchases', 'avg_order_value', 'website_visits', 'age_group', 'customer_segment']. Investigate possible seasonal behavioral changes or marketing channel source modifications.",
     "Governance Policy: Statistical covariate drift does not automatically imply causal model degradation. Do NOT automatically retrain without off-policy validation on new experimental data."
   ]
 }

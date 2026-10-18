@@ -389,20 +389,6 @@ export default function DriftPage() {
         </SectionCard>
       )}
 
-      {/* ── Operational Business Recommendations ────────────────────────── */}
-      <SectionCard
-        title="Automated Data Quality & Governance Directives"
-        subtitle="Plain-language directives generated from verified statistical stability audits"
-        icon={CheckCircle2}
-      >
-        <ul className="prose-list">
-          {report?.recommendations?.map((rec, idx) => (
-            <li key={idx} style={{ marginBottom: '8px' }}>
-              <strong>Directive {idx + 1}:</strong> {rec}
-            </li>
-          ))}
-        </ul>
-      </SectionCard>
     </div>
   )
 }

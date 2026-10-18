@@ -1,7 +1,7 @@
 # EconoCausal — Automated Data Drift & Quality Report
-**Generated:** 2026-10-14T16:06:12.648475+00:00  
-**Status:** **STABLE**  
-**Reference Records:** 2,200 | **Current Records:** 5  
+**Generated:** 2026-10-18T11:28:10.553756+00:00  
+**Status:** **DRIFT_DETECTED**  
+**Reference Records:** 2,200 | **Current Records:** 2,200  
 
 ---
 
@@ -9,9 +9,9 @@
 
 | Category | Assessment |
 |---|---|
-| **Overall Drift Status** | **STABLE** |
+| **Overall Drift Status** | **DRIFT_DETECTED** |
 | **Schema Integrity** | VALID |
-| **High Drift Features** | None |
+| **High Drift Features** | past_purchases, avg_order_value, website_visits, age_group, customer_segment |
 | **Moderate Drift Features** | None |
 
 ---
@@ -20,11 +20,11 @@
 
 | Feature | Type | Test | PSI | p-value | Severity | Status |
 |---|---|---|---|---|---|---|
-| `past_purchases` | numerical | KS & PSI | **0.0000** | 1.0000 | NONE | Stable |
-| `avg_order_value` | numerical | KS & PSI | **0.0000** | 0.3368 | NONE | Stable |
-| `website_visits` | numerical | KS & PSI | **0.0000** | 0.8636 | NONE | Stable |
-| `age_group` | categorical | Chi² & PSI | **0.0000** | 1.0000 | INSUFFICIENT_DATA | Insufficient Data |
-| `customer_segment` | categorical | Chi² & PSI | **0.0000** | 1.0000 | INSUFFICIENT_DATA | Insufficient Data |
+| `past_purchases` | numerical | KS & PSI | **0.8575** | 0.0000 | HIGH | Significant Drift |
+| `avg_order_value` | numerical | KS & PSI | **0.4500** | 0.0000 | HIGH | Significant Drift |
+| `website_visits` | numerical | KS & PSI | **0.8064** | 0.0000 | HIGH | Significant Drift |
+| `age_group` | categorical | Chi² & PSI | **0.2674** | 0.0000 | HIGH | Significant Drift |
+| `customer_segment` | categorical | Chi² & PSI | **0.3387** | 0.0000 | HIGH | Significant Drift |
 
 ---
 
@@ -42,7 +42,7 @@
 
 ## 4. Recommended Actions & Governance Notes
 
-- All monitored covariates exhibit stable distributions (PSI < 0.10). No intervention needed.
+- Significant distribution shift observed in ['past_purchases', 'avg_order_value', 'website_visits', 'age_group', 'customer_segment']. Investigate possible seasonal behavioral changes or marketing channel source modifications.
 - Governance Policy: Statistical covariate drift does not automatically imply causal model degradation. Do NOT automatically retrain without off-policy validation on new experimental data.
 
 > **Causal ML Governance Disclaimer:**  

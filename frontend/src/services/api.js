@@ -108,6 +108,72 @@ export const api = {
     }
   },
 
+  // ── CSV Dataset History ───────────────────────────────────────────────────
+  async getCsvHistory() {
+    try {
+      return await safeFetch(`${API_BASE}/data/history`)
+    } catch {
+      const stored = localStorage.getItem('econocausal_csv_history')
+      return stored ? JSON.parse(stored) : [
+        {
+          id: 'default_benchmark',
+          filename: 'cleaned_retail_campaign.csv',
+          name: 'Benchmark Observational Cohort (Default)',
+          formatted_date: 'Default Cohort',
+          rows: 2200,
+          size_formatted: '136.7 KB',
+          is_default: true,
+          is_active: true,
+          columns_count: 11,
+          treated_count: 1293,
+          control_count: 907,
+          source: 'Benchmark Synthetic',
+        }
+      ]
+    }
+  },
+
+  async uploadCsvHistory(formData) {
+    try {
+      const res = await fetch(`${API_BASE}/data/history/upload`, {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.detail || `Upload failed: HTTP ${res.status}`)
+      }
+      return await res.json()
+    } catch (err) {
+      console.warn('Backend history upload fallback:', err.message)
+      throw err
+    }
+  },
+
+  async saveCurrentCsvSnapshot(name) {
+    return await safeFetch(`${API_BASE}/data/history/save-current`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+  },
+
+  async activateCsvHistory(fileId) {
+    return await safeFetch(`${API_BASE}/data/history/activate/${fileId}`, {
+      method: 'POST',
+    })
+  },
+
+  async deleteCsvHistory(fileId) {
+    return await safeFetch(`${API_BASE}/data/history/${fileId}`, {
+      method: 'DELETE',
+    })
+  },
+
+  getCsvDownloadUrl(fileId) {
+    return `${API_BASE}/data/history/download/${fileId}`
+  },
+
   // ── Budget config ─────────────────────────────────────────────────────────
   async saveBudgetConfig(config) {
     try {

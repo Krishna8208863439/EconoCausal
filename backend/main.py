@@ -30,7 +30,8 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -68,6 +69,7 @@ from ml.drift_detector import (
     export_drift_reports,
     run_drift_analysis,
 )
+from backend.dataset_history import history_manager
 from ml.business_summary import (
     generate_prescriptive_business_summary,
     generate_drift_business_summary,
@@ -128,6 +130,10 @@ optimisation_state: Dict[str, Any] = {
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
+
+class SnapshotRequest(BaseModel):
+    name: str = Field(..., description="Snapshot label/name")
+
 
 class TrainRequest(BaseModel):
     estimator: str = Field(default="causal_forest", description="Estimator type: causal_forest or linear")
@@ -448,12 +454,96 @@ def load_default_dataset() -> Dict[str, Any]:
     cleaned_path = _ROOT / "data" / "processed" / "cleaned_retail_campaign.csv"
     if not cleaned_path.exists():
         raise HTTPException(status_code=404, detail="Default cleaned dataset not found.")
+    try:
+        history_manager.activate("default_benchmark")
+    except Exception:
+        pass
 
     return {
         "message": "Default synthetic retail campaign dataset loaded.",
         "path": str(cleaned_path),
         "status": "success",
     }
+
+
+# ── CSV File History & Snapshot Endpoints ─────────────────────────────────────
+
+@app.get("/data/history")
+def get_dataset_history() -> List[Dict[str, Any]]:
+    return history_manager.list_history()
+
+
+@app.post("/data/history/upload")
+async def upload_dataset_history(
+    file: UploadFile = File(...),
+    name: Optional[str] = Form(None),
+) -> Dict[str, Any]:
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
+    try:
+        contents = await file.read()
+        entry = history_manager.save_upload(contents, file.filename, custom_name=name)
+        return {
+            "message": f"Successfully saved and activated {entry['name']} ({entry['rows']:,} rows).",
+            "entry": entry,
+            "history": history_manager.list_history(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/data/history/save-current")
+def save_current_dataset_history(req: SnapshotRequest) -> Dict[str, Any]:
+    try:
+        entry = history_manager.save_current_snapshot(req.name)
+        return {
+            "message": f"Successfully created snapshot '{entry['name']}'.",
+            "entry": entry,
+            "history": history_manager.list_history(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/data/history/activate/{file_id}")
+def activate_dataset_history(file_id: str) -> Dict[str, Any]:
+    try:
+        entry = history_manager.activate(file_id)
+        return {
+            "message": f"Activated dataset '{entry['name']}' ({entry['rows']:,} rows).",
+            "entry": entry,
+            "history": history_manager.list_history(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/data/history/{file_id}")
+def delete_dataset_history(file_id: str) -> Dict[str, Any]:
+    try:
+        history_manager.delete(file_id)
+        return {
+            "message": "Successfully deleted history entry.",
+            "history": history_manager.list_history(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/data/history/download/{file_id}")
+def download_dataset_history(file_id: str):
+    try:
+        file_path = history_manager.get_file_path(file_id)
+        manifest = history_manager.list_history()
+        entry = next((i for i in manifest if i["id"] == file_id), None)
+        filename = entry["filename"] if entry else file_path.name
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type="text/csv",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 # ── Causal DAG & Budget Config ───────────────────────────────────────────────
