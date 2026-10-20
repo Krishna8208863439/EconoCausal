@@ -12,7 +12,9 @@
 **Repository:** [Krishna8208863439/EconoCausal](https://github.com/Krishna8208863439/EconoCausal)\
 **Build Status:** All 153 tests passing — stable and ready for review
 
-------------------------------------------------------------------------
+------------------------------------------------------------------------
+> **Dataset Note:** All input features must follow the schema defined in Section 9. Key columns include customer_id, treatment (binary), outcome (binary), and at least three numerical covariates for the DML estimator to function correctly.
+
 
 ## Table of Contents
 
