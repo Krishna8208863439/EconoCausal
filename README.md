@@ -717,25 +717,6 @@ The following checklist verifies compliance with the **EconoCausal: 5-Day Plan t
 
 ---
 
-## 14.2 Viva Voce Technical Defense & Key Concepts
-
-Every team member must be prepared to answer these core technical questions during the Mid-Review viva:
-
-### Q1: Why do we need residualization (Robinson's transformation)?
-**Answer:** In observational data, prices are confounded: retailers set higher prices when costs and competitor prices are high, or during periods of heavy ad spend. Naive regression suffers from omitted variable bias. Robinson's transformation partials out the confounding effect:
-$$\tilde{Y} = Y - \mathbb{E}[Y \mid X], \quad \tilde{D} = D - \mathbb{E}[D \mid X]$$
-Regressing $\tilde{Y}$ on $\tilde{D}$ isolates purely orthogonal, exogenous price variation, guaranteeing **Neyman orthogonality** where first-stage machine learning errors have zero first-order bias on the elasticity estimate.
-
-### Q2: Why is cross-fitting strictly necessary in Double Machine Learning?
-**Answer:** Standard sample splitting wastes data, while training nuisance models on the same data used for residual regression causes severe **overfitting / plug-in bias** (residuals become artificially correlated with in-sample errors, breaking the central limit theorem). Cross-fitting (e.g., 5 folds) trains nuisance models on out-of-fold data ($K-1$ folds) and evaluates residuals on the held-out fold, restoring $\sqrt{N}$-consistency and valid asymptotic 95% confidence intervals.
-
-### Q3: What does the causal DAG assume about unobserved confounding?
-**Answer:** The causal DAG assumes **Conditional Exchangeability (Unconfoundedness)**:
-$$\{ Y_i(d) \} \perp\!\!\perp D_i \mid X_i$$
-This assumes that our conditioning set $X$ (wholesale cost, competitor price, ad spend, inventory level, and customer behavioral features) blocks all backdoor paths between price and unit sales. It implies there are no unmeasured confounding variables (such as sudden viral social media shocks or unrecorded supply disruptions) that simultaneously drive pricing decisions and demand.
-
----
-
 ## 14.3 Social Media Video Script Outline (Week 2 Showcase)
 
 - **Hook (0:00–0:15):** "Why do naive pricing models fail in retail? Because when costs and ad spend go up, prices and sales rise together—making demand look artificially inelastic!"
