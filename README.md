@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Dataset Note:** All input features must follow the schema defined in Section 9. Key columns include customer_id, treatment (binary), outcome (binary), and at least three numerical covariates for the DML estimator to function correctly.
+> **Quick Start:** Clone the repo, copy `.env.example` to `.env`, run `pip install -r requirements.txt`, then `cd frontend && npm install`. Start backend with `uvicorn backend.main:app --reload` and frontend with `npm run dev`.
+
+
+> **Dataset Note:** All input features must follow the schema defined in Section 9. Key columns include customer_id, treatment (binary), outcome (binary), and at least three numerical covariates for the DML estimator to function correctly.
+
 
 
 ## Table of Contents
