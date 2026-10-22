@@ -855,3 +855,16 @@ To contribute, please follow these steps:
 
 Please follow PEP 8 for Python code and ESLint rules for JavaScript. Large refactors should
 be discussed in an Issue before implementation to avoid wasted effort or merge conflicts.
+
+---
+
+## 27. Getting Help and Support
+
+If you encounter issues or have questions about EconoCausal, please use the following channels:
+
+- Bug reports and feature requests: Open a GitHub Issue with a clear title, description,
+  steps to reproduce, and your environment details (OS, Python version, Node.js version).
+- General questions: Use the GitHub Discussions tab or add a comment to a relevant Issue.
+- Academic collaboration: Contact the author directly via the GitHub repository profile page.
+- Security disclosures: Do not open a public Issue for security vulnerabilities. Contact the
+  maintainer privately via GitHub before any public disclosure of the vulnerability details.
