@@ -868,3 +868,18 @@ If you encounter issues or have questions about EconoCausal, please use the foll
 - Academic collaboration: Contact the author directly via the GitHub repository profile page.
 - Security disclosures: Do not open a public Issue for security vulnerabilities. Contact the
   maintainer privately via GitHub before any public disclosure of the vulnerability details.
+
+---
+
+## 28. Project Metadata Summary
+
+| Field | Value |
+|-------|-------|
+| Project Name | EconoCausal -- Dynamic Pricing via Double Machine Learning |
+| Reference | ITS/DSML/1147 |
+| Team | Individual Project -- Causal ML and Data Science Research |
+| License | MIT License -- free to use, modify, and distribute with proper attribution |
+| Status | Active development -- v1.0.0 release candidate under final review |
+| Keywords | causal inference, double machine learning, pricing, uplift, EconML, CausalML |
+| Primary Language | Python 3.9+ (ML/backend), JavaScript/React (frontend dashboard) |
+| Frameworks Used | FastAPI, EconML, CausalML, DoubleML, Vite, React, Recharts |
