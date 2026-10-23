@@ -92,6 +92,10 @@
 
 
 
+> **Sensitivity Analysis:** Robustness checks against unobserved confounding are implemented using Rosenbaum bounds and placebo treatment tests in `ml/sensitivity_analysis.py`.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
