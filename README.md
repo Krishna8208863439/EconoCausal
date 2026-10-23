@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **API Config:** The FastAPI backend runs on `http://localhost:8000` by default. The React frontend is served on `http://localhost:5173`. Both ports can be changed via environment variables in the `.env` file before starting the servers.
+> **Model Artifacts:** Trained model files (`.joblib`) and scalers are saved to `reports/model_artifacts/`. Do not delete these files between runs as they are required by the FastAPI inference endpoints and the drift detection module.
+
+
+> **API Config:** The FastAPI backend runs on `http://localhost:8000` by default. The React frontend is served on `http://localhost:5173`. Both ports can be changed via environment variables in the `.env` file before starting the servers.
+
 
 
 > **Quick Start:** Clone the repo, copy `.env.example` to `.env`, run `pip install -r requirements.txt`, then `cd frontend && npm install`. Start backend with `uvicorn backend.main:app --reload` and frontend with `npm run dev`.
