@@ -96,6 +96,10 @@
 
 
 
+> **Policy Simulation:** Counterfactual revenue outcomes under alternative discount thresholds can be simulated interactively via the policy evaluation module (`ml/policy_evaluator.py`).
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
