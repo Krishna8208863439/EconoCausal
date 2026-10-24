@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Causal DAG:** The project uses a Directed Acyclic Graph (DAG) to encode the assumed causal structure between covariates, treatment assignment, and purchase outcome. The DAG is visualised interactively on the Causal Analysis page of the dashboard using D3-based rendering.
+> **Propensity Model:** The first-stage nuisance model in the DML pipeline estimates the propensity score — the probability of receiving a discount treatment given observed covariates. Overlap between treated and control groups is checked before causal effect estimation to ensure validity.
+
+
+> **Causal DAG:** The project uses a Directed Acyclic Graph (DAG) to encode the assumed causal structure between covariates, treatment assignment, and purchase outcome. The DAG is visualised interactively on the Causal Analysis page of the dashboard using D3-based rendering.
+
 
 
 > **Uplift Curve:** The Qini uplift curve displayed on the Uplift Analysis page measures cumulative incremental gain as more customers are targeted. A curve above the random baseline diagonal indicates the model successfully identifies persuadable customers.
