@@ -883,3 +883,19 @@ If you encounter issues or have questions about EconoCausal, please use the foll
 | Keywords | causal inference, double machine learning, pricing, uplift, EconML, CausalML |
 | Primary Language | Python 3.9+ (ML/backend), JavaScript/React (frontend dashboard) |
 | Frameworks Used | FastAPI, EconML, CausalML, DoubleML, Vite, React, Recharts |
+
+---
+
+## 29. Data Privacy and Ethical Use Statement
+
+EconoCausal is designed for use with anonymised or fully synthetic marketing datasets only.
+The following ethical guidelines apply to all uses of this platform:
+
+- Anonymisation: No personally identifiable information (PII) should be included in any input
+  dataset. All customer identifiers must be pseudonymised or replaced with synthetic IDs.
+- Fairness: Causal treatment effect estimates should be audited for demographic fairness before
+  informing any real-world discount allocation decisions affecting protected groups.
+- Transparency: Model predictions and CATE estimates must not be presented to end-users as
+  guarantees. They are probabilistic estimates subject to model assumptions and data quality.
+- Regulatory compliance: Ensure all data used to train or evaluate models was collected with
+  appropriate user consent and complies with applicable data protection regulations.
