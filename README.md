@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Model Artifacts:** Trained model files (`.joblib`) and scalers are saved to `reports/model_artifacts/`. Do not delete these files between runs as they are required by the FastAPI inference endpoints and the drift detection module.
+> **Drift Detection:** The PSI threshold for flagging data drift is set to `0.2` by default in `ml/drift_detector.py`. Adjust this value in the config if your dataset distribution changes significantly between training and inference time.
+
+
+> **Model Artifacts:** Trained model files (`.joblib`) and scalers are saved to `reports/model_artifacts/`. Do not delete these files between runs as they are required by the FastAPI inference endpoints and the drift detection module.
+
 
 
 > **API Config:** The FastAPI backend runs on `http://localhost:8000` by default. The React frontend is served on `http://localhost:5173`. Both ports can be changed via environment variables in the `.env` file before starting the servers.
