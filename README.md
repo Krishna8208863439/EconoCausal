@@ -100,6 +100,10 @@
 
 
 
+> **Test Suite:** The project contains 153 unit and integration tests covering end-to-end ML training, API endpoints, causal inference calculations, and drift monitoring. Run tests using `pytest tests/ -v`.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
