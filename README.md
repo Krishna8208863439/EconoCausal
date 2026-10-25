@@ -430,19 +430,6 @@ The following plan translates the assignment brief into practical
 milestones. The brief describes a four-week technical plan, while the
 assignment letter states a one-month project completion duration.
 
-| Milestone | Causal ML & optimization | Dashboard & reporting | Status |
-| :--- | :--- | :--- | :--- |
-| **Week 1** | Define the causal question, inspect data, create a DAG with DoWhy, identify treatment/outcome/confounders | Scaffold React dashboard; add data upload and budget configuration | ✅ Complete |
-| **Week 2** | Train DML estimator with EconML (CausalForestDML), evaluate nuisance models, compute uplift & Qini curves | Add interactive Plotly effect/uplift/Qini charts, policy comparison, live customer estimator, FastAPI backend | ✅ Complete |
-| **Mid-project review** | Review identification assumptions, propensity common support, benchmark against synthetic DGP | Validate dynamic filtering, interactive inference, and robust testing (99 tests) | ✅ Complete |
-| **Week 3** | Implement SciPy MILP optimization under strict marketing budget; benchmark 4 allocation policies | Customer-level Discount Allocation Matrix with sorting, filtering, CSV export, and Plotly allocation charts | ✅ Complete |
-| **Week 4** | REST API packaging (v4.0.0), automated KS & PSI data drift detector, plain-language business summaries | Add Data Drift Monitor page, Final Report presentation deck, and end-to-end test verification (63 tests) | ✅ Complete |
-
-The provided project image describes a similar progression, including a
-causal graph, DML training, causal audit, prescriptive optimization, API
-packaging, and dashboard refinement. Exact deliverables should be agreed
-with the assigned mentor.
-
 ## 13. Evaluation Strategy & Verified Week 2 Results
 
 ### Data and model diagnostics
@@ -700,20 +687,6 @@ python ml/budget_optimizer.py; `
 python ml/drift_detector.py; `
 pytest -v
 ```
-
----
-
-## 14.1 Week 2 Acceptance Checklist (Mid-Review Criteria)
-
-The following checklist verifies compliance with the **EconoCausal: 5-Day Plan to Complete Week 2 (15–19 Oct 2026)**:
-
-| Day | Task / Deliverable | Status | Verification Criteria |
-| :---: | :--- | :---: | :--- |
-| **Day 1** | **Align Data & Setup** | [x] PASSED | Dataset includes `price`, `units_sold`, `cost_price`, `competitor_price`, `ad_spend`, `inventory`, `date` with `seed=42`. True price effect (-1.50) saved to `true_price_effect.json`. `econml` installed and in `requirements.txt`. |
-| **Day 2** | **Core DML Estimator** | [x] PASSED | `src/causal/dml_estimator.py` fits 5-fold cross-fitting Robinson transformation on $\ln(\text{units})$ vs $\ln(\text{price})$. Records MAE, RMSE, $R^2$ for nuisance models. Produces $\beta = -1.1551$ with 95% CI $[-1.2161, -1.0942]$ and Naive OLS comparison table (42.6% bias reduction). |
-| **Day 3** | **Diagnostics & Heterogeneity** | [x] PASSED | `src/causal/diagnostics.py` runs end-to-end: verifies continuous overlap variance ($0.00554$), residual orthogonality ($|r| < 0.0021$), passes 3 DoWhy refutations (Placebo, Random Common Cause, 80% Subset), and exports `causal_diagnostics_results.json`. |
-| **Day 4** | **Dashboard, API & Database** | [x] PASSED | Causal Page displays Dual DAGs, Effect Distribution Histogram, Price-Demand Curve with shaded 95% Confidence Band, Segment Effects, and Interactive Filters. FastAPI provides `/health`, `/data/validate`, `/causal/estimate`. SQLite logs all runs in `data/econocausal.db`. |
-| **Day 5** | **Tests, Report & Tag** | [x] PASSED | Full pytest suite passes 186/186 tests. `reports/week2_dml_report.md` written with causal questions, assumptions, results with intervals, and limitations (strictly zero ROI/profit claims). Clean demo clone verified. |
 
 ---
 
