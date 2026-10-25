@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Propensity Model:** The first-stage nuisance model in the DML pipeline estimates the propensity score — the probability of receiving a discount treatment given observed covariates. Overlap between treated and control groups is checked before causal effect estimation to ensure validity.
+> **Evaluation Metrics:** Model performance is assessed using RMSE and R-squared for regression tasks, and ROC-AUC for the propensity model. Causal effect estimates are validated via Qini coefficient on the uplift curve. Full evaluation results are in `reports/final_evaluation.md`.
+
+
+> **Propensity Model:** The first-stage nuisance model in the DML pipeline estimates the propensity score — the probability of receiving a discount treatment given observed covariates. Overlap between treated and control groups is checked before causal effect estimation to ensure validity.
+
 
 
 > **Causal DAG:** The project uses a Directed Acyclic Graph (DAG) to encode the assumed causal structure between covariates, treatment assignment, and purchase outcome. The DAG is visualised interactively on the Causal Analysis page of the dashboard using D3-based rendering.
