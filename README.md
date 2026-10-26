@@ -915,3 +915,20 @@ using SEED=42. Results will vary with different datasets, hyperparameters, and r
 | Budget Allocation Improvement | 18% | Compared to random allocation baseline across customer segments |
 | API Response Time (p95 latency) | under 200ms | FastAPI backend running on local development server |
 | Full Test Suite Pass Rate | 100% | All 153 unit and integration tests passing via pytest suite |
+
+---
+
+## 31. Version History and Changelog Summary
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| v0.1.0 | Oct 09, 2026 | Initial project scaffold, repository setup, first README draft added |
+| v0.2.0 | Oct 10, 2026 | Week 1: Causal DAG visualisation, dashboard scaffolding, dataset schema |
+| v0.3.0 | Oct 11, 2026 | Week 2: DML training pipeline, uplift visualisation, unit tests added |
+| v0.4.0 | Oct 12, 2026 | Week 3-4: Budget optimiser, REST API endpoints, drift detection module |
+| v0.5.0 | Oct 14, 2026 | Enterprise SaaS dashboard redesign with interactive Recharts visualisations |
+| v0.6.0 | Oct 15, 2026 | Compliance documentation, currency defaults, and model artifact tracking |
+| v0.7.0 | Oct 16, 2026 | Frontend fix: Lucide icon rendering and Vite bound to 0.0.0.0 for LAN |
+| v0.8.0 | Oct 17, 2026 | UI: Discount Allocation fix, CSV downloads, and light-green theme applied |
+| v0.9.0 | Oct 18, 2026 | CSV file history, version snapshots, UI module cleanup and refactor |
+| v1.0.0-rc | Oct 21, 2026 | Final submission: complete codebase, patch scripts, all data files |
