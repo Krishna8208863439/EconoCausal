@@ -7,8 +7,8 @@
 
 **Domain:** Economics, Causal AI, Data Science & Machine Learning\
 **Project reference:** ITS/DSML/1147\
-**Status:** In development\
-**Last Updated:** October 2026\
+**Status:** Active development — final review in progress\
+**Last Updated:** 26 October 2026\
 **Repository:** [Krishna8208863439/EconoCausal](https://github.com/Krishna8208863439/EconoCausal)
 
 ------------------------------------------------------------------------
