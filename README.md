@@ -104,6 +104,10 @@
 
 
 
+> **Business Impact Summary:** Automated KPI extraction calculates projected incremental revenue uplift, wasted spend reductions, and margin preservation metrics documented in `ml/business_summary.py`.
+
+
+
 ## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
