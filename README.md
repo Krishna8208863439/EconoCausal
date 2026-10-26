@@ -13,7 +13,11 @@
 **Build Status:** All 153 tests passing — stable and ready for review
 
 ------------------------------------------------------------------------
-> **Evaluation Metrics:** Model performance is assessed using RMSE and R-squared for regression tasks, and ROC-AUC for the propensity model. Causal effect estimates are validated via Qini coefficient on the uplift curve. Full evaluation results are in `reports/final_evaluation.md`.
+> **Dashboard Pages:** The React dashboard has four main pages — Overview (KPI summary), Causal Analysis (DAG and CATE distribution), Budget Optimization (allocation table and savings), and Drift Monitor (PSI scores and feature drift charts). Use the sidebar to navigate between pages.
+
+
+> **Evaluation Metrics:** Model performance is assessed using RMSE and R-squared for regression tasks, and ROC-AUC for the propensity model. Causal effect estimates are validated via Qini coefficient on the uplift curve. Full evaluation results are in `reports/final_evaluation.md`.
+
 
 
 > **Propensity Model:** The first-stage nuisance model in the DML pipeline estimates the propensity score — the probability of receiving a discount treatment given observed covariates. Overlap between treated and control groups is checked before causal effect estimation to ensure validity.
