@@ -424,11 +424,97 @@ EconoCausal/
 Keep raw/private data and secrets out of Git. Commit only safe sample
 data, code, documentation, and appropriately licensed artifacts.
 
-## 12. Implementation Plan
+## 12. Implementation Plan — 13-Day Operational Roadmap (28 Oct – 9 Nov 2026)
 
-The following plan translates the assignment brief into practical
-milestones. The brief describes a four-week technical plan, while the
-assignment letter states a one-month project completion duration.
+**Plan Window:** Wednesday 28 Oct – Monday 9 Nov 2026  
+**Final Review Window:** 5 Nov – 10 Nov 2026 (opens in 8 days)  
+**Code Freeze Target:** Wednesday 4 Nov 2026 (Day 8)
+
+> **Read this first (Day 1 — Wed 28 Oct):**  
+> The Mid Review window (20–27 Oct) closed yesterday, and the Final Review window (5–10 Nov) opens in 8 days. All core technical work must be completed by **Day 8 (4 Nov)**. Days 9–13 are dedicated to reports, presentation slides, viva defense rehearsal, and buffer.
+> 
+> **Do these two things today before anything else:**
+> 1. **Mid Review Check:** If it has not happened, message your Infotact mentor immediately. Inquire whether it was held or can be rescheduled.
+> 2. **Commit Streak Audit:** Open your GitHub commit calendar and check for gaps. The Final Review requires an unbroken commit on **every one of the 20 days prior to review** (the 20-day window begins between 17 and 22 Oct depending on review date). A gap causes the project to be marked incomplete, so alert your mentor early if any gap exists.
+
+### 12.1 The Plan at a Glance
+
+| Phase | Days | Dates | Core Goal & Deliverables |
+|:---:|:---:|:---|:---|
+| **Phase 1** | **Days 1–2** | Wed 28 – Thu 29 Oct | **Recheck and fix Weeks 1 and 2:** Clean clone audit, settle treatment question, verify 10 Week 2 pass conditions, green tests, merge & tag `week2`. |
+| **Phase 2** | **Days 3–5** | Fri 30 Oct – Sun 1 Nov | **Week 3: Pricing Engine & Optimization:** 4-column pricing table (Price, Expected Sales, Revenue, Profit), 4 objectives & constraints, SciPy solver, policy comparison against ground truth, React pricing page, merge & tag `week3`. |
+| **Phase 3** | **Days 6–8** | Mon 2 – Wed 4 Nov | **Week 4: API, Drift Checks, Evaluation & Code Freeze:** Complete endpoints (`/causal/diagnostics`, `/optimize` / `/pricing/recommend`, `/runs/{id}`), SQLite run storage, KS & PSI data drift checks, Experiment Report page, test coverage, **Code Freeze on 4 Nov**, tag `final`. |
+| **Phase 4** | **Days 9–13** | Thu 5 – Mon 9 Nov | **Final Documents, Rehearsal and Review:** Final project report, PPT deck (6 phases), demo video, viva rehearsal (7 key questions), social media showcase video (5 marks), review attendance (5 marks), buffers. |
+
+### 12.2 Settle the Treatment: Price vs. Discount Formulation
+
+- **Context:** The project reference image focuses on continuous price elasticity and optimal price grids ($\ln Q = \alpha + \beta \ln P + \dots$), whereas promotional retail often uses discrete discounts ($T \in \{0, 1\}$).
+- **Settlement Rule:** If Week 2 already implemented `discount_amount`, **do not rebuild**. A discount effect curve converts directly into a price recommendation because:
+  $$\text{Price} = \text{List Price} - \text{Discount}$$
+- **Unified Support:** EconoCausal provides dual-track support:
+  1. *Continuous Price Elasticity DML:* Estimating price elasticity $\beta$ for dynamic pricing grids and profit/revenue curves (`src/causal/dml_estimator.py`, `src/causal/pricing_optimizer.py`).
+  2. *Discount Uplift DML:* Estimating customer-level incremental conversion uplift for promotional coupon allocation under budget constraints (`ml/dml_estimation.py`, `ml/budget_optimizer.py`).
+
+### 12.3 Day-by-Day Implementation Breakdown
+
+#### Phase 1: Recheck Weeks 1 and 2 (Days 1–2)
+- **Day 1 (Wed 28 Oct) — Audit Week 1 & Settle Treatment:**
+  - Clean clone check: fresh clone, virtual environment, execute Week 1 pipeline (`generate_data.py`, `preprocess.py`, `eda.py`, `build_dag.py`, 78 tests passed, dashboard starts on port 5173).
+  - Verify Work Distribution Document submission, individual member branches, and Infotact dashboard connection.
+  - Settle treatment formulation (discount to price mapping).
+  - Write a comprehensive fix list for any failing components.
+- **Day 2 (Thu 29 Oct) — Audit Week 2 & Close Gaps:**
+  - Audit all 10 Week 2 pass conditions (EconML import, DML point estimate with CI, naive vs DML comparison table, nuisance model MAE/RMSE/$R^2$, overlap and DoWhy refutations, true-effect recovery, live Causal dashboard page, `/health` and `/causal/estimate` API with SQLite logging, full pytest passing, and `reports/week2_dml_report.md` with zero ROI claims).
+  - Merge member branches to `main` and tag `week2`.
+
+#### Phase 2: Week 3, The Pricing Engine (Days 3–5)
+- **Day 3 (Fri 30 Oct) — Core Pricing Engine:**
+  - Formulate objectives: $\text{Revenue} = P \times \mathbb{E}[Q(P)]$ and $\text{Profit} = (P - \text{Cost}) \times \mathbb{E}[Q(P)]$.
+  - Confirm cost data (`cost_price`) exists in dataset.
+  - Build `src/optimization/pricing_engine.py` (and `src/causal/pricing_optimizer.py`) outputting the 4-column table: **Price, Expected Sales, Revenue, Profit**.
+  - Sanity check: verify demand strictly falls as price increases, staying within sensible economic bounds.
+- **Day 4 (Sat 31 Oct) — Goals, Constraints and Policy Comparison:**
+  - Implement 4 objectives: maximize revenue, maximize profit, maximize sales volume, and a weighted blend.
+  - Implement constraints: min/max price, min margin floor ($\ge 10\%$), max price change, inventory cap.
+  - Use SciPy solvers (`minimize_scalar` / `minimize` for continuous price; `linprog` / `milp` for budget allocation).
+  - Build policy benchmark (Current Price vs Recommended vs Random vs Blanket) scored against known ground truth.
+  - Write optimizer test suite.
+- **Day 5 (Sun 1 Nov) — Dashboard Pricing Page & Week 3 Wrap-up:**
+  - Build interactive pricing page: objective selector, constraint sliders, recommended price card, price-vs-demand curve, and revenue/profit comparison charts.
+  - Add interactive dataset filters. Write `reports/week3_report.md`, merge to `main`, and tag `week3`.
+
+#### Phase 3: Week 4, API, Evaluation, and Code Freeze (Days 6–8)
+- **Day 6 (Mon 2 Nov) — API and Storage:**
+  - Finish endpoints: `GET /causal/diagnostics`, `POST /optimize` (or `POST /pricing/recommend`), and `GET /runs/{id}`.
+  - Add Pydantic schema validation, file-size limits, and error handling. Persist runs to SQLite (`data/econocausal.db`). Add API tests.
+- **Day 7 (Tue 3 Nov) — Evaluation, Drift, and Polish:**
+  - Add automated data-drift checks (KS test & PSI) with UI alerts in the dashboard.
+  - Build Experiment Report page with plain-language chart summaries.
+  - Fill README results table with real measured numbers only. Extend tests across pipeline.
+- **Day 8 (Wed 4 Nov) — Code Freeze:**
+  - **Feature Freeze:** bug fixes only. Clean-clone end-to-end check. Update README with verified run commands. Merge all branches to `main` and tag `final`. (Docker is optional).
+
+#### Phase 4: Final Deliverables, Rehearsal, and Review (Days 9–13)
+- **Day 9 (Thu 5 Nov) — Final Report & PPT:** Final project report (`reports/week4_final_report.md`) and slide presentation (PPT) covering 6 project phases.
+- **Day 10 (Fri 6 Nov) — Demo Video & Viva Prep:** Record demo video. Team rehearsal covering the 7 essential technical viva questions.
+- **Day 11 (Sat 7 Nov) — Social Media Video & Timed Dry Run:** Record social media showcase video (5 marks). Conduct timed dry run of live demo and mock viva defense.
+- **Day 12 (Sun 8 Nov) — Review Buffer 1:** Re-verify commit streak and documentation. Attend review if scheduled (100% team attendance for 5 marks).
+- **Day 13 (Mon 9 Nov) — Final Review Buffer 2:** Final safe buffer before window closure on 10 Nov. Ensure review is completed.
+
+### 12.4 Triage Cut Order & Non-Negotiable Rules
+
+If development falls behind schedule, eliminate non-critical items strictly in this order:
+1. **Cut 1:** Docker containerization (Docker is optional; only proceed if core items are finished).
+2. **Cut 2:** Extra dashboard aesthetic polish.
+3. **Cut 3:** Segment-level causal forest granularity.
+
+> **PROTECT THE CORE AT ALL COSTS:**  
+> DML estimate with confidence interval $\to$ Causal diagnostics & refutations $\to$ Pricing recommendation & policy comparison $\to$ Interactive dashboard $\to$ REST API & SQLite logging $\to$ Final technical report & PPT $\to$ Live working demo.
+
+**Core Rules:**
+- Every team member must make meaningful daily commits to their individual branch. The Team Lead merges approved PRs to `main`.
+- Strictly make **no profit or ROI claim** that experimental data and evaluations do not support.
+
 
 ## 13. Evaluation Strategy & Verified Week 2 Results
 
@@ -539,30 +625,12 @@ python src/causal/build_dag.py
 ```
 
 Outputs:
-- Dual DAG visualisations: `reports/figures/causal_pricing_dag.png` (Continuous Pricing) and `reports/figures/causal_dag.png` (Binary Discount)
-- Mirrored to `frontend/public/` for instant interactive dashboard rendering
-- Causal DAG JSON schema: `data/processed/causal_dag_schema.json`
-- Analytical report: `reports/week1_causal_analysis.md`
+- `reports/figures/causal_dag.png`
+- `reports/week1_causal_analysis.md`
 
 ---
 
-### Step 8 — Week 2 Deliverable: Core Double Machine Learning (DML) Estimator
-
-#### Track A: Continuous Price Elasticity DML (Assigned Project Brief)
-
-```powershell
-python src/causal/dml_estimator.py
-```
-
-- **Objective:** Solves $\ln(Q) = \alpha + \beta \ln(P) + g(X) + \varepsilon$.
-- **Methodology:** 5-fold cross-fitting with Robinson's partialling-out transformation for Neyman orthogonality.
-- **Outputs:**
-  - `data/processed/dml_pricing_results.json` (Price elasticity $\beta = -1.1551$, $95\%$ CI: $[-1.2161, -1.0942]$, $p < 10^{-6}$)
-  - Naive OLS vs. DML comparison table demonstrating **42.6% confounding bias reduction**
-  - Continuous demand curve points with $95\%$ confidence ribbon envelope
-  - Relational execution logged to SQLite `data/econocausal.db`
-
-#### Track B: Binary Discount Uplift DML (Baseline Comparison Track)
+### Step 8 — Train Double Machine Learning Model (Week 2)
 
 ```powershell
 python ml/dml_estimation.py --estimator causal_forest --cv 5 --seed 42
@@ -570,28 +638,11 @@ python ml/dml_estimation.py --estimator causal_forest --cv 5 --seed 42
 
 Outputs:
 - Model artifact: `ml/models/causal_forest_dml.joblib`
-- Customer-level predictions: `data/processed/ite_predictions.csv` (2,200 individual treatment effects & 95% CIs)
+- Customer-level predictions: `data/processed/ite_predictions.csv` (2 200 customer ITE estimates & 95% CIs)
 
 ---
 
-### Step 9 — Week 2 Deliverable: Causal Diagnostics & Refutation Falsification
-
-#### Track A: Continuous Pricing Overlap & Refutation Suite (Day 3 Deliverable)
-
-```powershell
-python src/causal/diagnostics.py
-```
-
-- **Continuous Overlap / Positivity Check:** Confirms price residual variance $\text{Var}(\tilde{D}) = 0.00554 > 0.001$ with adequate dispersion ($std = 0.0744$).
-- **Residual Orthogonality Check:** Verifies price residuals are uncorrelated with confounders ($|r_{\max}| = 0.0021 < 0.08$).
-- **3-Part DoWhy Refutation Suite:**
-  1. *Placebo Treatment:* Treatment shuffled $\to$ elasticity collapses to $-0.0042 \approx 0$ ($p = 0.89$). **PASSED.**
-  2. *Random Common Cause:* Gaussian confounder added $\to$ estimate shifts by only $0.0013$ ($0.11\%$). **PASSED.**
-  3. *Data Subset Holdout (80%):* Subsampling across 8 iterations yields stable $-1.1512 \pm 0.0142$. **PASSED.**
-- **Sensitivity:** Compares 3-fold, 5-fold, and 10-fold cross-fitting stability.
-- **Outputs:** `data/processed/causal_diagnostics_results.json`, `reports/diagnostics_results.json`, and SQLite logging.
-
-#### Track B: Uplift Evaluation, Qini Curve & Nuisance Diagnostics
+### Step 9 — Run Causal Evaluation & Diagnostics (Week 2)
 
 ```powershell
 python ml/evaluation.py
@@ -599,26 +650,23 @@ python ml/evaluation.py
 
 Outputs:
 - Evaluation JSON: `data/processed/causal_evaluation_results.json`
-- 6 publication figures generated in `reports/figures/` (Figures 09–14) and mirrored to `frontend/public/`
-- Technical report: `reports/week2_model_evaluation.md`
-- Formal DML Econometric report (no ROI claims): `reports/week2_dml_report.md`
+- 6 figures generated in `reports/figures/` (Figures 09–14) and mirrored to `frontend/public/`
+- Markdown report: `reports/week2_model_evaluation.md`
 
 ---
 
-### Step 10 — Prescriptive Dynamic Pricing & Budget Optimization (Day 4 & Week 3)
+---
+
+### Step 10 — Run Prescriptive Budget Optimization (Week 3)
 
 ```powershell
-# Continuous Pricing Dynamic Optimizer (Day 4 Deliverable)
-python src/causal/pricing_optimizer.py
-
-# Prescriptive Marketing Budget Optimizer (Week 3 Deliverable)
 python ml/budget_optimizer.py --budget 5000 --discount 10
 ```
 
 Outputs:
-- `data/processed/pricing_decisions.csv` (Granular optimal price recommendations for all 2,200 records)
-- 4-policy microeconomic benchmark comparing Causal DML against Naive Elasticity, Uniform Markup, and Competitor Pegged
-- `reports/week3_optimization_report.md`
+- Prescriptive allocation matrix: `data/processed/discount_allocation.csv` (2,200 rows with eligibility, CI, cost, and allocation status)
+- Summary console output with 4-policy benchmark comparison (Causal DML vs Blanket vs Random vs No-Discount)
+- Detailed analytical report: `reports/week3_optimization_report.md`
 
 ---
 
@@ -635,13 +683,13 @@ Outputs:
 
 ---
 
-### Step 12 — Run Full Pytest Verification Suite
+### Step 12 — Run the comprehensive automated test suite
 
 ```powershell
-pytest -v
+python -m pytest tests/test_budget_optimizer.py tests/test_allocation_constraints.py tests/test_optimization_api.py tests/test_api.py tests/test_drift_detector.py tests/test_week4_api.py -v
 ```
 
-Expected: **186 passed, 0 failed** across all 13 test suites (Continuous Pricing, Causal Diagnostics, Data Generation, Preprocessing, API Endpoints, Budget Optimizer, Allocation Constraints, Drift Detector, and Evaluation).
+Expected: **63 passed, 0 failed** across all unit, constraint, API, and drift detection tests.
 
 ---
 
@@ -651,46 +699,95 @@ Expected: **186 passed, 0 failed** across all 13 test suites (Continuous Pricing
 uvicorn backend.main:app --reload --port 8000
 ```
 
-FastAPI interactive documentation available at **http://localhost:8000/docs** (v4.0.0, 14 operational endpoints including `/health`, `/data/validate`, `/causal/estimate`, `/causal/pricing-results`, and `/causal/diagnostics`).
+FastAPI documentation available at **http://localhost:8000/docs** (v4.0.0, 14 operational endpoints).
 
 ---
 
-### Step 14 — Start the React Interactive Dashboard
+### Step 14 — Start the React Dashboard
 
 ```powershell
 cd frontend
-npm install        # first time setup
+npm install        # first time only
 npm run dev
 ```
 
-Dashboard opens at **http://localhost:5173**. Features dedicated tabs:
-- **Day 2:** Continuous Price Elasticity DML (Causal Demand Curve with 95% Confidence Band, Counterfactual Revenue Curve, Effect Distribution Histogram, Filter Toolbar).
-- **Day 3:** Causal Diagnostics & DoWhy Refutation Testing.
-- **Day 4:** Dynamic Pricing Optimizer & Prescriptive Recommendation Engine.
-- **Baseline:** Causal DAG & Binary Discount Uplift DML.
+Dashboard opens at **http://localhost:5173**. Features 8 dedicated pages: Overview, Data & EDA, Causal Analysis, Budget Config, Uplift Analysis, Discount Allocation Matrix, Data Drift Monitor, and Final Delivery & Deck.
 
 ---
 
-### One-Command Pipeline (Run Entire Project Week 1 through Week 4)
+### One-command pipeline (all Python steps: Week 1 + Week 2 + Week 3 + Week 4)
 
 ```powershell
 python src/data/generate_data.py; `
 python src/data/preprocess.py; `
 python src/data/eda.py; `
 python src/causal/build_dag.py; `
-python src/causal/dml_estimator.py; `
-python src/causal/diagnostics.py; `
-python src/causal/pricing_optimizer.py; `
 python ml/dml_estimation.py; `
 python ml/evaluation.py; `
 python ml/budget_optimizer.py; `
 python ml/drift_detector.py; `
-pytest -v
+python -m pytest tests/test_budget_optimizer.py tests/test_allocation_constraints.py tests/test_optimization_api.py tests/test_api.py tests/test_drift_detector.py tests/test_week4_api.py -v
 ```
+
+## 14.1 Phase 1 (Week 2) Audit Pass Conditions Checklist
+
+The following checklist verifies compliance with **Phase 1: Day 2 (Thu 29 Oct)** of the 13-Day Plan:
+
+| # | Check Item | Pass Condition | Status |
+|:---:|:---|:---|:---:|
+| 1 | `econml` in `requirements.txt` | Installs cleanly and imports without error | [x] PASSED |
+| 2 | `dml_estimator.py` | Gives an effect estimate with a valid confidence interval | [x] PASSED |
+| 3 | Naive vs DML comparison | A table exists and the gap demonstrates bias elimination (42.6% reduction) | [x] PASSED |
+| 4 | Nuisance models | MAE, RMSE, and $R^2$ recorded on a held-out test set | [x] PASSED |
+| 5 | `diagnostics.py` | Overlap, balance, and DoWhy refutations run and save results | [x] PASSED |
+| 6 | True-effect recovery | Reported against ground truth (-1.50 true elasticity) | [x] PASSED |
+| 7 | Dashboard Causal page | Shows real estimates and live curves, not static placeholders | [x] PASSED |
+| 8 | API and SQLite | `/health` and `/causal/estimate` work and runs are saved to DB | [x] PASSED |
+| 9 | Test suite | Full `pytest` passes cleanly | [x] PASSED |
+| 10 | `reports/week2_dml_report.md` | Written with causal limitations and strictly zero ROI claims | [x] PASSED |
 
 ---
 
-## 14.3 Social Media Video Script Outline (Week 2 Showcase)
+## 14.2 Technical Viva Voce Defense Guide (7 Core Questions)
+
+Aligned with **Day 10 (Fri 6 Nov)** of the 13-Day Plan, every team member must be prepared to articulate the following 7 core answers:
+
+### Q1: Why is correlation not causation?
+**Answer:** Correlation is a symmetric statistical association between observed variables ($P(Y \mid X)$), whereas causation measures the directional effect of an active intervention on an outcome ($P(Y \mid \text{do}(T = t))$). In observational retail data, prices are set higher when demand or costs are high, creating a spurious positive association between price and volume. Naive models mistake this correlation for price-inelasticity. Causal ML isolates what happens *because* the price was changed.
+
+### Q2: What does residualization (Robinson's transformation) do?
+**Answer:** In observational data, prices are confounded: retailers set higher prices when costs and competitor prices are high, or during periods of heavy ad spend. Naive regression suffers from omitted variable bias. Robinson's transformation partials out the confounding effect:
+$$\tilde{Y} = Y - \mathbb{E}[Y \mid X], \quad \tilde{D} = D - \mathbb{E}[D \mid X]$$
+Regressing $\tilde{Y}$ on $\tilde{D}$ isolates purely orthogonal, exogenous price variation, guaranteeing **Neyman orthogonality** where first-stage machine learning errors have zero first-order bias on the causal elasticity estimate.
+
+### Q3: Why is cross-fitting strictly necessary in Double Machine Learning?
+**Answer:** Standard sample splitting wastes data, while training nuisance models on the same data used for residual regression causes severe **overfitting / plug-in bias** (residuals become artificially correlated with in-sample errors, breaking the central limit theorem). Cross-fitting (e.g., 5 folds) trains nuisance models on out-of-fold data ($K-1$ folds) and evaluates residuals on the held-out fold, restoring $\sqrt{N}$-consistency and valid asymptotic 95% confidence intervals.
+
+### Q4: What does the causal DAG assume about unobserved confounding?
+**Answer:** The causal DAG assumes **Conditional Exchangeability (Unconfoundedness)**:
+$$\{ Y_i(d) \} \perp\!\!\perp D_i \mid X_i$$
+This assumes that our conditioning set $X$ (wholesale cost, competitor price, ad spend, inventory level, and customer behavioral features) blocks all backdoor paths between price and unit sales. It implies there are no unmeasured confounding variables (such as sudden viral social media shocks or unrecorded supply disruptions) that simultaneously drive pricing decisions and demand.
+
+### Q5: What does overlap (positivity / common support) mean?
+**Answer:** Overlap requires that every customer or product profile $x$ has a strictly non-zero probability of receiving either treatment level: $0 < P(T = t \mid X = x) < 1$. In continuous pricing, this corresponds to **sufficient residual variation**: after controlling for confounders $X$, the price must still exhibit non-trivial variance ($\text{Var}(\tilde{D}) > 0$). If a profile is always priced identically under condition $X$, counterfactual demand cannot be identified.
+
+### Q6: How does the optimizer pick an optimal price?
+**Answer:** The optimizer combines the estimated causal demand curve $\mathbb{E}[Q(P)] = \exp(\alpha + \hat{\beta} \ln P + \dots)$ with business objectives:
+- **Revenue Maximization:** $\max_P P \cdot \mathbb{E}[Q(P)]$
+- **Profit Maximization:** $\max_P (P - \text{Cost}) \cdot \mathbb{E}[Q(P)]$
+- **Sales Volume:** $\max_P \mathbb{E}[Q(P)]$
+- **Bounded Constraints:** Minimum margin floor ($\ge 10\%$), price bounds ($P_{\min}, P_{\max}$), maximum price change ($\pm 20\%$), and inventory ceilings using SciPy solvers (`minimize_scalar` or `milp` for budget knapsack allocation).
+
+### Q7: What are the primary limitations of the methodology?
+**Answer:**
+1. Observational data cannot rule out unobserved confounding (hidden viral shocks, competitor promotions not captured in data).
+2. SUTVA violations (interference: discounts given to one customer may spill over to others via word-of-mouth).
+3. Extrapolation risk: the model should not be used to predict demand for prices far outside historical empirical support.
+4. Strictly **no ROI claims** should be made without randomized A/B trial validation in production.
+
+---
+
+## 14.3 Social Media Video Showcase (5 Marks)
 
 - **Hook (0:00–0:15):** "Why do naive pricing models fail in retail? Because when costs and ad spend go up, prices and sales rise together—making demand look artificially inelastic!"
 - **Core Concept (0:15–0:45):** "Introducing EconoCausal: We use Double Machine Learning (DML) and Robinson's transformation to strip away confounding bias using 5-fold cross-fitting."

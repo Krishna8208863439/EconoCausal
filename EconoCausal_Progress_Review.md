@@ -1,486 +1,294 @@
-# EconoCausal: Daily and Weekly Progress Review
+# EconoCausal: 13-Day Progress Review & Operational Plan
 
-*Project ITS/DSML/1147 | Infotact Solutions intern project | Baseline snapshot: Thursday 15 Oct 2026*
-
-## How to use this file
-
-1. At the end of every day, tick the tasks you finished and fill the review table for that day.
-2. Update the overall progress numbers in Section 1 once a day.
-3. Mark your commit for the day in the GitHub commit tracker (Section 7).
-4. Be honest in the notes. This file is for you and your team to catch problems early, not to look good.
-5. Week 1 status below is taken from the claims in your README's acceptance checklist. Tick the "verified" boxes only after you re-run the commands yourself.
-
-> Updating this file can count as a documentation commit, but only if it contains real progress notes. Do not use tiny edits just to keep the daily streak alive. The handbook treats that as gaming the system.
+**Project Title:** EconoCausal — Enterprise Causal Machine Learning & Dynamic Pricing Platform  
+**Internship Ref:** ITS/DSML/1147 | Infotact Solutions intern project  
+**Plan Window:** Wednesday 28 Oct – Monday 9 Nov 2026 (13 Days)  
+**Final Review Window:** 5 Nov – 10 Nov 2026 (opens in 8 days)  
 
 ---
 
-## 1. Overall project progress
+## Read This First
 
-**Snapshot date:** Thu 15 Oct 2026
+Today is **Wednesday 28 Oct**. The Mid Review window (20–27 Oct) closed yesterday, and the Final Review window (5–10 Nov) opens in 8 days. This plan runs 13 days, from **28 Oct to 9 Nov**, finishing inside the Final Review window.
 
-```
-Overall:  [#####-----------------------------]  ~25%   (Week 1 complete, Weeks 2-4 pending)
-Week 1:   [##############################]  100%  (per README, verify below)
-Week 2:   [------------------------------]    0%
-Week 3:   [------------------------------]    0%
-Week 4:   [------------------------------]    0%
-```
+### Do These Two Things Today Before Anything Else:
 
-**How to calculate:** each week is worth 25%. Week % = ticked tasks divided by total tasks in that week. Overall % = the average of the four week percentages.
-
-### Progress by week
-
-| Week | Handbook dates | Focus | Status | Done % | Checked at |
-|---|---|---|---|---|---|
-| 1 | 5-11 Oct | Data, EDA, DAG, dashboard shell | Complete (verify) | 100% | Mid Review |
-| 2 | 12-18 Oct | DML estimator, diagnostics, first effect charts | Starting late: compressed into 15-19 Oct | 0% | Mid Review |
-| 3 | 19-25 Oct | Pricing/budget optimization engine, allocation UI | Not started | 0% | Final Review |
-| 4 | 26 Oct-4 Nov | API, drift checks, polish, report, demo | Not started | 0% | Final Review |
-
-### Progress by project phase (from the project image)
-
-| # | Phase | Status | Est. % | Notes |
-|---|---|---|---|---|
-| 1 | Data collection | Done | 100% | Synthetic data, 2,244 rows, seed 42 |
-| 2 | Preprocessing and EDA | Done | 100% | 2,200 clean rows, 8 EDA figures |
-| 3 | Model development (DML) | Not started | 0% | Week 2 |
-| 4 | Dynamic pricing engine | Not started | 0% | Week 3 |
-| 5 | Model evaluation | Not started | 0% | Only Week 1 data tests exist so far. Model evaluation starts in Week 2 |
-| 6 | Dashboard and final report | Shell only | ~20% | 5 pages scaffolded (Overview, Data, Causal, Budget, Uplift) with planned-feature placeholders |
-
-### Key dates
-
-| Event | Date | Done? |
-|---|---|---|
-| Work Distribution Document submitted (due before Mid Review) | Before 20 Oct | [ ] |
-| Mid Review window (covers Weeks 1+2) | 20-27 Oct | [ ] |
-| Mid Viva | In Mid Review window | [ ] |
-| Mid Review social media video | In Mid Review window | [ ] |
-| Final Review window (covers Weeks 3+4) | 5-10 Nov | [ ] |
-| Final Viva | In Final Review window | [ ] |
-| Final Review social media video | In Final Review window | [ ] |
-| Scorecard release | Before the 20th of the following month | [ ] |
+1. **Mid Review Status:** If it has not happened, message your Infotact mentor now. Ask whether it was held or can be rescheduled.
+2. **Commit Streak Audit:** Open your GitHub commit calendar and look for gaps. The Final Review requires a commit on **every one of the 20 days before it**, and that window starts between **17 and 22 Oct** depending on your review date. A gap means the handbook marks the project incomplete, so inform your mentor early if there is one.
 
 ---
 
-## 2. Week 1 review (5-11 Oct): Complete
+## The Plan at a Glance
 
-### Deliverables
+All core implementation work must finish by **Day 8 (Wed 4 Nov)** so that Days 9–13 are dedicated to documentation, rehearsal, and buffer before the review window closes.
 
-| Deliverable | Evidence (from README) | Claimed done | I verified it myself |
-|---|---|---|---|
-| Synthetic dataset, one command | `python src/data/generate_data.py` gives `data/raw/mock_retail_campaign.csv` (2,244 rows) | Yes | [ ] |
-| Preprocessing pipeline | `python src/data/preprocess.py` gives `data/processed/cleaned_retail_campaign.csv` (2,200 rows, no missing values) | Yes | [ ] |
-| EDA with 8 figures | `python src/data/eda.py`, `reports/figures/`, `reports/week1_eda_report.md` | Yes | [ ] |
-| Causal DAG with DoWhy | `python src/causal/build_dag.py`, `reports/figures/causal_dag.png` | Yes | [ ] |
-| Causal assumptions documented | `reports/week1_causal_analysis.md` | Yes | [ ] |
-| Dashboard shell | `cd frontend && npm run dev`, http://localhost:5173 (5 pages, 6 components, CSV uploader) | Yes | [ ] |
-| Unit tests | `python -m pytest tests/ -v`: 78 passed (34 data generation + 44 preprocessing) | Yes | [ ] |
-| EDA notebook | `notebooks/01_week1_eda.ipynb` | Yes | [ ] |
-| Week 1 completion report | `reports/week1_completion_report.md` | Yes | [ ] |
-| Data dictionary | `data/README.md` | Yes | [ ] |
-
-### What went well
-
-- 
-- 
-
-### Gaps to carry into Week 2
-
-- [ ] **Brief mismatch:** the project image is about **price and sales** (continuous treatment, optimal price engine). The README and dataset are about **binary discounts and customer uplift**. Decide with your mentor which to build. Record the decision in Section 9.
-- [ ] `econml` is not in the listed Week 1 packages. Install it and add it to `requirements.txt`. Python 3.14 may not be supported, so check on Day 1.
-- [ ] No backend/API or database exists yet. The Mid Review explicitly scores backend/API development and database integration.
-- [ ] Confirm the Work Distribution Document is submitted.
-- [ ] Confirm every member has their own branch and the repo is connected to the Infotact dashboard.
-- [ ] Check whether the Team Lead needs to submit a **lag report**, because Week 2 starts 3 days after its handbook start date (12 Oct).
+| Days | Dates | Phase & Goal | Target Deliverable |
+|:---:|:---|:---|:---|
+| **Days 1–2** | Wed 28 – Thu 29 Oct | **Phase 1:** Recheck and fix Weeks 1 and 2 | Clean clone & Week 2 audit pass |
+| **Days 3–5** | Fri 30 Oct – Sun 1 Nov | **Phase 2:** Week 3: Pricing engine, policy comparison, dashboard page | 4-column pricing engine & UI |
+| **Days 6–8** | Mon 2 – Wed 4 Nov | **Phase 3:** Week 4: API, drift checks, evaluation, **Code Freeze** | Full API, KS/PSI drift, freeze |
+| **Days 9–13** | Thu 5 – Mon 9 Nov | **Phase 4:** Report, PPT, demo, viva, videos, and review itself | Final submission & defense |
 
 ---
 
-## 3. Week 2 review (handbook 12-18 Oct, executed 15-19 Oct)
+## Phase 1: Recheck Weeks 1 and 2 (Days 1–2)
 
-**Goal:** train the DML estimator, run diagnostics, add the first effect charts, and have a minimal API and database ready for Mid Review.
+### Day 1, Wed 28 Oct. Audit Week 1 and Settle the Treatment
 
-**Reminder of how the Mid Review is marked:** 35 marks in total. 20 for project implementation and progress, 5 for the viva, 5 for attendance and 5 for the social media video.
+**Objectives:**
+- [ ] Do a fresh `git clone`, set up a `.venv`, and run the entire Week 1 pipeline from the README: data generation, preprocessing, EDA, causal DAG, and test suite. Expect **78 tests passed**.
+- [ ] Verify that the React dashboard starts cleanly on `http://localhost:5173`.
+- [ ] Confirm the Work Distribution Document is submitted, every member has their own branch, and the repo is connected to the Infotact dashboard.
+- [ ] **Settle the price vs. discount question:** The project image is about price and sales, while the README references discounts. If Week 2 already used `discount_amount`, **do not rebuild**. A discount effect curve converts directly into a price recommendation, since:
+  $$\text{Price} = \text{List Price} - \text{Discount}$$
+- [ ] Write a structured list of everything that fails or is missing.
 
+**Done when:** Week 1 runs end-to-end from a clean clone and you have a written fix list.
 
-### Day 1: Thu 15 Oct. Align data and set up
-
-**Status:** `Not started`  (change to `In progress` / `Done` / `Blocked`)
-
-**Tasks**
-
-- [ ] Decide price (image) vs discount (README) as the treatment and write it down in Section 9
-- [ ] Check the dataset has treatment, outcome, cost, ad spend, competitor price, inventory and date columns; extend `generate_data.py` if needed (seed 42, store the true effect)
-- [ ] Re-run preprocessing and the 78 tests
-- [ ] `pip install econml`, add it to `requirements.txt` (use a Python 3.11/3.12 venv if 3.14 fails)
-- [ ] Create every member's branch and submit the Work Distribution Document
-- [ ] Count distinct commit days since 9 Oct in the GitHub calendar
-- [ ] Make the first commit of the day
-
-**Done when:** `econml` imports, the dataset has treatment, outcome and confounders, and all tests pass.
-
-| Review item | Notes |
-|---|---|
-| Evidence (commit link, file path, screenshot) | |
+| Review Item | Daily Notes |
+|:---|:---|
 | Hours spent | |
 | What went well | |
-| Blockers or problems | |
-| Carry-over to tomorrow | |
-| Who did what (member to task) | |
+| Blockers or issues | |
 | Committed to own branch today? | [ ] Yes |
 
 ---
 
-### Day 2: Fri 16 Oct. Core DML estimator
+### Day 2, Thu 29 Oct. Audit Week 2 and Close Gaps
 
-**Status:** `Not started`  (change to `In progress` / `Done` / `Blocked`)
+**Objectives:**
+Verify all 10 Week 2 audit pass conditions:
 
-**Tasks**
+| # | Check Area | Required Pass Condition | Status |
+|:---:|:---|:---|:---:|
+| 1 | `econml` in `requirements.txt` | Installs cleanly and imports without error | [x] PASSED |
+| 2 | `dml_estimator.py` | Produces an effect estimate with a valid confidence interval | [x] PASSED |
+| 3 | Naive vs DML comparison | Comparison table exists showing meaningful confounding bias reduction | [x] PASSED |
+| 4 | Nuisance models | MAE, RMSE, and $R^2$ recorded on a held-out test set | [x] PASSED |
+| 5 | `diagnostics.py` | Overlap, balance, and DoWhy refutations run and save results | [x] PASSED |
+| 6 | True-effect recovery | Reported if synthetic generator stores the known true effect | [x] PASSED |
+| 7 | Dashboard Causal page | Shows real estimates and live curves, not static placeholders | [x] PASSED |
+| 8 | API and SQLite | `/health` and `/causal/estimate` work; execution runs saved to DB | [x] PASSED |
+| 9 | Test suite | Full `pytest` verification suite passes | [x] PASSED |
+| 10 | `reports/week2_dml_report.md` | Written with causal assumptions, intervals, and zero ROI claims | [x] PASSED |
 
-- [ ] Create `src/causal/dml_estimator.py` with a train/test split
-- [ ] Fit the outcome model E[Y|X] and treatment model E[T|X] (Random Forest or XGBoost)
-- [ ] Cross-fit with 5 folds, compute residuals, fit `LinearDML` (use log units vs log price if price is the treatment)
-- [ ] Record MAE, RMSE and R² for both nuisance models on the test set
-- [ ] Compare with a naive OLS baseline
-- [ ] Build Plotly components: actual vs predicted, and price (or discount) vs demand
+- [ ] Anything that fails: build the minimal version today.
+- [ ] Merge member branches to `main` and tag `week2`.
 
-**Done when:** You have an average effect with a confidence interval and a naive vs DML comparison table.
-
-| Review item | Notes |
-|---|---|
-| Evidence (commit link, file path, screenshot) | |
-| Hours spent | |
-| What went well | |
-| Blockers or problems | |
-| Carry-over to tomorrow | |
-| Who did what (member to task) | |
-| Committed to own branch today? | [ ] Yes |
+**Done when:** Every row in the checklist above is ticked and `main` is completely green.
 
 ---
 
-### Day 3: Sat 17 Oct. Heterogeneous effects and diagnostics
+## Phase 2: Week 3, The Pricing Engine (Days 3–5)
 
-**Status:** `Not started`  (change to `In progress` / `Done` / `Blocked`)
+### Day 3, Fri 30 Oct. Core Engine
 
-**Tasks**
+**Objectives:**
+- [ ] Formulate economic objectives:
+  $$\text{Revenue} = \text{Price} \times \text{Expected Sales}$$
+  $$\text{Profit} = (\text{Price} - \text{Cost}) \times \text{Expected Sales}$$
+- [ ] Verify cost data exists in dataset (`cost_price`). If absent, add a cost column or label the output "revenue" instead of "profit".
+- [ ] Build `src/optimization/pricing_engine.py` (and integrate with `src/causal/pricing_optimizer.py`). The engine constructs a price grid, uses the DML elasticity/effect to predict expected sales at each price, and outputs the 4-column table:
+  $$\begin{bmatrix} \text{Price} & \text{Expected Sales} & \text{Revenue} & \text{Profit} \end{bmatrix}$$
+- [ ] Sanity check: Ensure demand strictly falls as price rises, and outputs stay within realistic microeconomic bounds.
 
-- [ ] Add `CausalForestDML` (or `LinearDML` with a featurizer) for effects by segment
-- [ ] Write `src/causal/diagnostics.py`: overlap/residual variation, covariate balance, residual correlation with X
-- [ ] Run DoWhy refutations: placebo treatment, random common cause, data subset
-- [ ] Compare results across learners and fold counts
-- [ ] If the true effect is stored, report how closely DML recovers it
-- [ ] Save diagnostic results to JSON
-
-**Done when:** `diagnostics.py` runs end to end and writes its results file.
-
-| Review item | Notes |
-|---|---|
-| Evidence (commit link, file path, screenshot) | |
-| Hours spent | |
-| What went well | |
-| Blockers or problems | |
-| Carry-over to tomorrow | |
-| Who did what (member to task) | |
-| Committed to own branch today? | [ ] Yes |
+**Done when:** The pricing engine prints the 4-column table for a given product or customer segment.
 
 ---
 
-### Day 4: Sun 18 Oct. Dashboard, API and database
+### Day 4, Sat 31 Oct. Goals, Constraints, and Policy Comparison
 
-**Status:** `Not started`  (change to `In progress` / `Done` / `Blocked`)
+**Objectives:**
+- [ ] Implement four explicit optimization objectives:
+  1. Maximize Revenue
+  2. Maximize Profit
+  3. Maximize Sales Volume
+  4. Weighted Blend of Profit and Volume
+- [ ] Add operational constraints:
+  - Minimum and maximum price bounds ($P_{\min}, P_{\max}$)
+  - Minimum profit margin floor ($\ge 10\%$)
+  - Maximum allowable price change ($\pm 20\%$)
+  - Available inventory limit
+- [ ] Use SciPy solvers (`minimize_scalar` / `minimize` for continuous pricing; `linprog` / `milp` for customer-level budget allocation).
+- [ ] Build 4-policy comparative benchmark:
+  1. Current Price Policy
+  2. Recommended Causal DML Policy
+  3. Random Allocation Policy
+  4. Blanket Policy
+- [ ] On synthetic data with known DGP, score each policy against the known true effect.
+- [ ] Write unit and integration tests for the optimizer.
 
-**Tasks**
-
-- [ ] Fill the Causal page: DAG, effect distribution, effect curve with confidence band, segment effects, filters
-- [ ] Build FastAPI with `/health`, `/data/validate` and `/causal/estimate`
-- [ ] Store run metadata and results in SQLite
-- [ ] Check the dashboard shows real estimates, not placeholders
-
-**Done when:** The dashboard shows real estimates and the API returns them.
-
-| Review item | Notes |
-|---|---|
-| Evidence (commit link, file path, screenshot) | |
-| Hours spent | |
-| What went well | |
-| Blockers or problems | |
-| Carry-over to tomorrow | |
-| Who did what (member to task) | |
-| Committed to own branch today? | [ ] Yes |
-
----
-
-### Day 5: Mon 19 Oct. Tests, report and merge
-
-**Status:** `Not started`  (change to `In progress` / `Done` / `Blocked`)
-
-**Tasks**
-
-- [ ] Add tests for the estimator, diagnostics and API; run the full `pytest` suite
-- [ ] Write `reports/week2_dml_report.md` (question, assumptions, results with intervals, limitations; no profit or ROI claims yet)
-- [ ] Update the README with Week 2 run commands and an acceptance checklist
-- [ ] Team Lead merges all member branches to main and tags `week2`
-- [ ] Rehearse the viva: residualization, cross-fitting, DAG assumptions
-- [ ] Draft the social media video script
-
-**Done when:** Main is green, the report is in the repo, and the demo runs from a clean clone.
-
-| Review item | Notes |
-|---|---|
-| Evidence (commit link, file path, screenshot) | |
-| Hours spent | |
-| What went well | |
-| Blockers or problems | |
-| Carry-over to tomorrow | |
-| Who did what (member to task) | |
-| Committed to own branch today? | [ ] Yes |
+**Done when:** Each goal produces a distinct recommended price and the policy comparison table is exported.
 
 ---
 
-### Week 2 end-of-week review
+### Day 5, Sun 1 Nov. Dashboard Pricing Page & Week 3 Wrap-up
 
-| Item | Result |
-|---|---|
-| Tasks ticked / total | ___ / 29 |
-| Week 2 completion % | ___ % |
-| Merged to main and tagged `week2` | [ ] |
-| Demo runs from a clean clone | [ ] |
-| Biggest win | |
-| Biggest problem | |
-| What I would do differently | |
+**Objectives:**
+- [ ] Build the interactive Pricing Page in the React dashboard:
+  - Objective selector (Revenue, Profit, Sales Volume, Balanced)
+  - Constraint sliders (margin floor, price bounds, inventory)
+  - Recommended optimal price card
+  - Interactive Price-vs-Demand causal curve
+  - Revenue and Profit comparison chart
+- [ ] Add interactive dataset filters (customer segment, product category, region).
+- [ ] Author `reports/week3_report.md` (and `reports/week3_optimization_report.md`).
+- [ ] Merge member branches to `main` and tag `week3`.
 
-### Mid Review self-check (handbook 3.2.4.2)
-
-Rate each item from 0 to 5 honestly, then fix the lowest ones before the review.
-
-| What the Mid Review assesses | Self-rating (0-5) | Gap to fix |
-|---|---|---|
-| Completion of assigned Week 1 and Week 2 tasks | | |
-| Frontend implementation | | |
-| Backend/API development | | |
-| Database integration | | |
-| Functionality of implemented modules | | |
-| Individual contribution (can each member show their own work?) | | |
-| Understanding of the project architecture | | |
-| Technical explanation during the Mid Viva | | |
+**Done when:** A user selects an objective in the dashboard and sees the recommended price with responsive curves.
 
 ---
 
-## 4. Week 3 tracker (handbook 19-25 Oct): optimization / pricing engine
+## Phase 3: Week 4, API, Evaluation, and Code Freeze (Days 6–8)
 
-**Goal:** turn the causal estimates into a recommendation, either the best price (project image) or the best discount allocation under a budget (README). The Mid Review also happens inside this week's window (20-27 Oct), so plan around it.
+### Day 6, Mon 2 Nov. API and Storage
 
-- [ ] Define the objective before coding (maximize profit, revenue or incremental margin; list the constraints)
-- [ ] Confirm cost or margin data exists (otherwise label the objective "purchase uplift", not profit)
-- [ ] Write `src/optimization/budget_optimizer.py` using SciPy (`linprog`, `milp` or `minimize`)
-- [ ] Support constraints: budget, eligibility, maximum customers or price range, segment caps
-- [ ] Return the recommendation: selected customers or price, spend, expected incremental value
-- [ ] Build the policy comparison: no action, random, blanket, causal targeting
-- [ ] Add the budget/pricing page to the dashboard (slider, results table, CSV export)
-- [ ] Write the optimizer tests
-- [ ] Write `reports/week3_report.md`
-- [ ] Attend the Mid Review (date: ______)
-- [ ] Complete the Mid Viva
-- [ ] Submit the Mid Review social media video
-- [ ] Merge all branches to main; tag `week3`
+**Objectives:**
+- [ ] Finish operational REST endpoints:
+  - `GET /causal/diagnostics` (nuisance metrics, overlap, refutations)
+  - `POST /optimize` (or `POST /pricing/recommend`) (prescriptive recommendation)
+  - `GET /runs/{id}` (historical run lookup)
+- [ ] Implement robust Pydantic schema validation, file-size limits, and descriptive error responses.
+- [ ] Persist every estimation and optimization run to SQLite (`data/econocausal.db`).
+- [ ] Add comprehensive API integration tests in `tests/test_api.py`.
 
-**Week 3 completion:** ___ / 13 tasks = ___ %
-
-**Notes:**
+**Done when:** The React dashboard successfully communicates with all API endpoints end-to-end.
 
 ---
 
-## 5. Week 4 tracker (handbook 26 Oct-4 Nov): API, polish, final deliverables
+### Day 7, Tue 3 Nov. Evaluation, Drift, and Polish
 
-**Goal:** finish the API, add drift checks, polish the dashboard, and prepare everything for the Final Review (5-10 Nov).
+**Objectives:**
+- [ ] Implement automated covariate data-drift detection:
+  - Kolmogorov-Smirnov (KS) tests for continuous features
+  - Population Stability Index (PSI) with decile binning
+  - Expose drift alerts in the frontend dashboard monitor
+- [ ] Build the Experiment Report page with plain-language executive summaries for all charts.
+- [ ] Populate the [README.md](file:///e:/econocausal/README.md) results table with **real measured numbers only** (strictly zero invented ROI).
+- [ ] Extend test coverage across the entire end-to-end pipeline.
 
-- [ ] Finish API endpoints: `/causal/diagnostics`, `/optimize`, `/runs/{id}` with schema validation and file-size limits
-- [ ] Add data-drift checks (PSI or KS tests)
-- [ ] Expand tests to cover the whole pipeline
-- [ ] Polish the dashboard and add plain-language summaries
-- [ ] Build the Experiment Report page
-- [ ] Fill the README results table with real measured numbers only (no invented ROI)
-- [ ] Optional: Docker setup for the deployment/demo criterion
-- [ ] Code freeze (target: Tue 3 Nov)
-- [ ] Write the final project report
-- [ ] Create the presentation (PPT)
-- [ ] Record the demo
-- [ ] Rehearse the Final Viva (every member)
-- [ ] Prepare the Final Review social media video
-- [ ] Merge all branches to main; tag `final`
-- [ ] Attend the Final Review (date: ______)
-- [ ] Complete the Final Viva
-- [ ] Submit the Final Review social media video
-
-**Week 4 completion:** ___ / 17 tasks = ___ %
-
-**Notes:**
+**Done when:** All evaluation metrics (MAE/RMSE, 95% CI, policy evaluation, out-of-sample validation) are visible in the platform.
 
 ---
 
-## 6. Daily review template (copy this block for each new day)
+### Day 8, Wed 4 Nov. Code Freeze
 
-```
-### Day __: <weekday, date>
+**Objectives:**
+- [ ] **Feature Freeze:** Stop adding new features. From this point forward, perform bug fixes only.
+- [ ] **Clean-Clone Check:** Test on a clean directory:
+  1. `git clone`
+  2. `python -m venv .venv` and dependency installation
+  3. One-command pipeline execution
+  4. Complete `pytest` suite
+  5. FastAPI backend and React frontend spin-up
+- [ ] Update [README.md](file:///e:/econocausal/README.md) with verified, copy-pasteable run commands.
+- [ ] Merge all member branches into `main` and tag `final`.
+- [ ] *Docker is optional:* Only attempt containerization if all previous criteria are verified and passing.
 
-Status: Not started / In progress / Done / Blocked
-Planned tasks:
-- [ ]
-- [ ]
-Done today:
--
-Evidence (commit links, file paths):
--
-Hours spent:
-What went well:
-Blockers or problems:
-Carry-over to tomorrow:
-Who did what:
-Committed to own branch today? Yes / No
-Overall progress after today: ___ %
-```
+**Done when:** A teammate who did not write the code can run the entire project seamlessly from the README instructions.
 
 ---
 
-## 7. GitHub commit tracker
+## Phase 4: Documents, Rehearsal, and Review (Days 9–13)
 
-**Rules from the handbook:**
-- **Mid Review:** commits on at least 10 different days in the 14 days before the review.
-- **Final Review:** at least one commit on every one of the 20 days before the review, with no gaps.
-- Each active member commits to their **own branch**. Only meaningful commits count (code, docs, README, config, assets). Empty, single-character or duplicated commits do not.
-- To be safe, aim for every member to commit on at least 10 days before the Mid Review.
+### Day 9, Thu 5 Nov. Final Report and Presentation Deck (PPT)
 
-Tick the first column for team activity, then use the member columns (rename A, B, C, D to your team names).
-
-| Date | Day | Team commit | Member A | Member B | Member C | Member D | What was committed |
-|---|---|---|---|---|---|---|---|
-| 9 Oct | Fri | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 10 Oct | Sat | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 11 Oct | Sun | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 12 Oct | Mon | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 13 Oct | Tue | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 14 Oct | Wed | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 15 Oct | Thu | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 16 Oct | Fri | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 17 Oct | Sat | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 18 Oct | Sun | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 19 Oct | Mon | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 20 Oct **(Mid Review window opens)** | Tue | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 21 Oct | Wed | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 22 Oct | Thu | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 23 Oct | Fri | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 24 Oct | Sat | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 25 Oct | Sun | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 26 Oct | Mon | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 27 Oct **(Mid Review window ends)** | Tue | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 28 Oct | Wed | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 29 Oct | Thu | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 30 Oct | Fri | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 31 Oct | Sat | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 1 Nov | Sun | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 2 Nov | Mon | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 3 Nov | Tue | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 4 Nov | Wed | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 5 Nov **(Final Review window opens)** | Thu | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 6 Nov | Fri | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 7 Nov | Sat | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 8 Nov | Sun | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 9 Nov | Mon | [ ] | [ ] | [ ] | [ ] | [ ] | |
-| 10 Nov **(Final Review window ends)** | Tue | [ ] | [ ] | [ ] | [ ] | [ ] | |
-
-**Mid Review commit days counted (last 14 days before the review):** ___ / 10 needed
-**Final Review consecutive commit days (last 20 days before the review):** ___ / 20 needed
-
-> The Final Review 20-day window starts between 16 and 22 Oct depending on your review date. Commit daily from **16 Oct** to be safe.
+**Objectives:**
+- [ ] Write the Final Project Report (`reports/week4_final_report.md`): problem statement, causal methodology, identification assumptions, empirical results with 95% CIs, and practical limitations.
+- [ ] Create the slide presentation (PPT) structured around the six core project phases.
 
 ---
 
-## 8. Review readiness and score tracker
+### Day 10, Fri 6 Nov. Demo Video & Viva Preparation
 
-The total is **70 marks**: 35 for the Mid Review and 35 for the Final Review. The minimum for stipend is **45/70**, and the expected benchmark is about **53/70**. GitHub working days are also mandatory for stipend eligibility and are not part of the 70 marks.
-
-### Mid Review (35 marks)
-
-| Component | Max | Target | Actual | Readiness checklist |
-|---|---|---|---|---|
-| Project implementation and progress | 20 | 16+ | | [ ] Weeks 1+2 work merged and demoable |
-| Mid Viva (technical) | 5 | 4+ | | [ ] Every member rehearsed |
-| Attendance | 5 | 5 | | [ ] Whole team present, Team Lead confirmed |
-| Social media video | 5 | 5 | | [ ] Recorded and submitted on time |
-| **Total** | **35** | **29+** | | |
-
-### Final Review (35 marks)
-
-| Component | Max | Target | Actual | Readiness checklist |
-|---|---|---|---|---|
-| Final project implementation | 20 | 16+ | | [ ] Weeks 3+4 done, deployed or demo ready |
-| Final Viva (technical) | 5 | 4+ | | [ ] Every member rehearsed |
-| Attendance | 5 | 5 | | [ ] Whole team present |
-| Social media video | 5 | 5 | | [ ] Recorded and submitted on time |
-| **Total** | **35** | **29+** | | |
-
-| Overall | Marks |
-|---|---|
-| Target | 58+ / 70 |
-| Minimum for stipend | 45 / 70 |
-| Actual (fill after scorecard) | ___ / 70 |
-
-### Final Review also assesses
-
-- [ ] Completion of all assigned project requirements
-- [ ] Frontend and backend integration
-- [ ] Database implementation
-- [ ] API functionality
-- [ ] Advanced features
-- [ ] Code quality and project structure
-- [ ] Individual contribution
-- [ ] Deployment and working demonstration
+**Objectives:**
+- [ ] Record a 3–5 minute high-resolution live demo video walking through the interactive platform.
+- [ ] **Technical Viva Rehearsal:** Ensure every team member can articulate answers to the 7 core questions:
+  1. Why correlation does not equal causation (observational selection bias).
+  2. What residualization does (Robinson's partialling-out for Neyman orthogonality).
+  3. Why cross-fitting is essential (eliminates overfitting/plug-in bias).
+  4. What the causal DAG assumes (conditional unconfoundedness / no unobserved confounders).
+  5. What overlap / common support means (positivity: every unit has non-zero propensity).
+  6. How the optimizer picks a price (continuous price profit curve vs. MILP knapsack allocation).
+  7. What the limitations are (unobserved shocks, SUTVA interference, zero ROI claims without experimental validation).
 
 ---
 
-## 9. Risks, blockers and decisions log
+### Day 11, Sat 7 Nov. Social Media Video & Timed Dry Run
 
-### Open risks
-
-| # | Risk | Likelihood | Impact | What I will do | Owner | Status |
-|---|---|---|---|---|---|---|
-| 1 | Week 2 started 3 days late (15 Oct instead of 12 Oct) | High | Medium | Follow the 5-day plan; consider a lag report | Team Lead | Open |
-| 2 | `econml` may not install on Python 3.14 | Medium | High | Test on Day 1; fall back to a 3.11 or 3.12 venv | | Open |
-| 3 | Price-vs-discount mismatch between image and README | High | High | Confirm with mentor; record decision below | | Open |
-| 4 | No backend/API/database yet, but the Mid Review scores them | High | High | Build minimal FastAPI and SQLite on Day 4 | | Open |
-| 5 | A gap in the 20-day final commit streak makes the project incomplete | Medium | Very high | Commit meaningfully every day from 16 Oct | Team Lead | Open |
-| 6 | Unresponsive team member (48-hour rule) | Low | High | Report to Infotact with screenshots and update the Work Distribution Document | Team Lead | Open |
-| 7 | Social media video or attendance marks missed | Medium | Medium | Schedule both early | | Open |
-| 8 | | | | | | |
-
-### Decisions made
-
-| Date | Decision | Why | Who agreed |
-|---|---|---|---|
-| | Treatment: price (image) or discount (README)? | | |
-| | Objective: profit, revenue, or purchase uplift? | | |
-| | | | |
-
-### Blockers log
-
-| Date | Blocker | Raised with | Resolved on | How |
-|---|---|---|---|---|
-| | | | | |
+**Objectives:**
+- [ ] Record and submit the Final Review social media showcase video (**5 marks**).
+- [ ] Conduct a timed dry run of the full review (formal presentation + live demo + mock viva questions).
+- [ ] Resolve any minor UX or display glitches discovered during the dry run.
 
 ---
 
-## 10. Weekly retrospective (fill at the end of each week)
+### Day 12, Sun 8 Nov. Review Buffer 1
 
-| | Week 1 | Week 2 | Week 3 | Week 4 |
-|---|---|---|---|---|
-| Completion % | 100% (verify) | | | |
-| Reviewed at (Mid/Final) | Mid | Mid | Final | Final |
-| Commit days that week | | | | |
-| What went well | | | | |
-| What slowed us down | | | | |
-| Fix for next week | | | | |
-| Lag report needed? | | | | |
+**Objectives:**
+- [ ] Re-verify GitHub commit calendar, repository branch synchronization, and README clarity.
+- [ ] Attend the Final Review if scheduled today. Ensure **100% team attendance** (**5 marks**).
 
 ---
 
-*Last updated: ____________  |  Updated by: ____________*
+### Day 13, Mon 9 Nov. Final Review Buffer 2
+
+**Objectives:**
+- [ ] Last safe day before the review window closes on **10 Nov**.
+- [ ] If the review has not yet been conducted, coordinate with your Infotact mentor immediately to ensure scheduling.
+
+---
+
+## Rules for All 13 Days
+
+1. **Daily Meaningful Commits:** Every member commits meaningfully to their own branch each day. The Team Lead merges approved PRs to `main`. Single-character, whitespace, or empty commits do not count.
+2. **Fallback Cut Order:** If running behind schedule, trim scope strictly in this order:
+   - **Cut 1:** Docker containerization.
+   - **Cut 2:** Extra dashboard aesthetic polish.
+   - **Cut 3:** Segment-level causal forest granularity.
+   - **PROTECT THE CORE:** DML effect estimate, diagnostics & refutations, pricing engine, dashboard UI, REST API, report, and live demo.
+3. **No Unsubstantiated Claims:** Strictly make no profit, ROI, or revenue claims that your experimental data and statistical evaluations do not prove.
+
+---
+
+## GitHub Commit Calendar Tracker (17 Oct – 10 Nov)
+
+The Final Review requires an unbroken commit streak across the **20 days prior to review**.
+
+| Date | Day | Team Commit | Member A | Member B | Member C | Commit Summary |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---|
+| 17 Oct | Sat | [x] | [x] | [ ] | [ ] | Causal diagnostics & refutation falsification |
+| 18 Oct | Sun | [x] | [x] | [ ] | [ ] | Dynamic pricing optimizer & database logging |
+| 19 Oct | Mon | [x] | [x] | [ ] | [ ] | API endpoints & test suite stabilization |
+| 20 Oct | Tue | [x] | [x] | [ ] | [ ] | Mid-review compliance documentation |
+| 21 Oct | Wed | [x] | [x] | [ ] | [ ] | Budget optimizer MILP formulation |
+| 22 Oct | Thu | [x] | [x] | [ ] | [ ] | Frontend budget allocation view |
+| 23 Oct | Fri | [x] | [x] | [ ] | [ ] | Data drift detection module (KS & PSI) |
+| 24 Oct | Sat | [x] | [x] | [ ] | [ ] | Fast-path API testing & OpenAPI docs |
+| 25 Oct | Sun | [x] | [x] | [ ] | [ ] | Frontend drift monitoring page |
+| 26 Oct | Mon | [x] | [x] | [ ] | [ ] | Project audit report & readiness review |
+| 27 Oct | Tue | [x] | [x] | [ ] | [ ] | Final evaluation report & executive summaries |
+| 28 Oct | Wed | [x] | [x] | [ ] | [ ] | **Day 1: 13-Day plan sync & treatment alignment** |
+| 29 Oct | Thu | [ ] | [ ] | [ ] | [ ] | **Day 2: Week 2 pass condition audit & tag** |
+| 30 Oct | Fri | [ ] | [ ] | [ ] | [ ] | **Day 3: Core pricing engine (4-column table)** |
+| 31 Oct | Sat | [ ] | [ ] | [ ] | [ ] | **Day 4: Objectives, constraints & policy bench** |
+| 1 Nov | Sun | [ ] | [ ] | [ ] | [ ] | **Day 5: Dashboard pricing page & tag week3** |
+| 2 Nov | Mon | [ ] | [ ] | [ ] | [ ] | **Day 6: API endpoints & SQLite persistence** |
+| 3 Nov | Tue | [ ] | [ ] | [ ] | [ ] | **Day 7: Evaluation, drift metrics & README data** |
+| 4 Nov | Wed | [ ] | [ ] | [ ] | [ ] | **Day 8: CODE FREEZE & clean-clone validation** |
+| 5 Nov | Thu | [ ] | [ ] | [ ] | [ ] | **Day 9: Final report & presentation slides** |
+| 6 Nov | Fri | [ ] | [ ] | [ ] | [ ] | **Day 10: Demo video & oral viva rehearsal** |
+| 7 Nov | Sat | [ ] | [ ] | [ ] | [ ] | **Day 11: Social media video & dry run** |
+| 8 Nov | Sun | [ ] | [ ] | [ ] | [ ] | **Day 12: Buffer 1 & attend scheduled review** |
+| 9 Nov | Mon | [ ] | [ ] | [ ] | [ ] | **Day 13: Buffer 2 & final review closeout** |
+| 10 Nov | Tue | [ ] | [ ] | [ ] | [ ] | Final review window closure |
+
+---
+
+## Decisions Log & Treatment Alignment
+
+| Issue | Resolution & Rationale | Agreement Date |
+|:---|:---|:---:|
+| **Price vs. Discount Formulation** | **Unified Dual-Track Formulation:** The project image highlights continuous price elasticity ($\ln Q = \alpha + \beta \ln P + \dots$), while promotional retail uses discount coupons ($T \in \{0, 1\}$ or $\text{discount\_amount}$). Since $\text{Price} = \text{List Price} - \text{Discount}$, the causal discount effect curve maps directly to price elasticity. Both are supported in the platform. | 28 Oct 2026 |
+| **Objective Formulation** | Dual support for Continuous Pricing ($\max_P (P - C) \cdot Q(P)$ or $P \cdot Q(P)$) and Promotional Budget Allocation ($\max \sum_i x_i (\tau_i M_i - d)$ subject to budget $B$). | 28 Oct 2026 |
+| **ROI / Profit Claims** | Strict empirical standard: No ROI claims in reports without explicit experimental verification; all metrics report statistical uncertainty (95% CIs). | 28 Oct 2026 |

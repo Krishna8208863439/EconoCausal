@@ -135,6 +135,9 @@ curl -X GET http://127.0.0.1:8000/drift/status
 
 ## 6. Docker Containerization (Production Deployment)
 
+> **Operational Guideline (13-Day Plan Cut Order):**  
+> Docker containerization is strictly **optional**. As defined in the project triage cut order, Docker is the first item to cut if time is constrained. Protect core deliverables first: DML estimation, causal diagnostics, pricing recommendations, interactive dashboard, REST API, and final reports. Only proceed with containerization if all core tasks are complete.
+
 ### 6.1. Backend `Dockerfile`
 Create `Dockerfile.backend`:
 ```dockerfile

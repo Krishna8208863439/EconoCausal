@@ -1,11 +1,14 @@
-# EconoCausal — Week-Wise Implementation Checklist
+# EconoCausal — Week-Wise Implementation & 13-Day Audit Checklist
 
-**Project Reference:** ITS/DSML/1147
-**Audit Date:** 2026-10-15
-**Status Label:** COMPLETED | PARTIALLY COMPLETED | NOT COMPLETED | BLOCKED
+**Project Reference:** ITS/DSML/1147 | Infotact Solutions intern project  
+**Audit Date:** Wednesday 28 October 2026  
+**Plan Window:** 28 Oct – 9 Nov 2026 (Final Review Window: 5–10 Nov 2026)  
+**Status Label:** COMPLETED | PARTIALLY COMPLETED | NOT COMPLETED | BLOCKED  
 
-> Note: Infotact's official week-wise task list was not provided. Tasks below are
-> proposed implementation milestones derived from the project codebase and README.
+> **Operational Context (13-Day Plan):**  
+> All milestone requirements below are aligned with the official *13-Day Plan to Recheck Weeks 1-2 and Finish Weeks 3-4*.
+> Core development freezes on **Day 8 (Wed 4 Nov)**; Days 9–13 are reserved for reports, PPT deck, demo video, viva rehearsal, and review buffer.
+
 
 ---
 
@@ -160,17 +163,20 @@
 
 ---
 
-## Overall Completion Summary
+## Overall Completion Summary & 13-Day Transition
 
-| Week | Completed | Total | Completion Rate |
-|---|---|---|---|
-| Week 1 — Foundation | 20 | 20 | 100% |
-| Week 2 — Core ML | 29 | 30 | 97% |
-| Week 3 — Prescriptive | 27 | 29 | 93% |
-| Week 4 — Delivery | 27 | 28 | 96% |
-| **TOTAL** | **103** | **107** | **96%** |
+| Week | Completed | Total | Completion Rate | 13-Day Roadmap Phase |
+|---|---|---|---|---|
+| Week 1 — Foundation | 20 | 20 | 100% | Phase 1 (Day 1: Clean-clone audit & treatment settlement) |
+| Week 2 — Core ML | 29 | 30 | 97% | Phase 1 (Day 2: Audit Week 2 pass conditions & tag) |
+| Week 3 — Prescriptive | 27 | 29 | 93% | Phase 2 (Days 3–5: 4-column pricing engine, UI, tag) |
+| Week 4 — Delivery | 27 | 28 | 96% | Phase 3 (Days 6–8: Full API, drift checks, Code Freeze) |
+| **TOTAL** | **103** | **107** | **96%** | **Phase 4 (Days 9–13: Reports, PPT, Demo, Viva, Review)** |
 
-**Critical gaps remaining:**
-1. GitHub daily commit activity (6 days vs required ≥ 10 for mid-review, ≥ 20 for final)
-2. 7 test file groups blocked by gmpy2 DLL environment issue (code is correct, environment fix needed)
-3. Model artifact (causal_forest_dml.joblib) not tracked in git
+**13-Day Priority Actions (Oct 28 – Nov 9):**
+1. **Mentor Inquiry (Day 1):** Clarify Mid Review status (closed Oct 27) and confirm scheduling.
+2. **Commit Streak Audit (Day 1):** Ensure daily commits without gaps across the 20 days prior to Final Review.
+3. **Core Pricing Engine (Days 3–4):** Verify 4-column output table (Price, Expected Sales, Revenue, Profit), 4 goals, and operational constraints.
+4. **Code Freeze (Day 8 — Wed 4 Nov):** All features locked; clean-clone verified.
+5. **Phase 4 Preparation (Days 9–13):** Viva rehearsal (7 questions), presentation PPT, demo video, and social media video.
+
