@@ -1,0 +1,128 @@
+{
+  "dataset_name": "test_cohort.csv",
+  "timestamp": "2026-10-18T11:37:09.050494+00:00",
+  "reference_sample_size": 2200,
+  "current_sample_size": 5,
+  "schema_status": "valid",
+  "schema_warnings": [],
+  "overall_drift_status": "STABLE",
+  "high_drift_features": [],
+  "moderate_drift_features": [],
+  "features": {
+    "past_purchases": {
+      "test": "Kolmogorov-Smirnov & Decile PSI",
+      "ks_statistic": 0.1241,
+      "p_value": 0.99997,
+      "psi": 0.0,
+      "ref_mean": 9.38,
+      "curr_mean": 8.8,
+      "ref_std": 5.11,
+      "curr_std": 4.76,
+      "drift_detected": false,
+      "severity": "none",
+      "status_label": "Stable",
+      "bin_details": [],
+      "feature_type": "numerical"
+    },
+    "avg_order_value": {
+      "test": "Kolmogorov-Smirnov & Decile PSI",
+      "ks_statistic": 0.3905,
+      "p_value": 0.33678,
+      "psi": 0.0,
+      "ref_mean": 55.61,
+      "curr_mean": 58.0,
+      "ref_std": 35.74,
+      "curr_std": 15.25,
+      "drift_detected": false,
+      "severity": "none",
+      "status_label": "Stable",
+      "bin_details": [],
+      "feature_type": "numerical"
+    },
+    "website_visits": {
+      "test": "Kolmogorov-Smirnov & Decile PSI",
+      "ks_statistic": 0.2441,
+      "p_value": 0.86358,
+      "psi": 0.0,
+      "ref_mean": 5.97,
+      "curr_mean": 6.2,
+      "ref_std": 2.51,
+      "curr_std": 3.7,
+      "drift_detected": false,
+      "severity": "none",
+      "status_label": "Stable",
+      "bin_details": [],
+      "feature_type": "numerical"
+    },
+    "age_group": {
+      "test": "Chi-Square & Categorical PSI",
+      "chi2_statistic": 0.0,
+      "p_value": 1.0,
+      "psi": 0.0,
+      "drift_detected": false,
+      "severity": "insufficient_data",
+      "status_label": "Insufficient Data",
+      "feature_type": "categorical"
+    },
+    "customer_segment": {
+      "test": "Chi-Square & Categorical PSI",
+      "chi2_statistic": 0.0,
+      "p_value": 1.0,
+      "psi": 0.0,
+      "drift_detected": false,
+      "severity": "insufficient_data",
+      "status_label": "Insufficient Data",
+      "feature_type": "categorical"
+    }
+  },
+  "target_and_treatment_drift": {
+    "treatment_rate": {
+      "reference_rate": 0.5877,
+      "current_rate": 0.6,
+      "absolute_diff": 0.0123,
+      "alert": false
+    },
+    "conversion_rate": {
+      "reference_rate": 0.4809,
+      "current_rate": 0.4,
+      "absolute_diff": 0.0809,
+      "alert": true
+    }
+  },
+  "missingness_summary": {
+    "past_purchases": {
+      "ref_missing_pct": 0.0,
+      "curr_missing_pct": 0.0,
+      "delta_pct": 0.0,
+      "alert": false
+    },
+    "avg_order_value": {
+      "ref_missing_pct": 0.0,
+      "curr_missing_pct": 0.0,
+      "delta_pct": 0.0,
+      "alert": false
+    },
+    "website_visits": {
+      "ref_missing_pct": 0.0,
+      "curr_missing_pct": 0.0,
+      "delta_pct": 0.0,
+      "alert": false
+    },
+    "age_group": {
+      "ref_missing_pct": 0.0,
+      "curr_missing_pct": 0.0,
+      "delta_pct": 0.0,
+      "alert": false
+    },
+    "customer_segment": {
+      "ref_missing_pct": 0.0,
+      "curr_missing_pct": 0.0,
+      "delta_pct": 0.0,
+      "alert": false
+    }
+  },
+  "recommendations": [
+    "All monitored covariates exhibit stable distributions (PSI < 0.10). No intervention needed.",
+    "Governance Policy: Statistical covariate drift does not automatically imply causal model degradation. Do NOT automatically retrain without off-policy validation on new experimental data."
+  ]
+}

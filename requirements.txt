@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# EconoCausal — Python dependencies
+# Project reference: ITS/DSML/1147
+# Tested on: Python 3.14.6, Windows 11
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Core data stack
+numpy>=1.26
+pandas>=2.2
+scipy>=1.13
+
+# Machine learning
+scikit-learn>=1.5
+joblib>=1.4
+
+# Causal ML (Week 1 & Week 2)
+# NOTE: dowhy 0.11+ requires Python <3.14. Use 0.8 for Python 3.14.
+dowhy==0.8
+econml>=0.15
+
+# Backend API (Week 2 & Week 3)
+fastapi>=0.110
+uvicorn>=0.30
+pydantic>=2.7
+
+# Visualisation
+matplotlib>=3.9
+plotly>=5.22
+seaborn>=0.13
+networkx>=3.3
+
+# Graph rendering (DoWhy DAG export)
+# pygraphviz is optional on Windows — build_dag.py uses networkx fallback
+# pygraphviz>=1.13    # uncomment if Graphviz binaries are installed
+
+# Notebook
+notebook>=7.2
+ipykernel>=6.29
+nbformat>=5.10
+
+# Testing
+pytest>=8.2
+pytest-cov>=5.0
+
+# Utilities
+python-dotenv>=1.0
+tqdm>=4.66

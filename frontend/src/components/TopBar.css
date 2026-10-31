@@ -1,0 +1,238 @@
+.topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-height);
+  padding: 0 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 16px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.menu-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--slate-600);
+  background: var(--slate-100);
+  transition: all 0.15s ease;
+}
+
+.menu-toggle-btn:hover {
+  background: var(--slate-200);
+  color: var(--slate-900);
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.brand-text-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+}
+
+.brand-badge-ref {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: var(--primary-50);
+  color: var(--primary-700);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--primary-200);
+  letter-spacing: 0.03em;
+}
+
+.brand-subtitle {
+  font-size: 0.72rem;
+  color: var(--slate-500);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.breadcrumb-divider {
+  color: var(--slate-300);
+  display: flex;
+  align-items: center;
+}
+
+.current-page-tag {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+
+.topbar-status-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.status-pill-live {
+  background: var(--emerald-50);
+  color: var(--emerald-700);
+  border: 1px solid #A7F3D0;
+}
+
+.status-pill-offline {
+  background: var(--slate-100);
+  color: var(--slate-500);
+  border: 1px solid var(--slate-200);
+}
+
+.status-pill-version {
+  background: var(--slate-100);
+  color: var(--slate-700);
+  border: 1px solid var(--slate-200);
+}
+
+.status-pill-stable {
+  background: var(--emerald-50);
+  color: var(--emerald-700);
+  border: 1px solid #A7F3D0;
+}
+
+.status-pill-warning {
+  background: var(--amber-50);
+  color: var(--amber-700);
+  border: 1px solid #FDE68A;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.last-sync-time {
+  font-size: 0.75rem;
+  color: var(--slate-400);
+  font-weight: 500;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--slate-500);
+  background: var(--slate-100);
+  transition: all 0.15s ease;
+}
+
+.refresh-btn:hover {
+  background: var(--slate-200);
+  color: var(--slate-800);
+}
+
+.refresh-btn.is-spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.api-docs-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-600);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.api-docs-link:hover {
+  background: var(--primary-100);
+  color: var(--primary-800);
+}
+
+@media (max-width: 992px) {
+  .brand-subtitle, .breadcrumb-divider, .current-page-tag, .last-sync-time {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 0 14px;
+  }
+  .status-pill-version {
+    display: none;
+  }
+  .api-docs-link span {
+    display: none;
+  }
+}
