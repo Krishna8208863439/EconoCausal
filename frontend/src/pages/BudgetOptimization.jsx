@@ -13,17 +13,24 @@ import {
   RefreshCw,
   Scale,
   ShieldCheck,
+<<<<<<< HEAD
   ChevronRight,
   Filter,
   BarChart2,
   Layers,
   ArrowRight
+=======
+  ChevronRight
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
 } from 'lucide-react'
 import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import BudgetAllocationChart from '../charts/BudgetAllocationChart.jsx'
 import PolicyComparisonChart from '../charts/PolicyComparisonChart.jsx'
+<<<<<<< HEAD
 import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
 import DiscountAllocationTable from '../components/DiscountAllocationTable.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../components/Toast.jsx'
@@ -34,6 +41,7 @@ export default function BudgetOptimization() {
   const [budget, setBudget]                         = useState(5000)
   const [discountAmount, setDiscountAmount]         = useState(10)
   const [minTreatmentEffect, setMinTreatmentEffect] = useState(0.0)
+<<<<<<< HEAD
   const [conservative, setConservative]             = useState(false)
   const [maxCustomers, setMaxCustomers]             = useState('')
   const [showSegmentCaps, setShowSegmentCaps]       = useState(false)
@@ -43,6 +51,8 @@ export default function BudgetOptimization() {
     Premium: '',
     Lapsed: '',
   })
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
 
   // Optimization state
   const [optimizing, setOptimizing]         = useState(false)
@@ -55,8 +65,11 @@ export default function BudgetOptimization() {
   const [summary, setSummary]               = useState(null)
   const [baselines, setBaselines]           = useState([])
   const [allocationRows, setAllocationRows] = useState([])
+<<<<<<< HEAD
   const [sweepData, setSweepData]           = useState([])
   const [activeTab, setActiveTab]           = useState('allocation') // 'allocation' | 'sweep' | 'comparison'
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
   const addToast = useToast()
 
   const pollTimerRef = useRef(null)
@@ -89,12 +102,15 @@ export default function BudgetOptimization() {
         setAllocationRows(resultsRes.allocation)
         if (resultsRes.last_run_at) setLastRunAt(resultsRes.last_run_at)
       }
+<<<<<<< HEAD
 
       // Load Day 2 budget sweep data
       const sweepRes = await api.getBudgetSweep([1000, 2500, 5000, 7500, 10000, 15000, 20000, 50000], 10, false).catch(() => [])
       if (sweepRes && sweepRes.length > 0) {
         setSweepData(sweepRes)
       }
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
     } catch (err) {
       console.warn('Initial optimization data load failed:', err)
     } finally {
@@ -108,7 +124,11 @@ export default function BudgetOptimization() {
 
   const pollForResults = useCallback(() => {
     let attempts = 0
+<<<<<<< HEAD
     const maxAttempts = 20
+=======
+    const maxAttempts = 25
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
 
     if (pollTimerRef.current) clearInterval(pollTimerRef.current)
 
@@ -128,10 +148,13 @@ export default function BudgetOptimization() {
             setBaselines(sumRes.baselines || [])
           }
 
+<<<<<<< HEAD
           // Refresh sweep data
           const updatedSweep = await api.getBudgetSweep([1000, 2500, 5000, 7500, 10000, 15000, 20000, 50000], discountAmount, conservative).catch(() => [])
           if (updatedSweep && updatedSweep.length > 0) setSweepData(updatedSweep)
 
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
           setOptimizing(false)
           setStatusMessage('Mixed-Integer Linear Program (MILP) solved to global optimum!')
           addToast('Prescriptive optimization completed successfully!', 'success')
@@ -155,8 +178,13 @@ export default function BudgetOptimization() {
           setError('Failed to poll optimization status: ' + err.message)
         }
       }
+<<<<<<< HEAD
     }, 800)
   }, [addToast, discountAmount, conservative])
+=======
+    }, 1500)
+  }, [addToast])
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
 
   const handleRunOptimization = async (e) => {
     if (e) e.preventDefault()
@@ -170,6 +198,7 @@ export default function BudgetOptimization() {
     }
 
     setOptimizing(true)
+<<<<<<< HEAD
     addToast('Executing SciPy HiGHS MILP Knapsack solver...', 'info')
 
     // Parse active segment caps
@@ -182,14 +211,20 @@ export default function BudgetOptimization() {
       })
     }
 
+=======
+    addToast('Executing SciPy HiGHS MILP solver...', 'info')
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
     try {
       await api.runOptimisation({
         budget: Number(budget),
         discount_amount: Number(discountAmount),
         min_treatment_effect: Number(minTreatmentEffect),
+<<<<<<< HEAD
         conservative: Boolean(conservative),
         max_customers: maxCustomers ? Number(maxCustomers) : null,
         segment_caps: Object.keys(parsedCaps).length > 0 ? parsedCaps : null,
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
         random_seed: 42,
       })
       pollForResults()
@@ -218,7 +253,11 @@ export default function BudgetOptimization() {
         <div>
           <h1 className="page-title">Discount Allocation Matrix & Prescriptive Optimization</h1>
           <p className="page-subtitle">
+<<<<<<< HEAD
             Week 3: Mixed-Integer Linear Programming · Cannibalization Penalty · Day 2 Constraints & Budget Sweep
+=======
+            Mixed-Integer Linear Programming (SciPy MILP) · Hard Budget Ceiling · Customer-Level Offer Targeting
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
           </p>
         </div>
         <div className="page-header-actions">
@@ -233,18 +272,28 @@ export default function BudgetOptimization() {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* ── Methodology Banner ─────────────────────────────────────────── */}
+=======
+      {/* ── Causal Estimates Disclaimer ─────────────────────────────────── */}
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
       <div className="notice-banner notice-banner--info">
         <div className="notice-banner__icon">
           <HelpCircle size={20} className="text-primary-600" />
         </div>
         <div>
+<<<<<<< HEAD
           <strong>EconoCausal Value Formulation:</strong> Unlike traditional uplift heuristics, our objective function
           explicitly subtracts organic conversion risk:
           <span style={{ fontFamily: 'var(--font-mono)', marginLeft: '6px', fontWeight: 600 }}>
             Incremental Margin = τ_i · (Margin_i − d) − p_{'{0,i}'} · d
           </span>.
           Coupons are never granted to buyers who would have converted anyway, protecting marketing margins.
+=======
+          <strong>Prescriptive Formulation:</strong> Instead of blanket discounts or predictive intent scores,
+          the system solves a <strong>0-1 Knapsack Mixed-Integer Linear Program</strong> to allocate promotions exclusively to
+          customers whose expected incremental basket margin ($\tau_i \cdot \text{AOV}_i - \text{Discount}$) is positive and maximized.
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
         </div>
       </div>
 
@@ -270,6 +319,7 @@ export default function BudgetOptimization() {
         </div>
       )}
 
+<<<<<<< HEAD
       {/* ── Day 1 & Day 2 Optimizer Controls Card ────────────────────────── */}
       <SectionCard
         title="Optimization Controls & Day 2 Business Constraints"
@@ -282,6 +332,20 @@ export default function BudgetOptimization() {
               <label className="form-label" htmlFor="opt-budget-input">
                 Total Budget Ceiling (₹)
                 <span className="form-hint">Hard spend constraint</span>
+=======
+      {/* ── Optimizer Controls Card ─────────────────────────────────────── */}
+      <SectionCard
+        title="Optimization Controls & Constraints"
+        subtitle="Configure the marketing budget, coupon unit cost, and minimum uplift threshold"
+        icon={Sliders}
+      >
+        <form onSubmit={handleRunOptimization} className="config-form">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', alignItems: 'end' }}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="opt-budget-input">
+                Total Promotional Budget (₹)
+                <span className="form-hint">Hard spend ceiling</span>
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
               </label>
               <input
                 id="opt-budget-input"
@@ -289,11 +353,16 @@ export default function BudgetOptimization() {
                 className="form-input"
                 value={budget}
                 min={100}
+<<<<<<< HEAD
                 step={500}
+=======
+                step={100}
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
                 onChange={e => setBudget(parseFloat(e.target.value) || 0)}
                 required
                 disabled={optimizing}
               />
+<<<<<<< HEAD
               <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
                 {[1000, 2500, 5000, 10000, 20000].map(b => (
                   <button
@@ -307,11 +376,17 @@ export default function BudgetOptimization() {
                   </button>
                 ))}
               </div>
+=======
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
             </div>
 
             <div className="form-group">
               <label className="form-label" htmlFor="opt-discount-input">
+<<<<<<< HEAD
                 Coupon Unit Cost (₹)
+=======
+                Discount Coupon Cost (₹)
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
                 <span className="form-hint">Cost per discount granted</span>
               </label>
               <input
@@ -329,8 +404,13 @@ export default function BudgetOptimization() {
 
             <div className="form-group">
               <label className="form-label" htmlFor="opt-ite-threshold">
+<<<<<<< HEAD
                 Min. Uplift Threshold (τ &gt;)
                 <span className="form-hint">Minimum ITE required</span>
+=======
+                Min. ITE Threshold (τ &gt;)
+                <span className="form-hint">Minimum uplift required</span>
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
               </label>
               <input
                 id="opt-ite-threshold"
@@ -345,6 +425,7 @@ export default function BudgetOptimization() {
               />
             </div>
 
+<<<<<<< HEAD
             <div className="form-group">
               <label className="form-label" htmlFor="opt-max-customers">
                 Max Audience Cap (N_max)
@@ -452,6 +533,33 @@ export default function BudgetOptimization() {
                 </>
               )}
             </button>
+=======
+            <div>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', height: '42px' }}
+                disabled={optimizing}
+              >
+                {optimizing ? (
+                  <>
+                    <RefreshCw size={16} className="is-spinning" />
+                    <span>Solving SciPy MILP…</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    <span>Run Prescriptive Solver</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px', fontSize: '0.78rem', color: '#64748B' }}>
+            <span>Targeting Capacity: ~<strong>{Math.floor(budget / (discountAmount || 1)).toLocaleString()}</strong> discounts</span>
+            <span>{lastRunAt ? `Last Solved: ${new Date(lastRunAt).toLocaleTimeString()}` : 'Solver ready'}</span>
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
           </div>
         </form>
       </SectionCard>
@@ -477,7 +585,11 @@ export default function BudgetOptimization() {
           value={`₹${Number(actualSpend).toLocaleString()}`}
           sub={`${budgetUtilPct}% budget utilized`}
           trend={{ value: actualSpend <= totalBudget ? 'Feasible' : 'Exceeded', positive: actualSpend <= totalBudget }}
+<<<<<<< HEAD
           tooltip="Total cost of all allocated discount offers."
+=======
+          tooltip="Total cost of all 500 allocated discount offers."
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
           icon={Coins}
           color="green"
         />
@@ -502,7 +614,11 @@ export default function BudgetOptimization() {
         <StatCard
           label="Incr. Contribution"
           value={`+₹${Number(incContribution).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+<<<<<<< HEAD
           sub="Net margin (Revenue − Cannibalization − Cost)"
+=======
+          sub="Net margin (Revenue − Coupon Cost)"
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
           trend={{ value: '+102% vs Random', positive: true }}
           tooltip="Objective function value: Net incremental margin generated above campaign spend."
           icon={Coins}
@@ -519,6 +635,7 @@ export default function BudgetOptimization() {
         />
       </div>
 
+<<<<<<< HEAD
       {/* ── Day 2 Budget Sweep & Policy Comparison Section ───────────────── */}
       <SectionCard
         title="Day 2 Advanced Analytics: Budget Sweep & Policy Benchmarks"
@@ -647,6 +764,32 @@ export default function BudgetOptimization() {
           </div>
         )}
       </SectionCard>
+=======
+      {/* ── Charts Grid ─────────────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {/* Budget Allocation Breakdown */}
+        {summary && (
+          <SectionCard
+            title="Budget Utilization & Audience Coverage"
+            subtitle="Breakdown of campaign capital and customer eligibility status"
+            icon={PieChart}
+          >
+            <BudgetAllocationChart summary={summary} currency="₹" />
+          </SectionCard>
+        )}
+
+        {/* 4-Policy Baseline Comparison */}
+        {baselines.length > 0 && (
+          <SectionCard
+            title="Policy Benchmark Comparison"
+            subtitle="Causal DML vs Blanket vs Random vs No-Discount at identical ₹5,000 spend"
+            icon={Target}
+          >
+            <PolicyComparisonChart baselines={baselines} />
+          </SectionCard>
+        )}
+      </div>
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
 
       {/* ── Customer-Level Discount Allocation Matrix Table ─────────────── */}
       <SectionCard
@@ -665,32 +808,51 @@ export default function BudgetOptimization() {
 
       {/* ── Mathematical Formulation & Economic Framework ───────────────── */}
       <SectionCard
+<<<<<<< HEAD
         title="Prescriptive Formulation & Economic Framework (Week 3 Methodology)"
         subtitle="Mathematical formulation and econometric assumptions underlying the prescriptive knapsack engine"
+=======
+        title="Prescriptive Formulation & Economic Framework"
+        subtitle="Mathematical formulation and econometric assumptions underlying the prescriptive engine"
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
         icon={Scale}
       >
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
           <div style={{ background: '#F8FAFC', padding: '18px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
             <h4 style={{ margin: '0 0 8px 0', color: '#1E293B', fontSize: '0.95rem', fontWeight: 700 }}>
+<<<<<<< HEAD
               📐 Binary Integer Program (BIP) with Cannibalization Penalty
+=======
+              📐 Binary Integer Program (BIP) Formulation
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
             </h4>
             <p style={{ margin: '0 0 10px 0', fontSize: '0.82rem', color: '#64748B' }}>
               We formulate the discount assignment as a 0-1 knapsack optimization problem solved via SciPy's HiGHS solver:
             </p>
             <pre style={{ background: '#0F172A', color: '#38BDF8', padding: '14px', borderRadius: '8px', fontSize: '0.82rem', overflowX: 'auto', fontFamily: 'var(--font-mono)' }}>
+<<<<<<< HEAD
 {`maximize   ∑  x_i · [ τ_i · (M_i − d) − p_{0,i} · d ]
 subject to ∑  x_i · d ≤ Budget
            ∑  x_i ≤ N_max                  (Optional)
            ∑_{i∈S} x_i ≤ Cap_S             (Segment caps)
            x_i ∈ {0, 1}                    ∀ i ∈ {1, ..., N}
+=======
+{`maximize   ∑  x_i · [ τ_i · M_i − d ]
+subject to ∑  x_i · d ≤ Budget
+           x_i ∈ {0, 1}   ∀ i ∈ {1, ..., N}
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
            τ_i > τ_min,   τ_i · M_i > d`}
             </pre>
             <ul style={{ paddingLeft: '20px', margin: '10px 0 0 0', fontSize: '0.8rem', color: '#475569', lineHeight: '1.6' }}>
               <li><strong>x_i ∈ &#123;0, 1&#125;:</strong> Binary decision variable (1 = offer discount, 0 = do not offer)</li>
               <li><strong>τ_i:</strong> Individual Treatment Effect (ITE) from Week 2 Causal Forest</li>
+<<<<<<< HEAD
               <li><strong>p_{'{0,i}'}:</strong> Baseline purchase probability without offer ($m(X_i) - e(X_i) \cdot \tau_i$)</li>
               <li><strong>p_{'{0,i}'} · d:</strong> Cannibalization penalty (cost of giving coupon to organic buyer)</li>
               <li><strong>M_i:</strong> Contribution margin proxy (Customer average order value, ₹55 baseline)</li>
+=======
+              <li><strong>M_i:</strong> Margin proxy (Customer average order value, ₹55 baseline)</li>
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
               <li><strong>d:</strong> Fixed discount cost per coupon offer (₹10)</li>
             </ul>
           </div>
@@ -701,6 +863,7 @@ subject to ∑  x_i · d ≤ Budget
             </h4>
             <ul style={{ paddingLeft: '18px', margin: 0, fontSize: '0.82rem', color: '#475569', lineHeight: '1.7' }}>
               <li style={{ marginBottom: '8px' }}>
+<<<<<<< HEAD
                 <strong>Strict Budget Invariance:</strong> Planned spend is mathematically guaranteed never to exceed the defined budget ($\sum x_i \cdot d \le B$).
               </li>
               <li style={{ marginBottom: '8px' }}>
@@ -711,6 +874,18 @@ subject to ∑  x_i · d ≤ Budget
               </li>
               <li>
                 <strong>Segment Balancing:</strong> Configurable caps ensure promotional equity across Regular, Premium, Occasional, and Lapsed segments without budget spillage.
+=======
+                <strong>Strict Budget Invariance:</strong> Planned spend is mathematically guaranteed never to exceed the defined budget (∑ x_i · d ≤ B).
+              </li>
+              <li style={{ marginBottom: '8px' }}>
+                <strong>Economic Viability Gate:</strong> Only customers with positive net expected contribution (τ_i · M_i &gt; d) are eligible, ensuring no loss-making discounts are ever issued.
+              </li>
+              <li style={{ marginBottom: '8px' }}>
+                <strong>Binary Treatment Contrast:</strong> The causal model estimates the contrast between receiving a discount vs not receiving a discount. Multi-tier discount dosage is excluded.
+              </li>
+              <li>
+                <strong>Uncertainty Flagging:</strong> Customers whose 95% confidence lower bound τ_lower ≤ 0 are marked with ⚠️ for business transparency, while retaining optimal point-estimate ranking.
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
               </li>
             </ul>
           </div>

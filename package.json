@@ -7,8 +7,12 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
+<<<<<<< HEAD
     "preview": "vite preview --host 0.0.0.0 --port 3000",
     "lint": "vite build"
+=======
+    "preview": "vite preview --host 0.0.0.0 --port 3000"
+>>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
   },
   "dependencies": {
     "lucide-react": "^1.57.0",
