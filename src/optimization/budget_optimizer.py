@@ -463,10 +463,10 @@ def main():
     parser.add_argument("--sweep", action="store_true", help="Run Day 2 budget sweep table")
     args = parser.parse_args()
 
-    print(f"\n=======================================================")
-    print(f"  EconoCausal Week 3 Prescriptive Optimizer Engine")
-    print(f"  Budget: ₹{args.budget:,.2f} | Discount: ₹{args.discount:,.2f} | Conservative: {args.conservative}")
-    print(f"=======================================================\n")
+    print("\n=======================================================")
+    print("  EconoCausal Week 3 Prescriptive Optimizer Engine")
+    print(f"  Budget: INR {args.budget:,.2f} | Discount: INR {args.discount:,.2f} | Conservative: {args.conservative}")
+    print("=======================================================\n")
 
     result = run_budget_optimization(
         budget=args.budget,
@@ -477,17 +477,17 @@ def main():
 
     s = result["summary"]
     print("Optimization Summary:")
-    print(f"  • Total Budget:            ₹{s['total_budget']:,.2f}")
-    print(f"  • Actual Spend:            ₹{s['actual_spend']:,.2f} ({s['budget_utilisation_pct']}% utilized)")
-    print(f"  • Selected Customers:      {s['n_selected_customers']:,} / {s['n_eligible_customers']:,} eligible")
-    print(f"  • Incremental Conversions: +{s['estimated_incremental_conversions']:,.1f} orders")
-    print(f"  • Net Incremental Margin:  +₹{s['estimated_incremental_contribution_inr']:,.2f}")
-    print(f"  • Return on Investment:    {s['roi_pct']:.1f}%")
-    print(f"  • Solver Engine:           {s['solver_used']}")
+    print(f"  - Total Budget:            INR {s['total_budget']:,.2f}")
+    print(f"  - Actual Spend:            INR {s['actual_spend']:,.2f} ({s['budget_utilisation_pct']}% utilized)")
+    print(f"  - Selected Customers:      {s['n_selected_customers']:,} / {s['n_eligible_customers']:,} eligible")
+    print(f"  - Incremental Conversions: +{s['estimated_incremental_conversions']:,.1f} orders")
+    print(f"  - Net Incremental Margin:  +INR {s['estimated_incremental_contribution_inr']:,.2f}")
+    print(f"  - Return on Investment:    {s['roi_pct']:.1f}%")
+    print(f"  - Solver Engine:           {s['solver_used']}")
 
     print("\nPolicy Comparison Benchmark:")
     for p in result["baselines"]:
-        print(f"  • {p['name']:<45} | Spend: ₹{p['actual_spend']:>7.0f} | Lift: +{p['estimated_incremental_conversions']:>5.1f} conv | Margin: ₹{p['estimated_incremental_contribution']:>8.2f}")
+        print(f"  - {p['name']:<45} | Spend: INR {p['actual_spend']:>7.0f} | Lift: +{p['estimated_incremental_conversions']:>5.1f} conv | Margin: INR {p['estimated_incremental_contribution']:>8.2f}")
 
     if args.sweep:
         print("\nDay 2 Budget Sweep Analysis:")
@@ -495,7 +495,7 @@ def main():
         print(f"  {'Budget':>10} | {'Customers':>10} | {'Spend':>10} | {'Incr. Orders':>14} | {'Incr. Margin':>14} | {'ROI':>8}")
         print("  " + "-" * 75)
         for r in sweep_data:
-            print(f"  ₹{r['budget']:>9,.0f} | {r['customers_targeted']:>10} | ₹{r['actual_spend']:>9,.0f} | +{r['incremental_purchases']:>13.1f} | ₹{r['incremental_margin']:>13,.2f} | {r['roi_pct']:>7.1f}%")
+            print(f"  INR {r['budget']:>9,.0f} | {r['customers_targeted']:>10} | INR {r['actual_spend']:>9,.0f} | +{r['incremental_purchases']:>13.1f} | INR {r['incremental_margin']:>13,.2f} | {r['roi_pct']:>7.1f}%")
 
     print("\n=======================================================\n")
 

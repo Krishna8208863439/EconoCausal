@@ -8,10 +8,13 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-<<<<<<< HEAD
-    allowedHosts: 'all',
-=======
->>>>>>> c252a66c1d9cdab11c0455b44796e49ac90fba8c
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   build: {
     outDir: 'dist',

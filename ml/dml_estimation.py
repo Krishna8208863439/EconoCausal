@@ -339,11 +339,49 @@ def train_and_export_dml(
         }
     )
 
-    # Save CSV
+    # Save customer predictions CSV
     out_csv = Path(output_predictions_path)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     predictions_df.to_csv(out_csv, index=False)
     log.info("Saved customer-level ITE predictions to %s", out_csv)
+
+    # Save Day 1 & Day 2 handoff file: data/processed/effects.csv
+    effects_path = _ROOT / "data" / "processed" / "effects.csv"
+    try:
+        from sklearn.model_selection import StratifiedKFold, KFold, cross_val_predict
+        X_trans = wrapper.preprocessor.transform(df[wrapper.feature_cols])
+        T_arr = df[DEFAULT_TREATMENT_COL].to_numpy().astype(int)
+        Y_arr = df[DEFAULT_OUTCOME_COL].to_numpy().astype(float)
+        
+        clf_t = RandomForestClassifier(n_estimators=50, max_depth=6, min_samples_leaf=10, random_state=random_state, n_jobs=-1)
+        reg_y = RandomForestRegressor(n_estimators=50, max_depth=6, min_samples_leaf=10, random_state=random_state, n_jobs=-1)
+        
+        e_hat = cross_val_predict(clf_t, X_trans, T_arr, cv=StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state), method="predict_proba")[:, 1]
+        m_hat = cross_val_predict(reg_y, X_trans, Y_arr, cv=KFold(n_splits=cv, shuffle=True, random_state=random_state))
+        p0_hat = np.clip(m_hat - e_hat * effects, 0.0, 1.0)
+    except Exception as exc:
+        log.warning("Could not compute cross-validated nuisance scores: %s; using heuristic bounds", exc)
+        e_hat = np.full(len(df), 0.50)
+        p0_hat = np.clip(0.40 - 0.50 * effects, 0.0, 1.0)
+
+    d_amt = df["discount_amount"].apply(lambda x: 10.0 if pd.isna(x) or x <= 0 else float(x)).to_numpy() \
+        if "discount_amount" in df.columns else np.full(len(df), 10.0)
+    margin_amt = df["avg_order_value"].to_numpy().astype(float)
+
+    effects_df = pd.DataFrame(
+        {
+            "customer_id": df["customer_id"],
+            "tau_hat": np.round(effects, 6),
+            "tau_lo": np.round(lb, 6),
+            "tau_hi": np.round(ub, 6),
+            "p0_hat": np.round(p0_hat, 6),
+            "e_hat": np.round(e_hat, 6),
+            "discount_amount": np.round(d_amt, 2),
+            "margin": np.round(margin_amt, 2),
+        }
+    )
+    effects_df.to_csv(effects_path, index=False)
+    log.info("Saved standardized handoff file to %s (%d rows)", effects_path, len(effects_df))
 
     # Save model artifact
     wrapper.save(model_save_path)

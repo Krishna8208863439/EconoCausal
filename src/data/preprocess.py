@@ -280,9 +280,13 @@ def run_pipeline(raw_path: Path = RAW_PATH) -> pd.DataFrame:
     pd.DataFrame
         Cleaned dataset ready for EDA and causal modelling.
     """
-    log.info("Loading raw data from %s", raw_path)
-    df = pd.read_csv(raw_path)
-    log.info("Raw dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
+    if isinstance(raw_path, pd.DataFrame):
+        df = raw_path.copy()
+        log.info("Using supplied DataFrame: %d rows, %d columns.", len(df), df.shape[1])
+    else:
+        log.info("Loading raw data from %s", raw_path)
+        df = pd.read_csv(raw_path)
+        log.info("Raw dataset loaded: %d rows, %d columns.", len(df), df.shape[1])
 
     # Validation
     validate_columns(df)
