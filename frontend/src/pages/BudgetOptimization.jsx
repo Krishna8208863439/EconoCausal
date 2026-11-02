@@ -24,6 +24,27 @@ import StatCard from '../components/StatCard.jsx'
 import BudgetAllocationChart from '../charts/BudgetAllocationChart.jsx'
 import PolicyComparisonChart from '../charts/PolicyComparisonChart.jsx'
 import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
+import DiscountAllocationTable from '../components/DiscountAllocationTable.jsx'
+import { api } from '../services/api.js'
+import { useToast } from '../components/Toast.jsx'
+
+export default function BudgetOptimization() {
+  const { addToast } = useToast ? useToast() : { addToast: () => {} }
+  const pollTimerRef = useRef(null)
+
+  // Form parameters
+  const [budget, setBudget]                             = useState(5000)
+  const [discountAmount, setDiscountAmount]             = useState(10)
+  const [minTreatmentEffect, setMinTreatmentEffect]     = useState(0.0)
+  const [conservative, setConservative]                 = useState(false)
+  const [maxCustomers, setMaxCustomers]                 = useState('')
+  const [showSegmentCaps, setShowSegmentCaps]           = useState(false)
+  const [segmentCaps, setSegmentCaps]                   = useState({
+    Regular: '',
+    Occasional: '',
+    Premium: '',
+    Lapsed: '',
+  })
 
   // Optimization state
   const [optimizing, setOptimizing]         = useState(false)
@@ -38,6 +59,29 @@ import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
   const [allocationRows, setAllocationRows] = useState([])
   const [sweepData, setSweepData]           = useState([])
   const [activeTab, setActiveTab]           = useState('allocation') // 'allocation' | 'sweep' | 'comparison'
+
+  const loadInitialData = useCallback(async () => {
+    setInitialLoading(true)
+    try {
+      const cfg = await api.getOptimisationConfig().catch(() => null)
+      if (cfg) {
+        if (cfg.default_budget) setBudget(cfg.default_budget)
+        if (cfg.default_discount_amount) setDiscountAmount(cfg.default_discount_amount)
+      }
+      const sumRes = await api.getOptimisationSummary().catch(() => null)
+      if (sumRes && sumRes.summary) {
+        setSummary(sumRes.summary)
+        setBaselines(sumRes.baselines || [])
+      }
+      const allocRes = await api.getOptimisationResults(3000, 0).catch(() => null)
+      if (allocRes && allocRes.allocation) {
+        setAllocationRows(allocRes.allocation)
+        setLastRunAt(allocRes.last_run_at)
+      }
+      const sweepRes = await api.getBudgetSweep([1000, 2500, 5000, 7500, 10000, 15000, 20000, 50000], 10, false).catch(() => [])
+      if (sweepRes && sweepRes.length > 0) {
+        setSweepData(sweepRes)
+      }
     } catch (err) {
       console.warn('Initial optimization data load failed:', err)
     } finally {
@@ -59,7 +103,7 @@ import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
       attempts++
       try {
         const res = await api.getOptimisationResults(3000, 0)
-        if (res.status === 'completed') {
+        if (res && res.status === 'completed') {
           clearInterval(pollTimerRef.current)
           pollTimerRef.current = null
           setAllocationRows(res.allocation || [])
@@ -74,7 +118,18 @@ import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
           // Refresh sweep data
           const updatedSweep = await api.getBudgetSweep([1000, 2500, 5000, 7500, 10000, 15000, 20000, 50000], discountAmount, conservative).catch(() => [])
           if (updatedSweep && updatedSweep.length > 0) setSweepData(updatedSweep)
-
+        } else if (attempts >= maxAttempts) {
+          clearInterval(pollTimerRef.current)
+          pollTimerRef.current = null
+        }
+      } catch {
+        if (attempts >= maxAttempts) {
+          clearInterval(pollTimerRef.current)
+          pollTimerRef.current = null
+        }
+      }
+    }, 1000)
+  }, [discountAmount, conservative])
 
   const handleRunOptimization = async (e) => {
     if (e) e.preventDefault()
@@ -108,6 +163,36 @@ import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
         conservative: Boolean(conservative),
         max_customers: maxCustomers ? Number(maxCustomers) : null,
         segment_caps: Object.keys(parsedCaps).length > 0 ? parsedCaps : null,
+      })
+      setStatusMessage('Prescriptive MILP optimization converged to global optimum!')
+      addToast('Prescriptive optimization complete', 'success')
+      pollForResults()
+    } catch (err) {
+      setError(err.message || 'Optimization failed.')
+      addToast(err.message || 'Optimization failed', 'error')
+    } finally {
+      setOptimizing(false)
+    }
+  }
+
+  const totalBudget = summary?.total_budget ?? budget
+  const actualSpend = summary?.actual_spend ?? 0
+  const budgetUtilPct = summary?.budget_utilisation_pct ?? 0
+  const remainingBudget = summary?.remaining_budget ?? 0
+  const totalCustomers = summary?.n_total_customers ?? allocationRows.length
+  const eligibleCount = summary?.n_eligible_customers ?? 0
+  const selectedCount = summary?.n_selected_customers ?? 0
+  const incConversions = summary?.estimated_incremental_conversions ?? 0
+  const incContribution = summary?.estimated_incremental_contribution_inr ?? 0
+
+  return (
+    <div className="page-container">
+      {/* ── Page Header ─────────────────────────────────────────────────── */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Prescriptive Budget Optimization</h1>
+          <p className="page-subtitle">
+            Mixed-Integer Linear Programming (MILP) Knapsack Allocation under Constrained Spend
           </p>
         </div>
         <div className="page-header-actions">
@@ -196,6 +281,11 @@ import BudgetSweepChart from '../charts/BudgetSweepChart.jsx'
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="opt-discount-input">
+                Discount Coupon Amount (₹)
                 <span className="form-hint">Cost per discount granted</span>
               </label>
               <input
