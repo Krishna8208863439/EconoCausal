@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import Sidebar from './components/Sidebar.jsx'
-import TopBar from './components/TopBar.jsx'
+import MainLayout from './components/MainLayout.jsx'
 import OverviewPage from './pages/OverviewPage.jsx'
 import DataPage from './pages/DataPage.jsx'
 import CausalPage from './pages/CausalPage.jsx'
@@ -26,36 +25,23 @@ const PAGES = {
 export default function App() {
   const [activePage, setActivePage] = useState('overview')
   const [uploadedData, setUploadedData] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const PageComponent = PAGES[activePage] || OverviewPage
 
   return (
     <ToastProvider>
-      <div className={`app-shell ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <TopBar
-          onMenuToggle={() => setSidebarOpen(o => !o)}
-          activePage={activePage}
+      <MainLayout
+        activePage={activePage}
+        onNavigate={(page) => {
+          setActivePage(page)
+        }}
+      >
+        <PageComponent
+          uploadedData={uploadedData}
+          onDataUploaded={setUploadedData}
+          onNavigatePage={setActivePage}
         />
-        <Sidebar
-          activePage={activePage}
-          onNavigate={(page) => {
-            setActivePage(page)
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
-        <main className="main-content" role="main">
-          <div className="content-container">
-            <PageComponent
-              uploadedData={uploadedData}
-              onDataUploaded={setUploadedData}
-              onNavigatePage={setActivePage}
-            />
-          </div>
-        </main>
-      </div>
+      </MainLayout>
     </ToastProvider>
   )
 }
