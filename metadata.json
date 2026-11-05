@@ -1,8 +1,5 @@
 {
-  "name": "EconoCausal Dashboard",
-  "description": "Dynamic Pricing and Uplift Modeling via Double Machine Learning and Prescriptive Budget Optimization.",
-  "permissions": [],
-  "capabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "name": "EconoCausal - Dynamic Pricing via Double Machine Learning",
+  "description": "Enterprise Decision Intelligence platform for causal dynamic pricing, Double Machine Learning (DML) heterogeneous treatment effects, prescriptive MILP budget optimization, and distribution drift monitoring.",
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

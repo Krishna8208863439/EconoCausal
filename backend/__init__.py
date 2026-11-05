@@ -1,3 +1,0 @@
-"""
-EconoCausal backend module.
-"""
