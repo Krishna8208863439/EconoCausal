@@ -123,6 +123,37 @@
   flex-shrink: 0;
 }
 
+.cmd-palette-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cmd-palette-trigger-btn:hover {
+  background: var(--slate-200);
+  color: var(--text-main);
+  border-color: var(--slate-300);
+}
+
+.cmd-palette-trigger-btn kbd {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+}
+
 .currency-badge {
   display: flex;
   align-items: center;

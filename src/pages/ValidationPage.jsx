@@ -28,6 +28,7 @@ export default function ValidationPage() {
   const [dgpInfo, setDgpInfo] = useState(null)
   const [hillstrom, setHillstrom] = useState(null)
   const [runningRefutation, setRunningRefutation] = useState(null)
+  const [hypoConfounderRR, setHypoConfounderRR] = useState(1.8)
   const [loading, setLoading] = useState(true)
   const addToast = useToast()
 
@@ -228,6 +229,68 @@ export default function ValidationPage() {
               </div>
             </div>
           ))}
+        </div>
+      </SectionCard>
+
+      {/* ── Interactive E-Value & Unobserved Confounder Stress Tester ────── */}
+      <SectionCard
+        title="Unobserved Confounder Sensitivity & E-Value Stress Tester"
+        subtitle="Quantify how strong an unmeasured variable must be to nullify the +19.47 pp treatment effect (Ding & VanderWeele, 2016)"
+        icon={Scale}
+        badge="Sensitivity Analysis"
+        badgeType="indigo"
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', alignItems: 'center' }}>
+          <div style={{ background: 'var(--bg-subtle)', padding: '18px', borderRadius: '10px', border: '1px solid var(--border-light)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>
+              <span>Hypothetical Confounder Risk Ratio (RR):</span>
+              <strong style={{ color: 'var(--primary-600)', fontSize: '1rem' }}>{hypoConfounderRR.toFixed(2)}×</strong>
+            </div>
+            <input
+              type="range"
+              min="1.0"
+              max="4.0"
+              step="0.1"
+              value={hypoConfounderRR}
+              onChange={e => setHypoConfounderRR(parseFloat(e.target.value))}
+              style={{ width: '100%', accentColor: 'var(--primary-600)' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              <span>1.0× (No association)</span>
+              <span>1.45× (Past Purchases)</span>
+              <span>2.84× (Critical E-Value)</span>
+              <span>4.0× (Extreme)</span>
+            </div>
+
+            <div style={{ marginTop: '14px', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.45' }}>
+              The <strong>E-value of 2.84</strong> defines the minimum risk ratio that an unmeasured confounder must have with both discount assignment and customer purchase to explain away the observed effect.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{
+              padding: '14px 16px',
+              borderRadius: '8px',
+              background: hypoConfounderRR < 2.84 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              border: `1px solid ${hypoConfounderRR < 2.84 ? '#10B981' : '#EF4444'}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.88rem', color: hypoConfounderRR < 2.84 ? '#047857' : '#B91C1C' }}>
+                <CheckCircle2 size={16} />
+                <span>{hypoConfounderRR < 2.84 ? 'Causal Treatment Effect Robust' : 'Vulnerable to Extreme Confounder'}</span>
+              </div>
+              <p style={{ fontSize: '0.80rem', margin: '6px 0 0', color: 'var(--text-body)', lineHeight: '1.5' }}>
+                {hypoConfounderRR < 2.84 ? (
+                  <>A hypothetical confounder with RR = <strong>{hypoConfounderRR.toFixed(2)}×</strong> is <em>insufficient</em> to invalidate the causal findings. The +19.47 pp DML lift remains statistically positive.</>
+                ) : (
+                  <>At RR = <strong>{hypoConfounderRR.toFixed(2)}×</strong>, this exceeds the critical threshold (2.84×). However, this is nearly <strong>2× stronger</strong> than past purchases (1.45×), the single strongest predictor in retail history.</>
+                )}
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--bg-subtle)', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border-light)', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              <strong>Empirical Context:</strong> In retail e-commerce, the strongest observed feature is <code>past_purchases</code> (RR = 1.45). An unobserved variable would have to exert almost double this association to overturn the promotional strategy.
+            </div>
+          </div>
         </div>
       </SectionCard>
 
