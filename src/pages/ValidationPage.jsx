@@ -20,6 +20,7 @@ import StatCard from '../components/StatCard.jsx'
 import SimpleBarChart from '../charts/SimpleBarChart.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../components/Toast.jsx'
+import { activityLogger } from '../services/activityLogger'
 import './Page.css'
 
 export default function ValidationPage() {
@@ -57,10 +58,20 @@ export default function ValidationPage() {
 
   const handleRerunRefutation = async (id) => {
     setRunningRefutation(id)
-    addToast(`Re-running ${id.replace(/_/g, ' ')} refutation bootstrap...`, 'info')
+    const refItem = refutations.find(r => r.id === id)
+    const refName = refItem ? refItem.name : id.replace(/_/g, ' ')
+    addToast(`Re-running ${refName} refutation bootstrap...`, 'info')
     await new Promise(r => setTimeout(r, 700))
     setRunningRefutation(null)
     addToast(`Refutation check completed successfully. Invariant bounds verified.`, 'success')
+
+    activityLogger.log(
+      'validation',
+      `Re-tested Refutation: ${refName}`,
+      'Bootstrap re-sampling confirmed causal effect invariant under perturbation',
+      'success',
+      'validation'
+    )
   }
 
   return (

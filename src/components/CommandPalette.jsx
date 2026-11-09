@@ -18,7 +18,8 @@ import {
   Calculator,
   ArrowRight,
   X,
-  Sparkles
+  Sparkles,
+  Activity
 } from 'lucide-react'
 import './CommandPalette.css'
 
@@ -159,6 +160,23 @@ export default function CommandPalette({
       description: 'Export comprehensive C-suite brief and model disclosure',
       icon: FileText,
       action: () => { if (onDownloadReport) onDownloadReport(); onClose(); }
+    },
+    {
+      id: 'action_activity_log',
+      category: 'Actions',
+      label: 'View Live Activity Log',
+      description: 'Audit trail of tracked user actions and optimizations',
+      icon: Activity,
+      action: () => {
+        onClose();
+        const actBtn = document.querySelector('.activity-view-all-btn');
+        if (actBtn) {
+          actBtn.click();
+        } else {
+          const actHeader = document.querySelector('.sidebar-activity-header');
+          if (actHeader) actHeader.click();
+        }
+      }
     },
   ]
 

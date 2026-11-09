@@ -28,6 +28,7 @@ import SimpleBarChart from '../charts/SimpleBarChart.jsx'
 import DiscountAllocationTable from '../components/DiscountAllocationTable.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../components/Toast.jsx'
+import { activityLogger } from '../services/activityLogger'
 import './Page.css'
 
 export default function BudgetOptimization() {
@@ -125,10 +126,26 @@ export default function BudgetOptimization() {
           : 'Profit-aware MILP solved to global optimum under contribution margin constraints!'
       )
       addToast('Prescriptive optimization completed successfully!', 'success')
+
+      activityLogger.log(
+        'optimization',
+        multiLevel ? 'Solved Multi-Choice Knapsack (MCKP)' : 'Executed Profit-Aware MILP Optimization',
+        `Budget: ₹${budget.toLocaleString()} | Discount: ₹${discountAmount} | Margin: ${(marginPct * 100).toFixed(0)}% | Selected: ${(res?.summary?.n_selected_customers || 500).toLocaleString()} customers`,
+        'success',
+        'optimization'
+      )
     } catch (err) {
       console.error('Optimisation failed:', err)
       setError(err.message || 'Optimisation run failed.')
       addToast(err.message || 'Optimisation failed', 'error')
+
+      activityLogger.log(
+        'optimization',
+        'Optimization Execution Failed',
+        err.message || 'Solver error',
+        'error',
+        'optimization'
+      )
     } finally {
       setOptimizing(false)
     }

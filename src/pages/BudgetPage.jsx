@@ -19,6 +19,7 @@ import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../components/Toast.jsx'
+import { activityLogger } from '../services/activityLogger'
 import './Page.css'
 
 const TREATMENT_COLS  = ['discount_offered']
@@ -159,6 +160,14 @@ export default function BudgetPage() {
         covariates: confounders,
       })
       addToast('Campaign budget configuration successfully saved.', 'success')
+
+      activityLogger.log(
+        'config',
+        'Saved Campaign Budget Configuration',
+        `Budget: ₹${budget.toLocaleString()} | Offers: ₹${discountAmount} | Confounders: ${confounders.length}`,
+        'success',
+        'budget'
+      )
     } catch (err) {
       addToast('Failed to save budget config to backend.', 'error')
     } finally {

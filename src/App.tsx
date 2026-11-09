@@ -13,7 +13,7 @@ import BudgetOptimization from './pages/BudgetOptimization.jsx'
 import DriftPage from './pages/DriftPage.jsx'
 import FinalReportPage from './pages/FinalReportPage.jsx'
 import { ToastProvider } from './components/Toast.jsx'
-import { api } from './services/api.js'
+import { activityLogger } from './services/activityLogger'
 import './App.css'
 
 export type ThemeMode = 'light' | 'dark'
@@ -31,11 +31,41 @@ const PAGES: Record<string, React.ComponentType<any>> = {
   report:       FinalReportPage,
 }
 
+const PAGE_TITLES: Record<string, string> = {
+  overview:     'Overview & Executive Summary',
+  data:         'Data & Exploratory Analysis',
+  causal:       'Causal DAG & Robinson DML',
+  validation:   'Causal Validation & Refutations',
+  elasticity:   'Dynamic Pricing & Price Elasticity Lab',
+  budget:       'Campaign Budget Configuration',
+  uplift:       'Uplift & Treatment Evaluation',
+  optimization: 'Discount Allocation Matrix',
+  drift:        'Automated Data Drift Monitor',
+  report:       'Executive Briefing & Technical Viva',
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState<string>('overview')
   const [uploadedData, setUploadedData] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false)
+
+  // ── Navigation Handler with Activity Logging ────────────────────────────────
+  const handleNavigate = useCallback((page: string) => {
+    setActivePage((prev) => {
+      if (prev !== page) {
+        activityLogger.log(
+          'navigation',
+          `Navigated to ${PAGE_TITLES[page] || page}`,
+          `Switched active module view to: ${page}`,
+          'info',
+          page
+        )
+      }
+      return page
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
 
   // ── Theme State & Switcher Function ──────────────────────────────────────────
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -63,6 +93,15 @@ export default function App() {
 
       // Persist in localStorage
       localStorage.setItem('econocausal_theme', nextTheme)
+
+      // Log activity
+      activityLogger.log(
+        'theme',
+        `Switched Theme to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`,
+        `Theme styling tokens updated across workspace`,
+        'info'
+      )
+
       return nextTheme
     })
   }, [])
@@ -102,6 +141,14 @@ export default function App() {
         a.click()
         document.body.removeChild(a)
         setTimeout(() => URL.revokeObjectURL(url), 2000)
+
+        activityLogger.log(
+          'export',
+          'Exported Discount Allocation CSV',
+          'Downloaded 2,200 prescriptive customer allocation decisions',
+          'success',
+          'optimization'
+        )
       }
     } catch (err) {
       console.error('CSV export error', err)
@@ -130,6 +177,14 @@ Project Reference: ITS/DSML/1147
     a.click()
     document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(url), 2000)
+
+    activityLogger.log(
+      'export',
+      'Downloaded Executive Report',
+      'Saved comprehensive markdown decision summary',
+      'success',
+      'report'
+    )
   }
 
   const PageComponent = PAGES[activePage] || OverviewPage
@@ -147,8 +202,7 @@ Project Reference: ITS/DSML/1147
         <Sidebar
           activePage={activePage}
           onNavigate={(page: string) => {
-            setActivePage(page)
-            window.scrollTo({ top: 0, behavior: 'smooth' })
+            handleNavigate(page)
           }}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -158,7 +212,7 @@ Project Reference: ITS/DSML/1147
             <PageComponent
               uploadedData={uploadedData}
               onDataUploaded={setUploadedData}
-              onNavigatePage={setActivePage}
+              onNavigatePage={handleNavigate}
             />
           </div>
         </main>
@@ -168,8 +222,7 @@ Project Reference: ITS/DSML/1147
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onNavigate={(page: string) => {
-          setActivePage(page)
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          handleNavigate(page)
         }}
         theme={theme}
         onToggleTheme={toggleTheme}

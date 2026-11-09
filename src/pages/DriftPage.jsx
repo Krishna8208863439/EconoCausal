@@ -18,6 +18,7 @@ import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../components/Toast.jsx'
+import { activityLogger } from '../services/activityLogger'
 import './Page.css'
 
 export default function DriftPage() {
@@ -67,9 +68,25 @@ export default function DriftPage() {
       setReport(res)
       setUploadSuccess(`Successfully evaluated '${file.name}' against approved reference cohort.`)
       addToast(`Drift audit complete: Status ${res.overall_drift_status}`, 'success')
+
+      activityLogger.log(
+        'audit',
+        `Evaluated Covariate Drift: ${file.name}`,
+        `Audit status: ${res.overall_drift_status} | 2-sample KS and Decile PSI evaluated`,
+        res.overall_drift_status === 'STABLE' ? 'success' : 'warning',
+        'drift'
+      )
     } catch (err) {
       setError(err.message || 'Failed to analyze uploaded dataset.')
       addToast(err.message || 'Drift audit failed', 'error')
+
+      activityLogger.log(
+        'audit',
+        `Drift Check Failed: ${file.name}`,
+        err.message || 'Audit error',
+        'error',
+        'drift'
+      )
     } finally {
       setChecking(false)
       e.target.value = ''

@@ -18,6 +18,7 @@ import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import { api } from '../services/api.js'
 import { useToast } from '../components/Toast.jsx'
+import { activityLogger } from '../services/activityLogger'
 import './Page.css'
 
 const DEFAULT_BRIEFING = {
@@ -104,6 +105,7 @@ export default function FinalReportPage() {
   }, [baselineConv, mdePct, targetPower, alphaSig, dailyTraffic])
 
   const handlePrint = () => {
+    activityLogger.log('export', 'Printed / Saved Executive PDF', 'Formatted print stylesheet executed', 'info', 'report')
     window.print()
   }
 
@@ -114,6 +116,7 @@ export default function FinalReportPage() {
         const blob = await staticRes.blob()
         downloadBlob(blob, 'econocausal_discount_allocation.csv')
         addToast('Downloaded discount allocation CSV (2,200 records)', 'success')
+        activityLogger.log('export', 'Exported Discount Allocation CSV', '2,200 prescriptive customer records downloaded', 'success', 'report')
         return
       }
 
@@ -130,6 +133,7 @@ export default function FinalReportPage() {
         const blob = new Blob([header + '\n' + body], { type: 'text/csv;charset=utf-8;' })
         downloadBlob(blob, 'econocausal_discount_allocation.csv')
         addToast(`Downloaded discount allocation CSV (${data.data.length.toLocaleString()} records)`, 'success')
+        activityLogger.log('export', 'Exported Discount Allocation CSV', `${data.data.length.toLocaleString()} prescriptive records downloaded`, 'success', 'report')
         return
       }
       throw new Error('No allocation records found')
@@ -209,6 +213,7 @@ ${summaryText}
       const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' })
       downloadBlob(blob, 'econocausal_executive_report.md')
       addToast('Downloaded comprehensive executive briefing report', 'success')
+      activityLogger.log('export', 'Downloaded Executive Report', 'Generated complete executive markdown briefing', 'success', 'report')
     } catch (err) {
       console.error('Report download failed:', err)
       addToast('Failed to generate report download', 'error')

@@ -25,6 +25,7 @@ import SectionCard from '../components/SectionCard.jsx'
 import StatCard from '../components/StatCard.jsx'
 import CsvUploader from '../components/CsvUploader.jsx'
 import { useToast } from '../components/Toast.jsx'
+import { activityLogger } from '../services/activityLogger'
 import './Page.css'
 
 const COLUMN_ROLES = {
@@ -84,6 +85,14 @@ export default function DataPage({ uploadedData, onDataUploaded }) {
     setPreviewPage(0)
     onDataUploaded(data)
     addToast(`Loaded ${data.length.toLocaleString()} records from ${name}`, 'success')
+
+    activityLogger.log(
+      'audit',
+      `Loaded Dataset: ${name}`,
+      `Imported ${data.length.toLocaleString()} customer cohort records`,
+      'success',
+      'data'
+    )
 
     if (file) {
       try {
